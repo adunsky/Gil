@@ -1,0 +1,28 @@
+
+Table _fields created<br>Table _forms created<br>Table _formFields created<br>Ta
+ble ???ù?ó?? ?¢?£?£?ù inserted to forms table<br>Table ???¿?ù?¢?¬ ?ô?ö?????ô ins
+erted to forms table<br>Table ?????¿?ó ?ø?¢???ù inserted to forms table<br>Table
+ ???ù?ñ?õ?? ?ð???????õ?¬ inserted to forms table<br>Table ?¿?¢?? ?£?ñ???? insert
+ed to forms table<br>Table ?¿?¢?? ?£???ñ?£ inserted to forms table<br>Table _mai
+n created with 59 columns<br>Exception: Error calling DELETE https://www.googlea
+pis.com/calendar/v3/calendars/f129d046ahq3cc7mn7a4hiqbi8%40group.calendar.google
+.com: (403) Insufficient Permission<br>
+Exception: Error calling DELETE https://www.googleapis.com/calendar/v3/calendars
+/jnp6efb9fpklnsf7iolh9odevg%40group.calendar.google.com: (403) Insufficient Perm
+ission<br>
+Exception: Error calling DELETE https://www.googleapis.com/calendar/v3/calendars
+/v5rmbonjnp5o5oep61fu1gb734%40group.calendar.google.com: (403) Insufficient Perm
+ission<br>
+Exception: Error calling DELETE https://www.googleapis.com/calendar/v3/calendars
+/lp1egcjf7mp3rt2t507pqlss74%40group.calendar.google.com: (403) Insufficient Perm
+ission<br>
+Exception: Error calling DELETE https://www.googleapis.com/calendar/v3/calendars
+/3gl4a2cqa5vbbe4fb76las37r4%40group.calendar.google.com: (403) Insufficient Perm
+ission<br>
+Exception: Error calling DELETE https://www.googleapis.com/calendar/v3/calendars
+/mspjc2ego5m2dp993nms4j32vg%40group.calendar.google.com: (403) Insufficient Perm
+ission<br>
+Exception: Error calling DELETE https://www.googleapis.com/calendar/v3/calendars
+/9k4pl0c6qe0coa36o7lojoqeeg%40group.calendar.google.com: (403) Insufficient Perm
+ission<br>
+^C

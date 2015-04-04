@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Module>
+  <ModulePrefs
+     title="__MSG_Labs_Gadget_Next_Title__"
+     height="43"
+     description="__MSG_Labs_Gadget_Next_Description__"
+     author="Google"
+     author_email="calendar-gadget-questions@google.com">
+    <Require feature="dynamic-height"/>
+    <Require feature="google.calendar-0.5"/>
+    <Require feature="google.calendar-0.5.read"/>
+    <Locale messages="myMessages__en.xml"/>
+  </ModulePrefs>
+  <Content type="html">
+  <![CDATA[
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+
+<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDVZMqHY1H4SCV6rhSVZTorUzvL_VDLCug"></script>
+
+<style>
+body {
+  background-color: #fff;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+body, td {
+  font-family:Arial;
+  font-size: 12.8px;
+}
+
+.timenumber {
+  font-size: 16pt;
+}
+
+#main {
+  text-align: center;
+  margin-bottom: 0;
+}
+
+#chip {
+  text-align: left;
+  margin: 0 5px;
+  padding: 2px 4px;
+  color: #fff;
+  cursor: pointer;
+}
+
+.chipborder {
+  margin: 0 6px;
+  height: 1px;
+  font-size: 0;
+  line-height: 0;
+}
+
+#chip:hover .title {
+  text-decoration: underline;
+}
+
+.title {
+  font-family: verdana, sans-serif;
+  font-size: 8pt;
+}
+
+.location {
+  font-family: verdana, sans-serif;
+  font-size: 11.05px;
+  margin-top: 0.1em;
+}
+
+#map-canvas { 
+	height: 600px;
+	width: 200px; 
+	margin: 0; 
+	padding: 0;
+}
+
+
+
+</style>
+
+<script>
+
+
+/**
+ * This is the callback function when the container sends us the next events.
+ */
+function eventsCallback(calendars) {
+	storedEvents = [];
+  	// Verify there were events.
+  	if (calendars && calendars.length > 0) {
+  		for(var c=0; calendars[c] && calendars[c].events; c++)
+  			for (var e=0; calendars[c].events[e] ; e++) {
+  			    storedEvents.push(calendars[c].events[e]);
+  			}
+  	}
+
+	// clear all the previous geolocations
+  	drawEvents();
+}
+
+
+/**
+ * Ask the container for the next calendar event.
+ */
+function getEvents() {
+  // Get the events for the dates displayed
+
+  var optionalParams = {
+    'requestedFields': ['status']
+  };
+
+
+  google.calendar.read.getEvents(
+      eventsCallback, 'selected',
+      displayedDates.start,
+      displayedDates.end,
+      optionalParams);
+}
+
+
+function dataRefresh () {
+
+	// Clear the stored geolocation array
+	Events = [];
+	getEvents();
+}
+
+/**
+ * The cached preference object.
+ */
+var _prefs = null;
+
+
+
+/**
+ * The offset from the current system time to the calendar displayed time.
+ */
+var timeOffset = 0;
+
+
+/**
+ * An array of events.
+ * @type {Array<Object>}
+ */
+var storedEvents = null;
+
+
+// array of geolocations per event id
+var Events = [];
+
+// array of markers currently drawn on the map
+var markers = [];
+
+/**
+ * The number of times that we've refreshed the events.
+ * @type {number}
+ */
+var refreshEvents = 0;
+
+var displayedDates = {};
+displayedDates.start = google.calendar.utils.fromDate(Date());
+displayedDates.end = google.calendar.utils.fromDate(Date());
+
+function displayedDatesCallback(dates) {
+	var startDate = google.calendar.utils.toDate(dates.startTime);
+	var endDate = google.calendar.utils.toDate(dates.endTime);
+	displayedDates.start = dates.startTime;	
+	// add one day to end date to include it
+	endDate.setDate(endDate.getDate()+1);
+	displayedDates.end = google.calendar.utils.fromDate(endDate);
+  
+  	getEvents();
+}
+
+
+// Deletes all markers in the array by removing references to them.
+function deleteMarkers() {
+  	for (var i = 0; i < markers.length; i++) {
+	    markers[i].setMap(null);
+   }
+	markers = [];
+}
+
+
+function openForm(id) {
+	window.open("http://h06dolon1.securedcloudassets.com/Gilamos?id=" + id + "#/newOrder");
+
+}
+
+
+function drawMarker(e, bounds) {
+
+   	//map.setCenter(Events[e.id]);
+     	var marker = new google.maps.Marker({
+         map: map,
+    		icon: {
+      		path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+      		fillColor: e.color,
+      		strokeColor: e.color,
+      		scale: 6
+    		},
+         position: Events[e.id]
+     	});
+     	
+		markers.push(marker);
+		 // for each marker, extend the map bounds:
+		bounds.extend(Events[e.id]);
+  	  		map.fitBounds(bounds); 
+		          
+		marker.info = new google.maps.InfoWindow({ content: e.title + '<br><a href="#" onclick="openForm(\''+e.id+'\')">Update</a>' });
+		
+		google.maps.event.addListener(marker, 'click', function() {
+				this.info.open(map, marker);
+		});
+
+}
+
+
+function setMarker(e, bounds) {
+	
+	  if (Events[e.id]) {
+	  		drawMarker(e, bounds);
+	  		return;
+	  	}
+	
+	  var retry = 1;	
+	  var geocoder = new google.maps.Geocoder();
+	  while (retry--) { // retry the geolocation service in case we ran over the query per second limit
+	  	geocoder.geocode ( { 'address': e.location}, function(results, status) {
+	  		if (status == google.maps.GeocoderStatus.OK) {
+				Events[e.id] = results[0].geometry.location; //  stored for future use 
+				drawMarker(e, bounds);
+
+				retry = 0;		        
+	     	} else {
+	        console.log('Did not find address: ' + e.location + ' for the following reason: ' + status);
+	        if (status == 'OVER_QUERY_LIMIT') {
+	        		retry = 1;  // this might cause an endless loop...
+	        		sleep(1);
+	        }
+ 			}				
+		});
+	}
+}
+/**
+ * Draw the events on the map.
+ */
+ 
+function drawEvents() {
+	
+	//console.log("Drawing the events on the Map...");
+     var bounds = new google.maps.LatLngBounds();
+	
+	  var count = (storedEvents && storedEvents.length) || 0;
+	  deleteMarkers();  // remove all the previous ones
+	  for (var i = 0; i < count; ++i) {
+		    var e = storedEvents[i];
+		    if (e.status == 'declined') {
+		      continue;
+		    }
+		
+		    e.title = e.title || '...';
+		    if (e.location) {
+					setMarker(e, bounds);
+		    }
+	
+	  }
+
+}
+
+function newOrder() {
+	window.open("http://h06dolon1.securedcloudassets.com/Gilamos/#/newOrder");
+
+}
+
+var map = null;
+
+function mapInit () {
+  var main = document.getElementById('main');
+
+	var html = '<a href="#" onclick="newOrder()" class="basic">New Order</a><br>';
+  	html += '<div id="map-canvas"></div>';
+  	
+ 	main.innerHTML = html;
+  
+  var mapOptions = {
+          center: { lat: 32, lng: 34.78}, // Tel Aviv
+          zoom: 8
+      };
+  
+  map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+  
+  gadgets.window.adjustHeight();
+  
+}
+
+
+</script>
+<div id=main>__MSG_Loading__</div>
+<script>
+
+/**
+ * Retrieve the initial set of events and and set things up to do the same
+ * periodically.
+ */
+function setupEventRetrieval() {
+	
+	console.log("loading...");
+	
+  // Ask the container for the next few events.
+  getEvents();
+
+  // Request that we be called back when the date changes
+  // and then re-fetch the next events.
+  google.calendar.subscribeToDataChange(dataRefresh);
+
+	// update the currently visible dates
+	google.calendar.subscribeToDates(displayedDatesCallback);
+	
+	mapInit();
+	drawEvents();
+
+}
+
+
+/**
+ * The container has replied with the preferences
+ * @param {Object} prefs The set of preferences.
+ */
+function getPrefsCallback(prefs) {
+  // Store interesting user preferences.
+  timeOffset = prefs.current_time_offset;
+
+  // Continue initialization.
+  setupEventRetrieval();
+}
+
+
+// Start the initialization process.
+google.calendar.getPreferences(getPrefsCallback);
+
+</script>
+  ]]></Content>
+</Module>

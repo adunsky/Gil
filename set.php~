@@ -1,0 +1,48 @@
+<?php  
+   /*
+   * Collect all Details from Angular HTTP Request.
+   */ 
+	require "mydb.php";
+	
+	//include_once "calendar.php";
+	
+   $postdata = file_get_contents("php://input");
+   //echo "postdata: " . $postdata;
+   //var_dump(json_decode($postdata));
+   $order = json_decode($postdata);
+
+   $number = $order->number;
+   $name = $order->name;
+   $customerID = $order->customerID;
+   $mobile = $order->mobile;
+   $location = $order->location;
+   $date1 = $order->date1;
+   $eventID = $order->eventID;
+   
+   //updateEvent();
+
+	date_default_timezone_set("Asia/Jerusalem");
+	$currTime = date("Y-m-d h:i:s");
+	//echo($currTime);   
+     	
+  	//check if order exists
+  	$sql = "SELECT * FROM orders WHERE number='$number'";
+	$result = mysql_query($sql) or die('Select Row Failed! ' . mysql_error()); 
+
+	if (mysql_num_rows($result) > 0) {
+	    // order  exists
+	    echo " order " . $number . " exists ";
+	    
+	   $sql = "UPDATE orders set name='$name', customerID='$customerID', location='$location', date1='$date1', mobile='$mobile', updateTime='$currTime', updated='0' WHERE number='$number'";
+		$result = mysql_query($sql) or die('Update payer status Failed! ' . mysql_error());
+	}
+	else {
+		// new order
+      $sql = "INSERT INTO orders VALUES ('$number', '$name', '$customerID', '$location', '$date1', '$mobile', null, '$currTime', 0 )";
+      if (!mysql_query($sql)) { 
+        		die('Insert Payer Failed !' . mysql_error()); 
+   	}
+   } 
+ 
+ 
+?>

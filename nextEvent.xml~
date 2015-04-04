@@ -1,0 +1,400 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Module>
+  <ModulePrefs
+     title="__MSG_Labs_Gadget_Next_Title__"
+     height="43"
+     description="__MSG_Labs_Gadget_Next_Description__"
+     author="Google"
+     author_email="calendar-gadget-questions@google.com">
+    <Require feature="dynamic-height"/>
+    <Require feature="google.calendar-0.5"/>
+    <Require feature="google.calendar-0.5.read"/>
+    <Locale messages="next/messages__en.xml"/>
+    <Locale messages="next/messages__ar.xml" lang="ar"/>
+    <Locale messages="next/messages__bg.xml" lang="bg"/>
+    <Locale messages="next/messages__ca.xml" lang="ca"/>
+    <Locale messages="next/messages__cs.xml" lang="cs"/>
+    <Locale messages="next/messages__da.xml" lang="da"/>
+    <Locale messages="next/messages__de.xml" lang="de"/>
+    <Locale messages="next/messages__el.xml" lang="el"/>
+    <Locale messages="next/messages__en.xml" lang="en"/>
+    <Locale messages="next/messages__en_GB.xml" lang="en-gb"/>
+    <Locale messages="next/messages__es.xml" lang="es"/>
+    <Locale messages="next/messages__fi.xml" lang="fi"/>
+    <Locale messages="next/messages__fr.xml" lang="fr"/>
+    <Locale messages="next/messages__hi.xml" lang="hi"/>
+    <Locale messages="next/messages__hr.xml" lang="hr"/>
+    <Locale messages="next/messages__hu.xml" lang="hu"/>
+    <Locale messages="next/messages__in.xml" lang="in"/>
+    <Locale messages="next/messages__it.xml" lang="it"/>
+    <Locale messages="next/messages__iw.xml" lang="iw"/>
+    <Locale messages="next/messages__ja.xml" lang="ja"/>
+    <Locale messages="next/messages__ko.xml" lang="ko"/>
+    <Locale messages="next/messages__lt.xml" lang="lt"/>
+    <Locale messages="next/messages__lv.xml" lang="lv"/>
+    <Locale messages="next/messages__nl.xml" lang="nl"/>
+    <Locale messages="next/messages__no.xml" lang="no"/>
+    <Locale messages="next/messages__pl.xml" lang="pl"/>
+    <Locale messages="next/messages__pt_BR.xml" lang="pt-br"/>
+    <Locale messages="next/messages__pt_PT.xml" lang="pt-pt"/>
+    <Locale messages="next/messages__ro.xml" lang="ro"/>
+    <Locale messages="next/messages__ru.xml" lang="ru"/>
+    <Locale messages="next/messages__sk.xml" lang="sk"/>
+    <Locale messages="next/messages__sl.xml" lang="sl"/>
+    <Locale messages="next/messages__sr.xml" lang="sr"/>
+    <Locale messages="next/messages__sv.xml" lang="sv"/>
+    <Locale messages="next/messages__th.xml" lang="th"/>
+    <Locale messages="next/messages__tl.xml" lang="tl"/>
+    <Locale messages="next/messages__tr.xml" lang="tr"/>
+    <Locale messages="next/messages__uk.xml" lang="uk"/>
+    <Locale messages="next/messages__vi.xml" lang="vi"/>
+    <Locale messages="next/messages__zh_CN.xml" lang="zh-cn"/>
+    <Locale messages="next/messages__zh_TW.xml" lang="zh-tw"/>
+  </ModulePrefs>
+  <Content type="html">
+  <![CDATA[
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" 
+  "http://www.w3.org/TR/html4/strict.dtd">
+<style>
+body {
+  background-color: #fff;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+body, td {
+  font-family:Arial;
+  font-size: 12.8px;
+}
+
+.timenumber {
+  font-size: 16pt;
+}
+
+#main {
+  text-align: center;
+  margin-bottom: 0;
+}
+
+#chip {
+  text-align: left;
+  margin: 0 5px;
+  padding: 2px 4px;
+  color: #fff;
+  cursor: pointer;
+}
+
+.chipborder {
+  margin: 0 6px;
+  height: 1px;
+  font-size: 0;
+  line-height: 0;
+}
+
+#chip:hover .title {
+  text-decoration: underline;
+}
+
+.title {
+  font-family: verdana, sans-serif;
+  font-size: 8pt;
+}
+
+.location {
+  font-family: verdana, sans-serif;
+  font-size: 11.05px;
+  margin-top: 0.1em;
+}
+</style>
+<script>
+
+/**
+ * This is the callback function when the container sends us the next events.
+ */
+function eventsCallback(events) {
+  // Verify there were events.
+  if (events && events.length > 0) {
+    storedEvents = events[0].events;
+  } else {
+    storedEvents = [];
+  }
+
+  drawScreen();
+}
+
+
+/**
+ * Ask the container for the next calendar event.
+ */
+function getNextEvents() {
+  // Get the next event for the current user.  Retrieve events for the next
+  // two weeks to find it.
+  var start = new Date();
+  var end = new Date();
+  end.setDate(end.getDate() + 14);
+
+  var optionalParams = {
+    'requestedFields': ['status']
+  };
+
+
+  google.calendar.read.getEvents(
+      eventsCallback, '@viewer',
+      google.calendar.utils.fromDate(start, timeOffset),
+      google.calendar.utils.fromDate(end, timeOffset),
+      optionalParams);
+}
+
+
+/**
+ * The cached preference object.
+ */
+var _prefs = null;
+
+/**
+ * Get the translated message for the ID.
+ * @param {string} id The id of the message.
+ * @return {string} The resulting string.
+ */
+function getMsg(id) {
+  if (!_prefs) {
+    _prefs = new gadgets.Prefs();
+  }
+  return _prefs.getMsg(id);
+}
+
+/**
+ * @param {number] n The number in question.
+ * @param {string} type The type [day, hour, minute].
+ * @return {string} The human readible description of the time period.
+ */
+function getText(n, type) {
+  if (n == 1) {
+    return getMsg(type + 'Singular');
+  }
+  var out = getMsg(type + 'Plural');
+  return out.replace("#", n);
+}
+
+/**
+ * Given a Calendar API style time, return the human readible amount
+ * of time until t.
+ * @param {Object} t The calendar API style time.
+ * @return {string} The amount of time until this occurs.
+ * TODO - fix this method of simpler i18n + pluralization.
+ */
+function getTimeToNow(t) {
+  var now = google.calendar.utils.getNow(timeOffset);
+  var event_start = google.calendar.utils.toDate(t);
+  var diff = (event_start.getTime() - now.getTime()) / (60 * 1000);
+  diff = Math.round(diff);
+
+  var minutes = diff % 60;
+  diff = Math.floor(diff / 60);
+  if (diff == 0) {
+    return getText(minutes, 'Minute');
+  }
+
+  var hours = diff % 24;
+  diff = Math.floor(diff / 24);
+
+  if (diff == 0) {
+    return getText(hours, 'Hour') + ' ' + getText(minutes, 'Minute');
+  }
+
+  var days = diff % 7;
+  diff = Math.floor(diff / 7);
+
+  if (days == 1) {
+    return getText(24 + hours, 'Hour');
+  }
+
+  if (diff == 0) {
+    return getText(days, 'Day') + ' ' + getText(hours, 'Hour');
+  }
+
+  var weeks = diff;
+  return getText(weeks * 7 + days, 'Day')
+}
+
+
+/**
+ * The ID of the event onscreen, if any.
+ * @type {string?}
+ */
+var curEventId = null;
+
+
+/**
+ * The offset from the current system time to the calendar displayed time.
+ */
+var timeOffset = 0;
+
+
+/**
+ * An array of events.
+ * @type {Array<Object>}
+ */
+var storedEvents = null;
+
+
+/**
+ * The number of times that we've refreshed the events.
+ * @type {number}
+ */
+var refreshEvents = 0;
+
+
+/**
+ * Draw the gadget onscreen now, and every minute in the future.
+ */
+function redrawPeriodically() {
+  drawScreen();
+
+  var local_now = new Date();
+  var s = local_now.getSeconds();
+  var ms_until_next_min = (60 - s) * 1000;
+
+  // Refresh events every 10 minutes
+  if (refreshEvents++ % 10 == 9) {
+    getNextEvents();
+  }
+
+  window.setTimeout(redrawPeriodically, ms_until_next_min);
+}
+
+
+/**
+ * Underline a particular element.
+ * @param {Element} el The element to underline.
+ */
+function underline_on(el) {
+  el.style.textDecoration = 'underline';
+}
+
+
+/**
+ * Make a particular element NOT underlined.
+ * @param {Element} el The element to de-underline.
+ */
+function underline_off(el) {
+  el.style.textDecoration = '';
+}
+
+
+/**
+ * Draw the next event on the screen.
+ */
+function drawScreen() {
+  var main = document.getElementById('main');
+  var now = (google.calendar.utils.getNow(timeOffset)).getTime();
+
+  var html = '';
+  var count = (storedEvents && storedEvents.length) || 0;
+  for (var i = 0; i < count; ++i) {
+    var e = storedEvents[i];
+    if (e.allDay ||
+        e.status == 'declined' ||
+        google.calendar.utils.toDate(e.startTime).getTime() < now) {
+      continue;
+    }
+
+    var chipColor;
+    var locationColor;
+    if (e.palette) {
+      chipColor = e.palette.dark;
+      locationColor = e.palette.lightest;
+    } else {
+      chipColor = "#999"; // Generic non-color
+      locationColor = "#ddd"; // Generic ligher non-color
+    }
+    // borderline is a 1px high line above and below the chip to simulate
+    // a notched corner
+    var borderLine = '<div class="chipborder" style="background-color:' +
+        chipColor + ';">&nbsp;</div>';
+
+    html += getTimeToNow(e.startTime) + '<br>';
+    html += borderLine;
+    html += '<div id="chip" style="background-color:' + chipColor +
+        ';" onclick="clickChip()" onmouseover="underline_on(this)"' +
+        ' onmouseout="underline_off(this)" title="' + getMsg('Open') + '">';
+    // Handle the empty title case
+
+    // TODO - Use elipsis until getMsg('No_Subject') is translated.
+    var title = e.title || '...';
+    html += '<div class="title">' + gadgets.util.escapeString(title) +
+        '</div>';
+    if (e.location) {
+      html += '<div class="location" style="color:' + locationColor + '">' +
+          gadgets.util.escapeString(e.location) + '</div>';
+    }
+    html += '</div>';
+    html += borderLine;
+
+    // Add a spacer
+    html += '<div style="height: 2px;line-height: 0"></div>';
+    curEventId = e.id;
+    break;
+  }
+
+  if (!html) {
+    // no events found
+    html = getMsg('None');
+  }
+
+  main.innerHTML = html;
+  gadgets.window.adjustHeight();
+}
+
+
+/**
+ * The user has clicked on the body. Show the current event onscreen.
+ */
+function clickChip() {
+  if (curEventId) {
+    google.calendar.showEvent(curEventId);
+  }
+}
+
+
+</script>
+<div id=main>__MSG_Loading__</div>
+<script>
+
+/**
+ * Retrieve the initial set of events and and set things up to do the same
+ * periodically.
+ */
+function setupEventRetrieval() {
+  // Ask the container for the next few events.
+  getNextEvents();
+
+  // Request that we be called back when the date changes
+  // and then re-fetch the next events.
+  google.calendar.subscribeToDataChange(getNextEvents);
+
+  // Kick off the drawing process.
+  redrawPeriodically();
+}
+
+
+/**
+ * The container has replied with the preferences
+ * @param {Object} prefs The set of preferences.
+ */
+function getPrefsCallback(prefs) {
+  // Store interesting user preferences.
+  timeOffset = prefs.current_time_offset;
+
+  // Continue initialization.
+  setupEventRetrieval();
+}
+
+
+// Start the initialization process.
+google.calendar.getPreferences(getPrefsCallback);
+
+</script>
+  ]]></Content>
+</Module>

@@ -1,0 +1,14 @@
+<messagebundle>
+<msg name="Labs_Gadget_Next_Title">Next meeting</msg>
+<msg name="Labs_Gadget_Next_Description">See what's coming up next in your calendar.</msg>
+<msg name="DayPlural"><span class="timenumber"> # </span> days</msg>
+<msg name="DaySingular"><span class="timenumber"> 1 </span> day</msg>
+<msg name="HourPlural"><span class="timenumber"> # </span> hours</msg>
+<msg name="HourSingular"><span class="timenumber"> 1 </span> hour</msg>
+<msg name="MinutePlural"><span class="timenumber"> # </span> minutes</msg>
+<msg name="MinuteSingular"><span class="timenumber"> 1 </span> minute</msg>
+<msg name="Open">View event details</msg>
+<msg name="None">No events</msg>
+<msg name="Loading">Loading...</msg>
+<msg name="No_Subject">(No title)</msg>
+</messagebundle>

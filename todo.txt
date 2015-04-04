@@ -1,0 +1,5 @@
+
+optimize calendar and spreadsheet auth
+add user access to forms and calendars
+Delete event if updated as null
+color codes for map markers
