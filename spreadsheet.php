@@ -196,6 +196,8 @@ function getCalcFields($order) {
 				$order[$i]["value"] = $value;
 		}
 		$i++;
+		if (!$order[$i])
+			break;	// reached the end of the array
 	}
 	if ($profile) {	
 		$currTime = date("h:i:s");

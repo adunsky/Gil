@@ -72,8 +72,8 @@ function createMainTable($worksheetFeed, $fieldTable, $mainTable)	{
 			
 			$ID = $column["index"];
 			$type = $column["type"];
-			if ($type == 'TEXT' || $type == 'LIST')		// translate TEXT in the worksheet to VARCHAR(32)
-				$type = 'VARCHAR(32)';
+			if ($type == 'TEXT' || $type == 'LIST')		// translate TEXT in the worksheet to VARCHAR(64)
+				$type = 'VARCHAR(64)';
 			
 			$mainSql .= "`$ID` $type";
 			$col++;
@@ -96,7 +96,7 @@ function createFieldTypeTable($worksheetFeed, $fieldTable, $listValueTable) {
 		// create fieldType table
 		$sql = "DROP TABLE IF EXISTS $fieldTable;";
 		$result = mysql_query($sql) or die('Drop table Failed! ' . mysql_error());
-		$sql = "CREATE TABLE $fieldTable ( `name` VARCHAR(32), `index` INT(32), `type` VARCHAR(32), `input` VARCHAR(32), `default` VARCHAR(32));";
+		$sql = "CREATE TABLE $fieldTable ( `name` VARCHAR(64), `index` INT(32), `type` VARCHAR(32), `input` VARCHAR(32), `default` VARCHAR(32));";
 				// echo $sql;
 		$result = mysql_query($sql) or die('Create Field Type table Failed! ' . mysql_error());
 		echo "Table ".$fieldTable." created<br>"; 
@@ -104,7 +104,7 @@ function createFieldTypeTable($worksheetFeed, $fieldTable, $listValueTable) {
 		// create listValue table
 		$sql = "DROP TABLE IF EXISTS $listValueTable;";
 		$result = mysql_query($sql) or die('Drop table Failed! ' . mysql_error());
-		$sql = "CREATE TABLE $listValueTable (`index` INT(32), `value` VARCHAR(32));";
+		$sql = "CREATE TABLE $listValueTable (`index` INT(32), `value` VARCHAR(64));";
 				// echo $sql;
 		$result = mysql_query($sql) or die('Create listValue table Failed! ' . mysql_error());
 		echo "Table ".$listValueTable." created<br>"; 
@@ -151,7 +151,7 @@ function createFormTables($worksheetFeed, $formsTable, $formFieldsTable) {
 		$sql = "DROP TABLE IF EXISTS $formsTable;";
 		$result = mysql_query($sql) or die('Drop table Failed! ' . mysql_error());
 		
-		$sql = "CREATE TABLE $formsTable ( title VARCHAR(32), number INT(32));";
+		$sql = "CREATE TABLE $formsTable ( title VARCHAR(64), number INT(32));";
 				// echo $sql;
 		$result = mysql_query($sql) or die('Create Forms table Failed! ' . mysql_error());
 	
@@ -235,7 +235,7 @@ function createCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 		$sql = "DROP TABLE IF EXISTS $calendarsTable;";
 		$result = mysql_query($sql) or die('Drop table Failed! ' . mysql_error());
 		// Create Calendars table		
-		$sql = "CREATE TABLE $calendarsTable ( number INT(32), name VARCHAR(32), fieldIndex INT(32), filter VARCHAR(32), formNumber INT(32), titleField INT(32) , locationField INT(32), calID VARCHAR(128));";
+		$sql = "CREATE TABLE $calendarsTable ( number INT(32), name VARCHAR(64), fieldIndex INT(32), filter VARCHAR(64), formNumber INT(32), titleField INT(32) , locationField INT(32), calID VARCHAR(128));";
 				// echo $sql;
 		$result = mysql_query($sql) or die('Create Calendars table Failed! ' . mysql_error());
 	
@@ -329,7 +329,7 @@ function createUsersTable($worksheetFeed, $usersTable, $calendarsTable) {
 
 		$sql = "DROP TABLE IF EXISTS $usersTable;";
 		$result = mysql_query($sql) or die('Drop table Failed! ' . mysql_error());
-		$sql = "CREATE TABLE $usersTable ( userName VARCHAR(32), email VARCHAR(32), calendarNum INT(32));";
+		$sql = "CREATE TABLE $usersTable ( userName VARCHAR(64), email VARCHAR(64), calendarNum INT(32));";
 				// echo $sql;
 		$result = mysql_query($sql) or die('Create Users table Failed! ' . mysql_error());
 		
