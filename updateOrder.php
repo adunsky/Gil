@@ -93,12 +93,8 @@
 		   	//else echo "Invalid date: ".$dates[$key]."<br>\n";
 			}
 			else {  // event record exist -  update it with the new date and set updated to 0
-				$event = mysql_fetch_array($ev);
-				$currDate = $event["eventDate"];
-				if ($currDate != $dates[$key]) { // update only id date has changed
 		   		$sql = "UPDATE $eventsTable set eventDate='$dates[$key]', updated='0' WHERE calendarID='$calendarID' AND fieldIndex='$key' AND orderID='$orderID'";
 		   		if (!mysql_query($sql)) die('Update event Failed !' . mysql_error());
-		   	}
 			}
 		}
 	}

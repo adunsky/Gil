@@ -131,7 +131,7 @@ function getCalcFields($order) {
 		if ($isInput) { // it is an input field
 				if ($type == "DATE" && $value!=" ") {
 						// remove the time from the datetime field
-					if ($value != "" && $date = strtotime($value)) {
+					if ($date = strtotime($value)) {
 						//echo "before date: ".$value."\n";	
 						$value = date('d-m-Y', $date);
 						//echo "After date: ".$value."\n";						
