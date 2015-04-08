@@ -1,4 +1,5 @@
-
+fix events insert
+fix OVER_QUERY_LIMIT
 optimize calendar and spreadsheet auth
 add user access to forms and calendars
 Delete event if updated as null

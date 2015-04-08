@@ -23,6 +23,7 @@
 	$formsTable = '_forms';
 	$formFieldsTable = '_formFields';
 	$fieldTable = '_fields';
+	$listValueTable = '_listValues';
 	$calendarsTable = '_calendars';
 	$eventsTable = '_events';
 	$usersTable = '_users';		

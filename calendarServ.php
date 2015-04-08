@@ -71,7 +71,7 @@ while (true) {
 
 			$sql = "SELECT * FROM $eventsTable WHERE updated='0';";
 			$result = mysql_query($sql) or die('Select event Failed! ' . mysql_error()); 
-			if ((mysql_num_rows($result) > 0) && ($event = mysql_fetch_array($result))) {
+			if ((mysql_num_rows($result) > 0) && ($event = mysql_fetch_array($result, MYSQL_ASSOC))) {
 				$orderID = $event["orderID"];
 	    		$eventID = $event["eventID"];
 	    		$calendarNum = $event["calendarID"];
@@ -89,7 +89,7 @@ while (true) {
 	         
 				$sql = "SELECT * FROM $calendarsTable WHERE number = '$calendarNum';";
 				$result = mysql_query($sql) or die('Select calendar Failed! ' . mysql_error()); 
-				if ((mysql_num_rows($result) > 0) && ($calendar = mysql_fetch_array($result))) {
+				if ((mysql_num_rows($result) > 0) && ($calendar = mysql_fetch_array($result, MYSQL_ASSOC))) {
 					// Found the calendar details and the google calendar ID
 					$calendarID = $calendar["calID"];
 					$titleField = $calendar["titleField"];
@@ -134,10 +134,10 @@ while (true) {
 				$new = true;
 			}
 
-			if (!strtotime($date)) {
+			if (!strtotime($date) || ($date == '0000-00-00')) {
 				echo "Removing event with invalid date: ".$date."<br>\n";
 				// The new event date is empty or not valid - remove the event from the calendar
-				if ($calEvent)
+				if (!$new && $calEvent)
 					$service->events->delete($calendarID, $calEvent->getId());
 				// Remove the event from the events table
 				$sql = "DELETE FROM $eventsTable WHERE eventID = '$eventID';";

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Module>
   <ModulePrefs
-     title="__MSG_Labs_Gadget_Next_Title__"
+     title=""
      height="43"
-     description="__MSG_Labs_Gadget_Next_Description__"
-     author="Google"
-     author_email="calendar-gadget-questions@google.com">
+     description="Gilamos project"
+     author="Amos Gery"
+     author_email="amosgery@gmail.com">
     <Require feature="dynamic-height"/>
     <Require feature="google.calendar-0.5"/>
     <Require feature="google.calendar-0.5.read"/>
@@ -225,24 +225,20 @@ function setMarker(e, bounds) {
 	  		return;
 	  	}
 	
-	  var retry = 1;	
-	  var geocoder = new google.maps.Geocoder();
-	  while (retry--) { // retry the geolocation service in case we ran over the query per second limit
+	  	var geocoder = new google.maps.Geocoder();
+	
 	  	geocoder.geocode ( { 'address': e.location}, function(results, status) {
 	  		if (status == google.maps.GeocoderStatus.OK) {
 				Events[e.id] = results[0].geometry.location; //  stored for future use 
 				drawMarker(e, bounds);
-
-				retry = 0;		        
+	    
 	     	} else {
 	        console.log('Did not find address: ' + e.location + ' for the following reason: ' + status);
 	        if (status == 'OVER_QUERY_LIMIT') {
-	        		retry = 1;  // this might cause an endless loop...
-	        		sleep(1);
+	        		setTimeout(setMarker(e, bounds), 1000); // recursive call to retry after 1 sec
 	        }
- 			}				
+	 			}				
 		});
-	}
 }
 /**
  * Draw the events on the map.

@@ -45,7 +45,7 @@ function initGoogleAPI() {
 	}
 	else {
 	
-		$spreadsheetName = 'Take2-27-3-15.xlsx';
+		$spreadsheetName = 'Take3';
 		$clientid = '457875993449-48gmkqssiulu00va3vtrlvg297pv1j8u.apps.googleusercontent.com';
 		$clientmail = '457875993449-48gmkqssiulu00va3vtrlvg297pv1j8u@developer.gserviceaccount.com';
 		$clientkeypath = 'API Project-0ffd21d566b5.p12';
@@ -111,7 +111,7 @@ function getCalcFields($order) {
 	$spreadsheet = initGoogleAPI();
 	
 	$worksheetFeed = $spreadsheet->getWorksheets();
-	$worksheet = $worksheetFeed->getByTitle('Take2');
+	$worksheet = $worksheetFeed->getByTitle('Main');
 	$cellFeed = $worksheet->getCellFeed();
 	
 	// write order to spreadsheet
@@ -130,10 +130,15 @@ function getCalcFields($order) {
 
 		if ($isInput) { // it is an input field
 				if ($type == "DATE" && $value!=" ") {
-					// remove the time from the datetime field
-				if ($date = strtotime($value))
-					$value = date('d-m-Y', $date);						
-					// echo "date: ".$value."\n";			
+						// remove the time from the datetime field
+					if ($date = strtotime($value)) {
+						//echo "before date: ".$value."\n";	
+						$value = date('d-m-Y', $date);
+						//echo "After date: ".$value."\n";						
+					}
+					else 
+						$value = "";						
+						// echo "date: ".$value."\n";			
 				}		
  
  				if ($value == "")
@@ -183,9 +188,13 @@ function getCalcFields($order) {
 	$values = $listEntry->getValues();
 	//var_dump($values);
 	$i = -1;
-	foreach ($values as $value) {
-		if ($i > -1) // skip the first column
-			$order[$i]["value"] = $value;
+	foreach ($values as $value) { // update the output values
+		if ($i > -1) {// skip the first column
+			if ($value == "_none")
+				$order[$i]["value"] = "";
+			else	
+				$order[$i]["value"] = $value;
+		}
 		$i++;
 	}
 	if ($profile) {	

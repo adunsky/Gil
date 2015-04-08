@@ -18,8 +18,10 @@
 	if ($numFields > 0)	{
 		//  found fields
 
-		while ($column = mysql_fetch_array($result)) {
-			array_push($row, $column);	
+		while ($fields = mysql_fetch_array($result, MYSQL_ASSOC)) {
+
+			array_push($row, $fields);	
+
 		}
 	}
 	else {
@@ -31,7 +33,7 @@
 	$result = mysql_query($sql) or die('get eventID Failed! ' . mysql_error()); 
 	if (mysql_num_rows($result) > 0)	{
 		//  found event
-		$event = mysql_fetch_array($result);
+		$event = mysql_fetch_array($result, MYSQL_ASSOC);
 		$orderID = $event["orderID"];	
 		$calendarID = $event["calendarID"];
 		//echo $orderID;
@@ -40,7 +42,7 @@
 		$result = mysql_query($sql) or die('get form from calendar Failed! ' . mysql_error()); 
 		if (mysql_num_rows($result) > 0)	{
 			//  found calendar
-			$calendar=mysql_fetch_array($result);
+			$calendar=mysql_fetch_array($result, MYSQL_ASSOC);
 			$formID = $calendar["formNumber"];
 		}
 	
@@ -56,10 +58,14 @@
 		}
 		
 	}
-	else {// event not found - new order
-
+	else {// event not found - set the default value for each field
 		for($i=0; $i < $numFields ; $i++) {
-			$row[$i]["value"] = "";  // return space in all values		
+			if ($row[$i]["type"] == "DATE" && $row[$i]["default"] != "") {
+				if ($date = strtotime($row[$i]["default"]))
+					$row[$i]["value"] = date('d-m-Y', $date);	
+			}
+			else
+				$row[$i]["value"] = $row[$i]["default"];  // return default in all values		
 		}
 	
 	}

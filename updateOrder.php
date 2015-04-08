@@ -42,14 +42,13 @@
 				$value = date('Y-m-d', $date);
 				// echo "date: ".$value."\n";
 			}
+			else {
+				$value = "0000-00-00";				
+			}
 			$dates[$name] = $value;
 	
 		}
-		
-		if (!$value || $value == "_none")
-			$value = '';
-		// echo $field["name"]. ": ". $value." , ";
-			
+ 		
 		if ($orderID) {	
 				if ($values != "") // after the first name=value pair
 					$values .= ", ";
@@ -87,10 +86,11 @@
 			$ev = mysql_query($sql) or die('get event from events table Failed! ' . mysql_error());
 			if (mysql_num_rows($ev) == 0) {
 				// event record doesn't exist in table - insert it	
-				if (strtotime($dates[$key])) { // ignore invalid dates			
+				if (strtotime($dates[$key]) && ($dates[$key] != "0000-00-00")) { // ignore invalid dates			
 		   		$sql = "INSERT INTO $eventsTable VALUES ('$calendarID', '$key', '$orderID', '$dates[$key]', '', 0 )";
 		   		if (!mysql_query($sql)) die('Insert event Failed !' . mysql_error());
 		   	}
+		   	//else echo "Invalid date: ".$dates[$key]."<br>\n";
 			}
 			else {  // event record exist -  update it with the new date and set updated to 0
 				$event = mysql_fetch_array($ev);

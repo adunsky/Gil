@@ -238,7 +238,7 @@ function setMarker(e, bounds) {
 	        console.log('Did not find address: ' + e.location + ' for the following reason: ' + status);
 	        if (status == 'OVER_QUERY_LIMIT') {
 	        		retry = 1;  // this might cause an endless loop...
-	        		sleep(1);
+	        		setTimeout(setMarker(e, bounds), 1000);
 	        }
  			}				
 		});

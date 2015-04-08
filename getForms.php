@@ -11,7 +11,7 @@
 	if (mysql_num_rows($result) > 0)	{
 		//  found forms
 		$forms = [];
-		while ($form = mysql_fetch_array($result)) {
+		while ($form = mysql_fetch_array($result, MYSQL_ASSOC)) {
 			$formID = $form["number"];
 			
 			$fieldsql = "SELECT * FROM $formFieldsTable WHERE formNumber = '$formID';";
@@ -19,15 +19,26 @@
 			if (mysql_num_rows($fieldresult) > 0)	{
 				//  found fields
 				$fields = [];
-				while ($field = mysql_fetch_array($fieldresult)) {
+				while ($field = mysql_fetch_array($fieldresult, MYSQL_ASSOC)) {
 					$fieldID = $field["fieldIndex"];
 					
 					$fieldsql = "SELECT * FROM $fieldTable WHERE `index` = '$fieldID';";	
 					$fieldetails = mysql_query($fieldsql) or die('get field details Failed! ' . mysql_error()); 
 					if (mysql_num_rows($fieldetails) > 0)	{
-						$fieldata = mysql_fetch_array($fieldetails);
+						$fieldata = mysql_fetch_array($fieldetails, MYSQL_ASSOC);
 						$field["name"] = $fieldata["name"];
 						$field["type"] = $fieldata["type"];
+						$field["default"] = $fieldata["default"];
+						$type = $field["type"];
+						if ($type == "LIST") {
+							// get the list values
+							$field["listValues"] = [];
+							$sql = "SELECT * FROM $listValueTable WHERE `index` = '$fieldID';";
+							$res = mysql_query($sql) or die('get list values Failed! ' . mysql_error()); 
+							while ($listValue = mysql_fetch_array($res, MYSQL_ASSOC)) {
+								array_push($field["listValues"], $listValue);	
+							}
+						}						
 					}
 					array_push($fields, $field);
 				}

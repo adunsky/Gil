@@ -34,8 +34,8 @@ use Google\Spreadsheet\ServiceRequestFactory;
 		$worksheetFeed = $spreadsheet->getWorksheets();
 
 		// Create FieldType table
-		createFieldTypeTable($worksheetFeed, $fieldTable);
-		
+		createFieldTypeTable($worksheetFeed, $fieldTable, $listValueTable);
+	
 		// Create form and field form tables	
 		createFormTables($worksheetFeed, $formsTable, $formFieldsTable);	
 
@@ -45,7 +45,7 @@ use Google\Spreadsheet\ServiceRequestFactory;
 		// remove the google calendars
 		removeCalendars($worksheetFeed, $calendarsTable);
 		
-				
+
 		// Create calendar and tables
 		createCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fieldTable);
 		
@@ -54,7 +54,7 @@ use Google\Spreadsheet\ServiceRequestFactory;
 		
 		// Create Users table		
 		createUsersTable($worksheetFeed, $usersTable, $calendarsTable);
-		
+
 
 function createMainTable($worksheetFeed, $fieldTable, $mainTable)	{
 
@@ -72,6 +72,9 @@ function createMainTable($worksheetFeed, $fieldTable, $mainTable)	{
 			
 			$ID = $column["index"];
 			$type = $column["type"];
+			if ($type == 'TEXT' || $type == 'LIST')		// translate TEXT in the worksheet to VARCHAR(32)
+				$type = 'VARCHAR(32)';
+			
 			$mainSql .= "`$ID` $type";
 			$col++;
 		}
@@ -79,7 +82,7 @@ function createMainTable($worksheetFeed, $fieldTable, $mainTable)	{
 		$mainSql .= ");";
 		
 		// echo $sql;
-		$result = mysql_query($mainSql) or die('Create table Failed! ' . mysql_error());
+		$result = mysql_query($mainSql) or die('Create Main table Failed! ' . mysql_error());
 		echo "Table ".$mainTable." created with ".($col)." columns<br>"; 		
 	}
 	else {
@@ -89,34 +92,56 @@ function createMainTable($worksheetFeed, $fieldTable, $mainTable)	{
 
 }
 
-function createFieldTypeTable($worksheetFeed, $fieldTable) {
-		// create fieldType tabls
+function createFieldTypeTable($worksheetFeed, $fieldTable, $listValueTable) {
+		// create fieldType table
 		$sql = "DROP TABLE IF EXISTS $fieldTable;";
 		$result = mysql_query($sql) or die('Drop table Failed! ' . mysql_error());
-				
-		$sql = "CREATE TABLE $fieldTable ( `name` VARCHAR(32), `index` INT(32), `type` VARCHAR(32), `input` VARCHAR(32));";
+		$sql = "CREATE TABLE $fieldTable ( `name` VARCHAR(32), `index` INT(32), `type` VARCHAR(32), `input` VARCHAR(32), `default` VARCHAR(32));";
 				// echo $sql;
-		$result = mysql_query($sql) or die('Create FieldType table Failed! ' . mysql_error());
-	
+		$result = mysql_query($sql) or die('Create Field Type table Failed! ' . mysql_error());
 		echo "Table ".$fieldTable." created<br>"; 
 		
+		// create listValue table
+		$sql = "DROP TABLE IF EXISTS $listValueTable;";
+		$result = mysql_query($sql) or die('Drop table Failed! ' . mysql_error());
+		$sql = "CREATE TABLE $listValueTable (`index` INT(32), `value` VARCHAR(32));";
+				// echo $sql;
+		$result = mysql_query($sql) or die('Create listValue table Failed! ' . mysql_error());
+		echo "Table ".$listValueTable." created<br>"; 
 		
 		$worksheet = $worksheetFeed->getByTitle('CellType');
 		$cellFeed = $worksheet->getCellFeed();
 
 		$row = 2;
-		$cellEntry = $cellFeed->getCell($row, 1);		
+		$cellEntry = $cellFeed->getCell($row, 1);	
 		while ($cellEntry && ($name = $cellEntry->getContent()) != "") {
 			$cellEntry = $cellFeed->getCell($row, 2);	
 			$type = $cellEntry->getContent();
-			if ($type == 'TEXT')		// translate TEXT in the worksheet to VARCHAR(32)
-				$type = 'VARCHAR(32)'; 
+ 
 			$cellEntry = $cellFeed->getCell($row, 3);	
 			$input = $cellEntry->getContent();
 			
-			$sql = "INSERT INTO $fieldTable VALUES ('$name', '$row', '$type', '$input');";
+			$cellEntry = $cellFeed->getCell($row, 4);
+			if ($cellEntry)
+				$default = $cellEntry->getContent();
+			else 
+				$default = "";
+							
+			$sql = "INSERT INTO $fieldTable VALUES ('$name', '$row', '$type', '$input', '$default');";
 					// echo $sql;
 			$result = mysql_query($sql) or die('Insert to fields table Failed! ' . mysql_error());
+
+			if ($type == "LIST") {
+				// Add list values to list table
+				$col = 5;	
+				$cellEntry = $cellFeed->getCell($row, $col);	
+				while ($cellEntry && ($value = $cellEntry->getContent()) != "") {
+					$sql = "INSERT INTO $listValueTable VALUES ('$row', '$value');";
+							// echo $sql;
+					$result = mysql_query($sql) or die('Insert to list values table Failed! ' . mysql_error());
+					$cellEntry = $cellFeed->getCell($row, ++$col);	
+				}			
+			}
 			$cellEntry = $cellFeed->getCell(++$row, 1);
 		}
 }

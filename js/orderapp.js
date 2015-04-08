@@ -54,8 +54,9 @@ orderApp.config(function($routeProvider){
 
 
 
-orderApp.controller('orderCtrl', function($scope, $http, myService){
-			//$scope.order = myService.getOrder();
+orderApp.controller('orderCtrl', function($scope, $http, $timeout, myService){
+			$scope.order = myService.getOrder();
+			$scope.inProgress = false;
 			
       	$scope.getOrder = function () {
 			   var parameters = location.search.substring(1).split("&");
@@ -85,10 +86,8 @@ orderApp.controller('orderCtrl', function($scope, $http, myService){
 	        		 catch (e) {
 	            		console.log("did not receive a valid Json: " + e);
 	            		myService.setOrder(null);
-	        		 }  
-
+	        		 } 
 				}); 
-				
 			};
 			
 			
@@ -103,13 +102,14 @@ orderApp.controller('orderCtrl', function($scope, $http, myService){
 		   	        		if ($scope.forms) {
 		             			myService.setForms($scope.forms);
 		             			$scope.form = $scope.forms[form];
-		             			$scope.setFormValues();	
+		             			$scope.setFormValues();
+
 								}
 			      	 }
 		        		 catch (e) {
 		            		console.log("did not receive a valid Json: " + e);
 		            		myService.setForms(null);
-		        		 }  
+		        		 } 
 	
 					}); 
 				}
@@ -120,7 +120,14 @@ orderApp.controller('orderCtrl', function($scope, $http, myService){
 
 			};
 	
-	
+			setProgress = function() {
+				$scope.progress += 5;
+				if ($scope.inProgress)
+					$timeout(setProgress, 200);
+			
+			}
+			
+				
 			$scope.setFormValues = function()	{
 					if ($scope.order) 
 						for(var i=0; $scope.form && $scope.form.fields[i]; i++) {
@@ -137,9 +144,11 @@ orderApp.controller('orderCtrl', function($scope, $http, myService){
 			    field.dateTimeCalendarisOpen = true;
 			};
       
-         
 	      $scope.updateOrder = function () {
 	      		document.body.style.cursor = 'wait';
+	      		$scope.progress = 0;
+					$scope.inProgress = true;
+	      		setProgress(); 
 	      		$scope.updateValues(); 
 	      		// get the order ID and send to PHP
 					$updatedOrder = {};
@@ -159,12 +168,14 @@ orderApp.controller('orderCtrl', function($scope, $http, myService){
 						 if (!isNaN(data)) 	                
 	                	$scope.orderID = data; // PHP returned a valid ID number
 	                console.log($scope.message);
+	                $scope.inProgress = false;
 	                alert("Order ID: "+$scope.orderID+" updated successfully");
   						 window.close();
 	          
 	            });
 	            request.error(function (data, status) {
 	                $scope.message = "From PHP file : "+data;
+	                $scope.inProgress = false;
 	                alert($scope.message);
 	            });
 	      }   
@@ -175,6 +186,39 @@ orderApp.controller('orderCtrl', function($scope, $http, myService){
 	      		$scope.order[fieldIndex].value = $scope.form.fields[i].value;
 	      	}         
 			}
+  
+	      $scope.calcOrder = function () {
+	      		document.body.style.cursor = 'wait';
+	      		$scope.progress = 0;
+					$scope.inProgress = true;
+	      		setProgress(); 	      		
+	      		$scope.updateValues(); 
+	            var content = angular.toJson($scope.order);
+	            var request = $http({
+	                    method: "post",
+	                    url: "calcOrder.php",
+	                    data: content,
+	                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+	            });
+	                /* Check whether the HTTP Request is Successfull or not. */
+	            request.success(function (data) {
+	               $scope.message = "From PHP file : "+data;
+	               console.log($scope.message);
+						$scope.order = angular.fromJson(data);
+		            $scope.setFormValues();
+		            myService.setOrder($scope.order);						
+						document.body.style.cursor = 'default';
+		            $scope.inProgress = false;	
+							          
+	            });
+	            request.error(function (data, status) {
+	                $scope.message = "From PHP file : "+data;
+	                $scope.inProgress = false;
+	                alert($scope.message);
+	            });
+
+			};
+			
          
 	        
 });
