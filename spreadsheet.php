@@ -129,7 +129,7 @@ function getCalcFields($order) {
 		$type = $field["type"];
 
 		if ($isInput) { // it is an input field
-				if ($type == "DATE" && $value!=" ") {
+				if ($type == "DATE" && $value!="") {
 						// remove the time from the datetime field
 					if ($date = strtotime($value)) {
 						//echo "before date: ".$value."\n";	
@@ -192,11 +192,16 @@ function getCalcFields($order) {
 		if ($i > -1) {// skip the first column
 			if ($value == "_none")
 				$order[$i]["value"] = "";
-			else	
+			else {	
+				if ($order[$i]["type"] == "DATE")
+					// format the returned date
+					$value = str_replace('/', '-', $value);
+					
 				$order[$i]["value"] = $value;
+			}
 		}
-		$i++;
-		if (!$order[$i])
+
+		if (!array_key_exists(++$i, $order))
 			break;	// reached the end of the array
 	}
 	if ($profile) {	
