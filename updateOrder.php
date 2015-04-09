@@ -36,7 +36,7 @@
 		$value = $field["value"];
 		$type = $field["type"];
 		if ($type == "DATE") {
-			// need add to the dates array to add to the events table
+			// need to add to the dates array to add to the events table
 			if ($date = strtotime($value)) {
 				// format it to DB date format
 				$date = date('Y-m-d', $date);
@@ -84,7 +84,7 @@
 			$ev = mysql_query($sql) or die('get event from events table Failed! ' . mysql_error());
 			if (mysql_num_rows($ev) == 0) {
 				// event record doesn't exist in table - insert it	
-				if (strtotime($dates[$key])) { // ignore invalid dates			
+				if (strtotime($dates[$key]) && $dates[$key] != "0000-00-00") { // ignore invalid dates			
 		   		$sql = "INSERT INTO $eventsTable VALUES ('$calendarID', '$key', '$orderID', '$dates[$key]', '', 0 )";
 		   		if (!mysql_query($sql)) die('Insert event Failed !' . mysql_error());
 		   	}

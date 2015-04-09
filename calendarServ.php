@@ -140,7 +140,7 @@ while (true) {
 				if (!$new && $calEvent)
 					$service->events->delete($calendarID, $calEvent->getId());
 				// Remove the event from the events table
-				$sql = "DELETE FROM $eventsTable WHERE eventID = '$eventID';";
+				$sql = "DELETE FROM $eventsTable WHERE calendarID='$calendarNum' AND fieldIndex='$fieldIndex' AND orderID='$orderID' AND eventID = '$eventID';";
 				$result = mysql_query($sql) or die('Delete event Failed! ' . mysql_error());
 				continue; // Don't continue to process this event
 			}		
