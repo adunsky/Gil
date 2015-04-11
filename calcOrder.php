@@ -24,8 +24,7 @@
 			if ($date != "00-00-0000" && $date = strtotime($date)) {
 				$order[$i]["value"] = date('Y-m-d', $date);
 			}
-			else
-				$order[$i]["value"] = "";
+
 		}
 		$i++;
 	}

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Module>
   <ModulePrefs
-     title=""
+     title="מפת אירועים"
      height="43"
      description="Gilamos project"
      author="Amos Gery"
@@ -235,7 +235,7 @@ function setMarker(e, bounds) {
 	     	} else {
 	        console.log('Did not find address: ' + e.location + ' for the following reason: ' + status);
 	        if (status == 'OVER_QUERY_LIMIT') {
-	        		setTimeout(setMarker(e, bounds), 1000); // recursive call to retry after 1 sec
+	        		setTimeout(setMarker(e, bounds), 1500); // recursive call to retry after 1 sec
 	        }
 	 			}				
 		});

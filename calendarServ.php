@@ -85,7 +85,7 @@ while (true) {
    			//echo "date: ".$date1;
    			$customerID = $order["customerID"];
    			*/
-	         echo "found event for order ". $orderID. "<br>\n";
+	         echo "found event for order ". $orderID." Date: ".$date."<br>\n";
 	         
 				$sql = "SELECT * FROM $calendarsTable WHERE number = '$calendarNum';";
 				$result = mysql_query($sql) or die('Select calendar Failed! ' . mysql_error()); 

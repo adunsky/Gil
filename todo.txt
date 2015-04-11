@@ -1,4 +1,4 @@
-fix events date
+separate input from output fields
 fix OVER_QUERY_LIMIT
 optimize calendar and spreadsheet auth
 add user access to forms and calendars
