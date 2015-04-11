@@ -241,7 +241,7 @@ function setMarker(e, bounds) {
 		  		if (status == google.maps.GeocoderStatus.OK) {
 					Events[e.id] = results[0].geometry.location; //  stored for future use 
 					drawMarker(e, bounds);
-		    
+					retry = 0;		    
 		     	} else {
 		        console.log('Did not find address: ' + e.location + ' for the following reason: ' + status);
 		        if (status == 'OVER_QUERY_LIMIT') {
