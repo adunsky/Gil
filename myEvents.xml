@@ -174,6 +174,15 @@ function displayedDatesCallback(dates) {
   	getEvents();
 }
 
+function sleep(milliseconds) {
+  var start = new Date().getTime();
+  for (var i = 0; i < 1e7; i++) {
+    if ((new Date().getTime() - start) > milliseconds){
+      break;
+    }
+  }
+}
+
 
 // Deletes all markers in the array by removing references to them.
 function deleteMarkers() {
@@ -224,21 +233,24 @@ function setMarker(e, bounds) {
 	  		drawMarker(e, bounds);
 	  		return;
 	  	}
-	
-	  	var geocoder = new google.maps.Geocoder();
-	
-	  	geocoder.geocode ( { 'address': e.location}, function(results, status) {
-	  		if (status == google.maps.GeocoderStatus.OK) {
-				Events[e.id] = results[0].geometry.location; //  stored for future use 
-				drawMarker(e, bounds);
-	    
-	     	} else {
-	        console.log('Did not find address: ' + e.location + ' for the following reason: ' + status);
-	        if (status == 'OVER_QUERY_LIMIT') {
-	        		setTimeout(setMarker(e, bounds), 1500); // recursive call to retry after 1 sec
-	        }
-	 			}				
-		});
+	  	var retry=1;
+		while (retry--) {
+		  	var geocoder = new google.maps.Geocoder();
+		
+		  	geocoder.geocode ( { 'address': e.location}, function(results, status) {
+		  		if (status == google.maps.GeocoderStatus.OK) {
+					Events[e.id] = results[0].geometry.location; //  stored for future use 
+					drawMarker(e, bounds);
+		    
+		     	} else {
+		        console.log('Did not find address: ' + e.location + ' for the following reason: ' + status);
+		        if (status == 'OVER_QUERY_LIMIT') {
+		        		sleep(1000); // wait to retry after 1 sec
+		        		retry = 1;
+		        }
+		 		}				
+			});
+		}
 }
 /**
  * Draw the events on the map.
