@@ -28,7 +28,7 @@
 			<div ng-repeat="field in form.fields">
 		      <div class="form-group col-sm-12" ng-show="{{field.type=='TEXT' && field.fieldType!='Read Only'}}" >
 		        <div class="col-sm-7">
-		          <input type="text" class="form-control" name="{{field.name}}" id="{{field.name}}" ng-model="field.value" ng-disabled="{{field.fieldType=='Read Only'}}">
+		          <input type="text" dir="rtl" class="form-control" name="{{field.name}}" id="{{field.name}}" ng-model="field.value" ng-disabled="{{field.fieldType=='Read Only'}}">
 		        </div>
 		        <label class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
 		      </div>

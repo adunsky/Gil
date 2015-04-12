@@ -23,7 +23,7 @@
 			//echo " Date value before: ".$value."<br>\n";
 			$date = str_replace('/', '-', $value);
 			if ($date != "00-00-0000" && $date = strtotime($date)) {
-				$order[$i]["value"] = date('Y-m-d', $date);
+				$order[$i]["value"] = date('d-m-Y', $date);
 				//echo " Processed date: ".$order[$i]["value"]."<br>\n";
 			}
 		}
