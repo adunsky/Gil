@@ -45,7 +45,7 @@ function initGoogleAPI() {
 	}
 	else {
 	
-		$spreadsheetName = 'Take3';
+		$spreadsheetName = 'MyTake3';
 		$clientid = '457875993449-48gmkqssiulu00va3vtrlvg297pv1j8u.apps.googleusercontent.com';
 		$clientmail = '457875993449-48gmkqssiulu00va3vtrlvg297pv1j8u@developer.gserviceaccount.com';
 		$clientkeypath = 'API Project-0ffd21d566b5.p12';
@@ -174,7 +174,6 @@ function getCalcFields($order) {
 	$listEntry = $entries[1];	
 	$listEntry->update($values);	
 	
-	
 */
 	if ($profile) {
 		$currTime = date("h:i:s");
@@ -196,7 +195,7 @@ function getCalcFields($order) {
 				if ($order[$i]["type"] == "DATE")
 					// format the returned date
 					$value = str_replace('/', '-', $value);
-					
+
 				$order[$i]["value"] = $value;
 			}
 		}
