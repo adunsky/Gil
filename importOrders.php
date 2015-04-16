@@ -8,7 +8,7 @@
 
 	$sql = "SELECT * FROM $fieldTable ;";
 	$fields = mysql_query($sql) or die('get fields Failed! ' . mysql_error()); 
-	if (mysql_num_rows($fields, MYSQL_ASSOC) == 0)
+	if (mysql_num_rows($fields) == 0)
 		die('get fields Failed! ' . mysql_error());
 
 	$sql = "SELECT * FROM $mainTable ;";
@@ -18,7 +18,7 @@
 		//$order = getCalcFields($order);  // get from spreadsheet
 		
 		$dates = [];	
-		foreach ($fields as $field) {
+		while ($field = mysql_fetch_array($fields, MYSQL_ASSOC)) {
 			$name = $field["index"];
 			$value = $order[$name];
 			$type = $field["type"];
