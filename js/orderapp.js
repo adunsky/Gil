@@ -54,7 +54,7 @@ orderApp.config(function($routeProvider){
 
 
 
-orderApp.controller('orderCtrl', function($scope, $http, $timeout, myService){
+orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, myService){
 			$scope.order = myService.getOrder();
 			$scope.inProgress = false;
 			
@@ -132,7 +132,10 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, myService){
 					if ($scope.order) 
 						for(var i=0; $scope.form && $scope.form.fields[i]; i++) {
 		      			var fieldIndex = $scope.form.fields[i].fieldIndex-2;
-		      			$scope.form.fields[i].value = $scope.order[fieldIndex].value;	
+		      			if ($scope.form.fields[i].type == 'EmbedHyperlink')
+		      				$scope.form.fields[i].value = $sce.trustAsResourceUrl($scope.order[fieldIndex].value);
+		      			else
+		      				$scope.form.fields[i].value = $scope.order[fieldIndex].value;	
 		      		}    		
 			}
 			

@@ -70,7 +70,7 @@ body, td {
 }
 
 #map-canvas { 
-	height: 600px;
+	height: 800px;
 	width: 200px; 
 	margin: 0; 
 	padding: 0;
@@ -245,7 +245,7 @@ function setMarker(e, bounds) {
 		     	} else {
 		        console.log('Did not find address: ' + e.location + ' for the following reason: ' + status);
 		        if (status == 'OVER_QUERY_LIMIT') {
-		        		sleep(1000); // wait to retry after 1 sec
+		        		//sleep(1000); // wait to retry after 1 sec
 		        		retry = 1;
 		        }
 		 		}				
