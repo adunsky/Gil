@@ -46,6 +46,7 @@
 				$dates[$name] = "0000-00-00";
 
 		}
+		$value = mysql_real_escape_string($value);	// handle special characters
  		
 		if ($orderID) {	
 				if ($values != "") // after the first name=value pair

@@ -113,14 +113,16 @@ while (true) {
 			}	
 			
 			$calEvent = null;
-			//echo "eventID= ".$eventID."<br>\n";
+			echo "eventID= ".$eventID."<br>\n";
 			if ($eventID && $eventID != ""){
 				// look for the event in the calendar
-		    	$list = $service->events->listEvents($calendarID);	
+				$params = [];
+				$params["maxResults"] = 2500;	// max number of events per calendar
+		    	$list = $service->events->listEvents($calendarID, $params);	
 				foreach($list["items"] as $eventx) {
-					//echo "eventx ID= ".$eventx["htmlLink"]."<br>\n";
+					// echo "eventx ID= ".$eventx["htmlLink"]."<br>\n";
 					if ($eventID == $eventx["id"] || strpos($eventx["htmlLink"], $eventID ) != false) {
-		    			echo " found event ". $eventID."<br>\n";
+		    			echo " found event in calendar: ". $calendarID."<br>\n";
 		    			$calEvent = $eventx;
 		    			break;
 					}	

@@ -1,8 +1,6 @@
-export main table to spreadsheet
-fix OVER_QUERY_LIMIT without a busy loop
+
+fix OVER_QUERY_LIMIT without a busy loop - maintain coordinates in events table ?
 map size according to window height
 write logs and exceptions
 optimize calendar and spreadsheet auth
-add user access to forms and calendars
-Delete event if updated as null
-color codes for map markers
+

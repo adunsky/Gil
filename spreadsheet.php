@@ -38,14 +38,18 @@ use Google\Spreadsheet\Batch;
   the service account
  ************************************************/
  
-function initGoogleAPI() {
+function initGoogleAPI($spreadsheetName = NULL) {
+	
+	if (!$spreadsheetName)
+		$spreadsheetName = 'Take3';
+		
+	syslog (LOG_INFO, "Spreadsheet name: ".$spreadsheetName."<br>\n");
 	if (isset($_SESSION["spreadsheet"] ) && false) { // need to serialize it
-		echo "spreadsheet found";
+		syslog(LOG_INFO, "spreadsheet found");
 		$spreadsheetService = $_SESSION["spreadsheet"];	
 	}
 	else {
 	
-		$spreadsheetName = 'Take3';   // change 
 		$clientid = '457875993449-48gmkqssiulu00va3vtrlvg297pv1j8u.apps.googleusercontent.com';
 		$clientmail = '457875993449-48gmkqssiulu00va3vtrlvg297pv1j8u@developer.gserviceaccount.com';
 		$clientkeypath = 'API Project-0ffd21d566b5.p12';
@@ -86,11 +90,11 @@ function initGoogleAPI() {
 			$_SESSION["spreadsheet"] = $spreadsheetService;		
 		}
 		else {
-			echo "could not access spreadsheet";
+			syslog(LOG_ERR, "could not access spreadsheet");
 			return null;
 		} 
 	}
-	//echo "service initiated<br>";
+	syslog(LOG_INFO, "service initiated<br>");
 	$spreadsheetFeed = $spreadsheetService->getSpreadsheets();
 	$spreadsheet = $spreadsheetFeed->getByTitle($spreadsheetName);
 
@@ -102,11 +106,11 @@ function initGoogleAPI() {
 function getCalcFields($order) {	
 	set_time_limit (0); // This may take a while
 	date_default_timezone_set("Asia/Jerusalem");
-	$profile = false;
+	$profile = true;
 	
 	if ($profile) {
 		$currTime = date("h:i:s");
-		echo " Start SS init : ".$currTime;
+		syslog(LOG_INFO, " Start SS init : ".$currTime);
 	} 
 	$spreadsheet = initGoogleAPI();
 	
@@ -117,7 +121,7 @@ function getCalcFields($order) {
 	// write order to spreadsheet
 	if ($profile) {	
 		$currTime = date("h:i:s");
-		echo " Start SS write : ".$currTime; 
+		syslog(LOG_INFO, " Start SS write : ".$currTime); 
 	}	
 	// batch update
 	$batchRequest = new Google\Spreadsheet\Batch\BatchRequest();
@@ -132,30 +136,30 @@ function getCalcFields($order) {
 				if ($type == "DATE" && $value!="") {
 						// remove the time from the datetime field
 					if ($date = strtotime($value)) {
-						//echo "before date: ".$value."\n";	
+						syslog(LOG_INFO, "Value before date: ".$value."\n");	
 						$value = date('d-m-Y', $date);
-						//echo "After date: ".$value."\n";						
+						syslog(LOG_INFO, "After date: ".$value."\n");						
 					}
 					else 
 						$value = "";  // clear invalid date					
-						// echo "date: ".$value."\n";			
 				}		
  
  				if ($value == "")
  					$value = "_none"; // ensure non empty cells for the batch to work
+ 					
 				$input = $cellFeed->getCell(2, $col);
 				if (empty($input)) {
         			// CellEntry doesn't exist. Use edit cell.
         			$cellFeed->editCell(2, $col, $value);
         		}
         		else {	
-					$input->setContent($value);
+ 					$input->setContent($value);
 	        		$batchRequest->addEntry($input);
-        	}
+        		}
 		}		
 			
 	}	
-	$cellFeed->updateBatch($batchRequest);	
+	$cellFeed->insertBatch($batchRequest);	
 	
 /*	
 	// list update	
@@ -177,7 +181,7 @@ function getCalcFields($order) {
 */
 	if ($profile) {
 		$currTime = date("h:i:s");
-		echo " End SS write : ".$currTime; 
+		syslog (LOG_INFO, " End SS write : ".$currTime); 
 	}	
 		// now get the computed values
 	$listFeed = $worksheet->getListFeed();
@@ -205,9 +209,34 @@ function getCalcFields($order) {
 	}
 	if ($profile) {	
 		$currTime = date("h:i:s");
-		echo " End SS read : ".$currTime."\n"; 
+		syslog (LOG_INFO, " End SS read : ".$currTime."\n"); 
 	}
 	return $order;
 }
 
+
+
+function importOrders($spreadsheetName) {
+	echo "Reading ".$spreadsheetName."...<br>\n";
+	$spreadsheet = initGoogleAPI($spreadsheetName);
+	
+	$worksheetFeed = $spreadsheet->getWorksheets();
+	$worksheet = $worksheetFeed->getByTitle('Sheet1');
+	
+	$listFeed = $worksheet->getListFeed();
+	
+	$entries = $listFeed->getEntries();
+	
+	$orders = [];
+	$i = -1;
+	while (array_key_exists(++$i, $entries)) {
+		$listEntry = $entries[$i];
+		$order = $listEntry->getValues(); 
+		//var_dump($order);
+		$orders[$i] = $order;
+	}
+	
+	echo "Completed reading ".$i." records<br>\n";
+	return $orders;
+}
 ?>

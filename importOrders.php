@@ -4,23 +4,24 @@
    */ 
 	require_once "mydb.php";
 	require_once "spreadsheet.php";
-	
 
-	$sql = "SELECT * FROM $fieldTable ;";
-	$fields = mysql_query($sql) or die('get fields Failed! ' . mysql_error()); 
-	if (mysql_num_rows($fields) == 0)
-		die('get fields Failed! ' . mysql_error());
-
-	$sql = "SELECT * FROM $mainTable ;";
-	$records = mysql_query($sql) or die('get order Failed! ' . mysql_error()); 
-   if ($order = mysql_fetch_array($records, MYSQL_ASSOC)) {
-		$orderID = $order["id"]; 
-		//$order = getCalcFields($order);  // get from spreadsheet
+	$orders = importOrders("1756 records");
+	foreach ($orders as $order) {
 		
+		// get the fields
+		$sql = "SELECT * FROM $fieldTable ;";
+		$fields = mysql_query($sql) or die('get fields Failed! ' . mysql_error()); 
+		if (mysql_num_rows($fields) == 0)
+			die('get fields Failed! ' . mysql_error());
+
+		$values = "'null' ";
 		$dates = [];	
 		while ($field = mysql_fetch_array($fields, MYSQL_ASSOC)) {
 			$name = $field["index"];
-			$value = $order[$name];
+			list($key, $value) = each($order);
+			//echo "Index: ".$name." value: ".$value."<br>\n";
+			if ($value == '_none')
+				$value = "";
 			$type = $field["type"];
 			if ($type == "DATE") {
 				// need to add to the dates array to add to the events table
@@ -34,8 +35,16 @@
 					$dates[$name] = "0000-00-00";
 	
 			}
+			$value = mysql_real_escape_string($value);	// handle special characters
+			$values .= ", '$value'";
 		}
-	
+		//echo "values: ".$values."<br>\n";
+		// insert each order to the main table
+		$sql = "INSERT INTO $mainTable VALUES ($values);";
+		$res = mysql_query($sql) or die('insert into main Failed! ' . mysql_error()); 
+		$orderID = mysql_insert_id();	
+
+
 		// Update the events table with the updated dates
 		$keys = array_keys($dates);
 		foreach ($keys as $key) { // loop on date fields
