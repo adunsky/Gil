@@ -113,7 +113,7 @@ while (true) {
 			}	
 			
 			$calEvent = null;
-			echo "eventID= ".$eventID."<br>\n";
+			//echo "eventID= ".$eventID."<br>\n";
 			if ($eventID && $eventID != ""){
 				// look for the event in the calendar
 				$params = [];
