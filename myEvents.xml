@@ -123,7 +123,7 @@ function getEvents() {
 function dataRefresh () {
 
 	// Clear the stored geolocation array
-	Events = [];
+	// Locations = [];
 	getEvents();
 }
 
@@ -147,8 +147,8 @@ var timeOffset = 0;
 var storedEvents = null;
 
 
-// array of geolocations per event id
-var Events = [];
+// array of geolocations per address
+var Locations = [];
 
 // array of markers currently drawn on the map
 var markers = [];
@@ -201,7 +201,7 @@ function openForm(id) {
 
 function drawMarker(e, bounds) {
 
-   	//map.setCenter(Events[e.id]);
+   	//map.setCenter(Locations[e.location]);
      	var marker = new google.maps.Marker({
          map: map,
     		icon: {
@@ -210,12 +210,12 @@ function drawMarker(e, bounds) {
       		strokeColor: e.color,
       		scale: 6
     		},
-         position: Events[e.id]
+         position: Locations[e.location]
      	});
      	
 		markers.push(marker);
 		 // for each marker, extend the map bounds:
-		bounds.extend(Events[e.id]);
+		bounds.extend(Locations[e.location]);
   	  		map.fitBounds(bounds); 
 		          
 		marker.info = new google.maps.InfoWindow({ content: e.title + '<br><a href="#" onclick="openForm(\''+e.id+'\')">Update</a>' });
@@ -229,7 +229,7 @@ function drawMarker(e, bounds) {
 
 function setMarker(e, bounds) {
 	
-	  if (Events[e.id]) {
+	  if (Locations[e.location]) {
 	  		drawMarker(e, bounds);
 	  		return;
 	  	}
@@ -239,7 +239,7 @@ function setMarker(e, bounds) {
 		
 		  	geocoder.geocode ( { 'address': e.location}, function(results, status) {
 		  		if (status == google.maps.GeocoderStatus.OK) {
-					Events[e.id] = results[0].geometry.location; //  stored for future use 
+					Locations[e.location] = results[0].geometry.location; //  stored for future use 
 					drawMarker(e, bounds);
 					retry = 0;		    
 		     	} else {
