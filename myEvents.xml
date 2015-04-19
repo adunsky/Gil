@@ -233,24 +233,22 @@ function setMarker(e, bounds) {
 	  		drawMarker(e, bounds);
 	  		return;
 	  	}
-	  	var retry=1;
-		while (retry--) {
-		  	var geocoder = new google.maps.Geocoder();
-		
-		  	geocoder.geocode ( { 'address': e.location}, function(results, status) {
-		  		if (status == google.maps.GeocoderStatus.OK) {
-					Locations[e.location] = results[0].geometry.location; //  stored for future use 
-					drawMarker(e, bounds);
-					retry = 0;		    
-		     	} else {
-		        console.log('Did not find address: ' + e.location + ' for the following reason: ' + status);
-		        if (status == 'OVER_QUERY_LIMIT') {
-		        		//sleep(1000); // wait to retry after 1 sec
-		        		retry = 1;
-		        }
-		 		}				
-			});
-		}
+
+	  	var geocoder = new google.maps.Geocoder();
+	
+	  	geocoder.geocode ( { 'address': e.location}, function(results, status) {
+	  		if (status == google.maps.GeocoderStatus.OK) {
+				Locations[e.location] = results[0].geometry.location; //  stored for future use 
+				drawMarker(e, bounds);
+	    
+	     	} else {
+	        console.log('Did not find address: ' + e.location + ' for the following reason: ' + status);
+	        if (status == 'OVER_QUERY_LIMIT') {
+	        		setTimeout(setMarker(e, bounds), 1000); // wait to retry after 1 sec
+
+	        }
+	 		}				
+		});
 }
 /**
  * Draw the events on the map.
