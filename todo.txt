@@ -1,6 +1,10 @@
-calendarServ.php breaks
+calendarServ.php breaks if DB is down
+Fix dates without leading 0
+Allow adding fields and calendars in updateDB
+Lock spreadsheet for writing/reading
+Check returned message from updateOrder.php
 fix OVER_QUERY_LIMIT without a busy loop - maintain coordinates in events table ? get coordinates at server side
-map size according to window height
+map size according to window height + return from street view 
 write logs and exceptions
 optimize calendar and spreadsheet auth
 

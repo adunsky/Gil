@@ -4,8 +4,8 @@
    */ 
    
    $hostname = 'localhost';
-	$username = 'root';
-	$password = "";
+	$username = 'amosg';
+	$password = "96e346nv932&";
 	
 	$databasename = "gilamos";
 
