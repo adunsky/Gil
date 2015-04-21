@@ -1,7 +1,8 @@
 calendarServ.php breaks if DB is down
-add script for updating lists
+script to download to SS from DB
 Fix dates without leading 0
-Allow adding fields and calendars in updateDB
+Allow adding fields in updateDB
+Allow removing users and calendars in updateDB
 Lock spreadsheet for writing/reading
 Check returned message from updateOrder.php
 map size according to window height + return from street view 

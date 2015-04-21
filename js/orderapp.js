@@ -168,18 +168,23 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, myServi
 	                /* Check whether the HTTP Request is Successfull or not. */
 	            request.success(function (data) {
 	                $scope.message = "From PHP file : "+data;
-						 if (!isNaN(data)) 	                
-	                	$scope.orderID = data; // PHP returned a valid ID number
 	                console.log($scope.message);
-	                $scope.inProgress = false;
-	                alert("Order ID: "+$scope.orderID+" updated successfully");
-  						 window.close();
-	          
+						 if (!isNaN(data)) {	                
+	                	$scope.orderID = data; // PHP returned a valid ID number
+	                	$scope.inProgress = false;
+	                	alert("Order ID: "+$scope.orderID+" updated successfully");
+  						 	window.close();	                	
+	                }
+	                else {
+	                	$scope.orderID = data; // PHP returned a valid ID number
+	                	$scope.inProgress = false;
+	                	alert("Error: "+$scope.message);
+	                }	
 	            });
 	            request.error(function (data, status) {
 	                $scope.message = "From PHP file : "+data;
 	                $scope.inProgress = false;
-	                alert($scope.message);
+	                alert("Error: "+$scope.message);
 	            });
 	      }   
          
@@ -207,16 +212,21 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, myServi
 	            request.success(function (data) {
 	               $scope.message = "From PHP file : "+data;
 	               console.log($scope.message);
-						$scope.order = angular.fromJson(data);
-		            $scope.setFormValues();
-		            myService.setOrder($scope.order);						
+	               try {
+							$scope.order = angular.fromJson(data);
+							$scope.setFormValues();
+		            	myService.setOrder($scope.order);
+		            }						
+						catch (e) {
+							alert("Error: "+$scope.message);
+						}						
 						document.body.style.cursor = 'default';
 		            $scope.inProgress = false;	
-							          
 	            });
 	            request.error(function (data, status) {
 	                $scope.message = "From PHP file : "+data;
 	                $scope.inProgress = false;
+						 document.body.style.cursor = 'default';	                
 	                alert($scope.message);
 	            });
 

@@ -104,9 +104,9 @@ function initGoogleAPI($spreadsheetName = NULL) {
 }
 
 function getCalcFields($order) {	
-	set_time_limit (0); // This may take a while
+	set_time_limit (30); // This may take a while
 	date_default_timezone_set("Asia/Jerusalem");
-	$profile = true;
+	$profile = false;
 	
 	if ($profile) {
 		$currTime = date("h:i:s");
@@ -122,7 +122,25 @@ function getCalcFields($order) {
 	if ($profile) {	
 		$currTime = date("h:i:s");
 		syslog(LOG_INFO, " Start SS write : ".$currTime); 
-	}	
+	}
+	$lockCell = $cellFeed->getCell(2, 1);	// special cell used for locking
+	if ($lockCell)	
+		$lock = $lockCell->getContent();
+	else 
+		$lock = 0;
+		
+	$counter = 0;
+	while ($lock) {	// wait until cell gets unlocked
+		//if ($counter++>9)	break;
+		sleep(1);
+		$lockCell = $cellFeed->getCell(2, 1);	// need to get the cell again to get the content
+		$lock = $lockCell->getContent();
+		//echo "Lock: ".$lock;
+	}
+	
+	$lockCell->setContent("1");	// Lock the cell
+	//echo $lockCell->getContent();
+	
 	// batch update
 	$batchRequest = new Google\Spreadsheet\Batch\BatchRequest();
 	
@@ -160,25 +178,7 @@ function getCalcFields($order) {
 			
 	}	
 	$cellFeed->insertBatch($batchRequest);	
-	
-/*	
-	// list update	
-	$listFeed = $worksheet->getListFeed();
-	
-	$entries = $listFeed->getEntries();
-	$listEntry = $entries[0];	
-	$values = $listEntry->getValues();
-	
-	$keys = array_keys($values);
-	$i=1;
-	foreach ($order as $field) {
-		$values[$keys[$i++]] = $field["value"];
-			
-	}	
-	$listEntry = $entries[1];	
-	$listEntry->update($values);	
-	
-*/
+
 	if ($profile) {
 		$currTime = date("h:i:s");
 		syslog (LOG_INFO, " End SS write : ".$currTime); 
@@ -190,6 +190,9 @@ function getCalcFields($order) {
 	$listEntry = $entries[0]; 
 	$values = $listEntry->getValues();
 	//var_dump($values);
+	
+	$lockCell->setContent("0");	// Unlock the cell
+	
 	$i = -1;
 	foreach ($values as $value) { // update the output values
 		if ($i > -1) {// skip the first column
