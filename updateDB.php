@@ -42,16 +42,18 @@ use Google\Spreadsheet\ServiceRequestFactory;
 			updateListValueTable($worksheetFeed, $listValueTable);
 			return;
 		}
+		if ($command == "calendars") {
+			// update calendars and users that share them
+			updateCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fieldTable);
+			createUsersTable($worksheetFeed, $usersTable, $calendarsTable);	
+			return;	
+		}
 		if ($command == "users") {
 			// Just update the Users table		
 			createUsersTable($worksheetFeed, $usersTable, $calendarsTable);	
 			return;	
 		}
-		if ($command == "calendars") {
-			updateCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fieldTable);	
-			return;	
-		}
-		
+				
 		if ($command == "all") {		
 			// Create FieldType table
 			createFieldTypeTable($worksheetFeed, $fieldTable, $listValueTable);
