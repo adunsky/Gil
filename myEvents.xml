@@ -70,8 +70,8 @@ body, td {
 }
 
 #map-canvas { 
-	height: 800px;
-	width: 200px; 
+	height: 600;
+	//width: 200px; 
 	margin: 0; 
 	padding: 0;
 }
@@ -125,6 +125,8 @@ function dataRefresh () {
 	// Clear the stored geolocation array
 	// Locations = [];
 	getEvents();
+   // Tells gadget to resize itself
+ 	gadgets.window.adjustHeight();
 }
 
 /**
@@ -172,15 +174,6 @@ function displayedDatesCallback(dates) {
 	displayedDates.end = google.calendar.utils.fromDate(endDate);
   
   	getEvents();
-}
-
-function sleep(milliseconds) {
-  var start = new Date().getTime();
-  for (var i = 0; i < 1e7; i++) {
-    if ((new Date().getTime() - start) > milliseconds){
-      break;
-    }
-  }
 }
 
 
