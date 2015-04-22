@@ -70,8 +70,8 @@ body, td {
 }
 
 #map-canvas { 
-	height: 600;
-	//width: 200px; 
+	height: 600px;
+	width: 165px; 
 	margin: 0; 
 	padding: 0;
 }
