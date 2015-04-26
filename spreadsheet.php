@@ -164,7 +164,8 @@ function getCalcFields($order) {
  
  				if ($value == "")
  					$value = "_none"; // ensure non empty cells for the batch to work
- 					
+ 				else
+					$value = str_replace('"','', $value);	
 				$input = $cellFeed->getCell(2, $col);
 				if (empty($input)) {
         			// CellEntry doesn't exist. Use edit cell.
@@ -173,12 +174,14 @@ function getCalcFields($order) {
         		else {	
  					$input->setContent($value);
 	        		$batchRequest->addEntry($input);
+			 	//echo "Value: ".$value."<br>\n";
         		}
 		}		
 			
 	}	
-	$cellFeed->insertBatch($batchRequest);	
-
+	$batchRes = $cellFeed->insertBatch($batchRequest);	
+	if ($batchRes->hasErrors())
+		syslog(LOG_ERR, "Error in batch<br>\n");	
 	if ($profile) {
 		$currTime = date("h:i:s");
 		syslog (LOG_INFO, " End SS write : ".$currTime); 
