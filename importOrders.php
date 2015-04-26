@@ -5,7 +5,9 @@
 	require_once "mydb.php";
 	require_once "spreadsheet.php";
 
-	$orders = importOrders("1756 records");
+	$inputSpreadsheet = $_GET['input'];
+
+	$orders = importOrders($inputSpreadsheet);
 	foreach ($orders as $order) {
 		
 		// get the fields
