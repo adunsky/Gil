@@ -103,6 +103,31 @@ function initGoogleAPI($spreadsheetName = NULL) {
 	
 }
 
+
+
+function get_named_lock($lockname) {
+     $sql = "SELECT IS_FREE_LOCK('$lockname') AS isfree";
+     $result = mysql_query($sql);
+     $lock = mysql_fetch_array($result);
+
+	  if ($lock['isfree']) {
+	      $sql =  "SELECT GET_LOCK('$lockname', 1) AS locked";
+	      $result = mysql_query($sql);
+	      $lock = mysql_fetch_array($result);
+	      return $lock['locked'];
+	  } 
+	  else {
+	  		return false;
+	  }
+}
+
+function release_named_lock($lockname) {
+        $sql = "DO RELEASE_LOCK('$lockname')";
+        $result = mysql_query($sql);
+
+}
+
+
 function getCalcFields($order) {	
 	set_time_limit (30); // This may take a while
 	date_default_timezone_set("Asia/Jerusalem");
@@ -123,24 +148,13 @@ function getCalcFields($order) {
 		$currTime = date("h:i:s");
 		syslog(LOG_INFO, " Start SS write : ".$currTime); 
 	}
-	$lockCell = $cellFeed->getCell(2, 1);	// special cell used for locking
-	if ($lockCell)	
-		$lock = $lockCell->getContent();
-	else 
-		$lock = 0;
-		
-	$counter = 0;
-	while ($lock) {	// wait until cell gets unlocked
-		//if ($counter++>9)	break;
-		sleep(1);
-		$lockCell = $cellFeed->getCell(2, 1);	// need to get the cell again to get the content
-		$lock = $lockCell->getContent();
-		//echo "Lock: ".$lock;
-	}
 	
-	$lockCell->setContent("1");	// Lock the cell
-	//echo $lockCell->getContent();
-	
+   while (!($locked = get_named_lock('mylock'))) { // wait until unlocked
+   	//echo "Waiting for spreadsheet to unlock <br>\n";
+   	syslog(LOG_INFO, "Waiting for spreadsheet to unlock ");
+   }
+
+
 	// batch update
 	$batchRequest = new Google\Spreadsheet\Batch\BatchRequest();
 	
@@ -193,9 +207,11 @@ function getCalcFields($order) {
 	$listEntry = $entries[0]; 
 	$values = $listEntry->getValues();
 	//var_dump($values);
+
+
+	release_named_lock('mylock');
 	
-	$lockCell->setContent("0");	// Unlock the cell
-	
+
 	$i = -1;
 	foreach ($values as $value) { // update the output values
 		if ($i > -1) {// skip the first column
