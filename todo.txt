@@ -1,10 +1,11 @@
+Display values not in list
 calendarServ.php breaks if DB is down
-script to download to SS from DB
+script to download to SS from DB - fix time limit
 Fix dates without leading 0
 Allow adding fields in updateDB
 Allow removing users and calendars in updateDB
-Lock spreadsheet for writing/reading
-Check returned message from updateOrder.php
+Lock spreadsheet for writing/reading - test
+Check returned message from updateOrder.php - test
 map size according to window height + return from street view 
 write logs and exceptions
 optimize calendar and spreadsheet auth

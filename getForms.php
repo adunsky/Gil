@@ -36,7 +36,7 @@
 							$sql = "SELECT * FROM $listValueTable WHERE `index` = '$fieldID';";
 							$res = mysql_query($sql) or die('get list values Failed! ' . mysql_error()); 
 							while ($listValue = mysql_fetch_array($res, MYSQL_ASSOC)) {
-								array_push($field["listValues"], $listValue);	
+								array_push($field["listValues"], $listValue["value"]);	
 							}
 						}						
 					}

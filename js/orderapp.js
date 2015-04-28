@@ -135,7 +135,16 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, myServi
 		      			if ($scope.form.fields[i].type == 'EmbedHyperlink')
 		      				$scope.form.fields[i].value = $sce.trustAsResourceUrl($scope.order[fieldIndex].value);
 		      			else
-		      				$scope.form.fields[i].value = $scope.order[fieldIndex].value;	
+		      				$scope.form.fields[i].value = $scope.order[fieldIndex].value;
+		    				if ($scope.form.fields[i].type == 'LIST') {
+								// add the current value to the list if it is not there
+								if ($scope.form.fields[i].listValues.indexOf($scope.form.fields[i].value) == -1)
+									$scope.form.fields[i].listValues.push($scope.form.fields[i].value);	    				
+		    					// add an empty string to the list if not already there
+								if ($scope.form.fields[i].value != "")		    					
+		    						$scope.form.fields[i].listValues.push("");
+		    				}  				
+		      				
 		      		}    		
 			}
 			
