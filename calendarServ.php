@@ -31,7 +31,7 @@ $clientmail = '457875993449-48gmkqssiulu00va3vtrlvg297pv1j8u@developer.gservicea
 $clientkeypath = 'API Project-0ffd21d566b5.p12';
 
 $client = new Google_Client();
-$client->setApplicationName("gil");
+$client->setApplicationName($appname);
 $client->setClientId($clientid);
 $service = new Google_Service_Calendar($client);
 

@@ -123,7 +123,7 @@ function createFieldTypeTable($worksheetFeed, $fieldTable, $listValueTable) {
 		// create fieldType table
 		$sql = "DROP TABLE IF EXISTS $fieldTable;";
 		$result = mysql_query($sql) or die('Drop table Failed! ' . mysql_error());
-		$sql = "CREATE TABLE $fieldTable ( `name` VARCHAR(64), `index` INT(32), `type` VARCHAR(32), `input` VARCHAR(32), `default` VARCHAR(32));";
+		$sql = "CREATE TABLE $fieldTable ( `name` VARCHAR(64), `index` INT(32), `type` VARCHAR(32), `input` VARCHAR(32), `default` VARCHAR(256));";
 				// echo $sql;
 		$result = mysql_query($sql) or die('Create Field Type table Failed! ' . mysql_error());
 		echo "Table ".$fieldTable." created<br>"; 

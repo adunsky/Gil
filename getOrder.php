@@ -49,16 +49,25 @@
 		$sql = "SELECT * FROM $mainTable WHERE id = '$orderID';";
 		$result = mysql_query($sql) or die('get order Failed! ' . mysql_error()); 
 		if (mysql_num_rows($result) > 0)	{
-			//  found order
+			//  found order - set the values from the main table
 			$order = mysql_fetch_array($result, MYSQL_ASSOC);
 			for($i=0; $i < $numFields ; $i++) {
 				$index = $row[$i]["index"];
 				$row[$i]["value"] = $order[$index];	
+	
+				if ($row[$i]["value"] == "" && ($row[$i]["type"] == "Hyperlink" || $row[$i]["type"] == "EmbedHyperlink")) {
+					// For Hyperlinks set the default value in case no value is set
+					$row[$i]["value"] = $row[$i]["default"];			
+				}
 			}
+			
 		}
+		else 
+			$orderID = 0; // Order not found in Main table
 		
 	}
-	else {// event not found - set the default value for each field
+	
+	if ($orderID == 0) {// event not found - set the default value for each field
 		for($i=0; $i < $numFields ; $i++) {
 			if ($row[$i]["type"] == "DATE" && $row[$i]["default"] != "") {
 				if ($date = strtotime($row[$i]["default"]))

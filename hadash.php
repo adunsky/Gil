@@ -15,7 +15,7 @@
  * limitations under the License.
  */
  
-include_once "google-api-php-client-master/examples/templates/base.php";
+include_once realpath(dirname(__FILE__) . "/google-api-php-client-master/examples/templates/base.php");
 //session_start();
 
 require_once realpath(dirname(__FILE__) . '/google-api-php-client-master/autoload.php');
@@ -35,22 +35,22 @@ use Google\Spreadsheet\ServiceRequestFactory;
  		set_time_limit (0); // This may take a while
 		$spreadsheet = initGoogleAPI(); // from spreadsheet.php
 		$worksheetFeed = $spreadsheet->getWorksheets();
-
-		// Create FieldType table
-		createFieldTypeTable($worksheetFeed, $fieldTable, $listValueTable);
-	
-		// Create form and field form tables	
-		createFormTables($worksheetFeed, $formsTable, $formFieldsTable);	
-
-		// Create main table
-		createMainTable($worksheetFeed, $fieldTable, $mainTable);
-
-		// remove the google calendars
-		removeCalendars($worksheetFeed, $calendarsTable, $eventsTable);
-		
-		// Skip the rest if we just want to clean the tables
+		if ($command == "clean") {
+			// remove the google calendars
+			removeCalendars($worksheetFeed, $calendarsTable, $eventsTable);
+		}
 		if ($command == "new") {
-				
+			// Create FieldType table
+			createFieldTypeTable($worksheetFeed, $fieldTable, $listValueTable);
+		
+			// Create form and field form tables	
+			createFormTables($worksheetFeed, $formsTable, $formFieldsTable);	
+	
+			// Create main table
+			createMainTable($worksheetFeed, $fieldTable, $mainTable);		
+			
+			// remove the google calendars
+			removeCalendars($worksheetFeed, $calendarsTable, $eventsTable);					
 			// Create calendar and tables
 			createCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fieldTable);
 			
@@ -104,7 +104,7 @@ function createFieldTypeTable($worksheetFeed, $fieldTable, $listValueTable) {
 		// create fieldType table
 		$sql = "DROP TABLE IF EXISTS $fieldTable;";
 		$result = mysql_query($sql) or die('Drop table Failed! ' . mysql_error());
-		$sql = "CREATE TABLE $fieldTable ( `name` VARCHAR(64), `index` INT(32), `type` VARCHAR(32), `input` VARCHAR(32), `default` VARCHAR(32));";
+		$sql = "CREATE TABLE $fieldTable ( `name` VARCHAR(64), `index` INT(32), `type` VARCHAR(32), `input` VARCHAR(32), `default` VARCHAR(256));";
 				// echo $sql;
 		$result = mysql_query($sql) or die('Create Field Type table Failed! ' . mysql_error());
 		echo "Table ".$fieldTable." created<br>"; 

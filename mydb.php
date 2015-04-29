@@ -6,7 +6,7 @@
    $hostname = 'localhost';
 	$username = 'amosg';
 	$password = "96e346nv932&";
-	
+	$appname = "Gilamos";
 	$databasename = "gilamos";
 
 	$mysql_id = @mysql_connect($hostname, $username, $password);
