@@ -20,9 +20,10 @@
 		// check if order exists
 		$sql = "SELECT * FROM $mainTable WHERE id = $orderID;";
 		$result = mysql_query($sql) or die('get order Failed! ' . mysql_error()); 
-		if (mysql_num_rows($result) == 0)	
+		if (mysql_num_rows($result) == 0) {	
 			syslog (LOG_INFO, "Order ".$orderID." not found - insert as new");
 			$orderID = null;
+		}
 	}
 
 	if ($orderID) // existing order
