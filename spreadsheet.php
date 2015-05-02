@@ -41,7 +41,7 @@ use Google\Spreadsheet\Batch;
 function initGoogleAPI($spreadsheetName = NULL) {
 	
 	if (!$spreadsheetName)
-		$spreadsheetName = 'Take3';
+		$spreadsheetName = constant("theSpreadsheet");
 		
 	syslog (LOG_INFO, "Spreadsheet name: ".$spreadsheetName."<br>\n");
 	if (isset($_SESSION["spreadsheet"] ) && false) { // need to serialize it
@@ -55,7 +55,7 @@ function initGoogleAPI($spreadsheetName = NULL) {
 		$clientkeypath = 'API Project-0ffd21d566b5.p12';
 		
 		$client = new Google_Client();
-		$client->setApplicationName("gil");
+		$client->setApplicationName("Gilamos");
 		$client->setClientId($clientid);	 
 		
 		if (isset($_SESSION['service_token'])) {

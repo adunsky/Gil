@@ -144,6 +144,7 @@ function createFieldTypeTable($worksheetFeed, $fieldTable, $listValueTable) {
 				$col = 5;	
 				$cellEntry = $cellFeed->getCell($row, $col);	
 				while ($cellEntry && ($value = $cellEntry->getContent()) != "") {
+					$value = mysql_real_escape_string($value);
 					$sql = "INSERT INTO $listValueTable VALUES ('$row', '$value');";
 							// echo $sql;
 					$result = mysql_query($sql) or die('Insert to list values table Failed! ' . mysql_error());
@@ -430,6 +431,7 @@ function updateListValueTable($worksheetFeed, $listValueTable) {
 				$col = 5;	
 				$cellEntry = $cellFeed->getCell($row, $col);	
 				while ($cellEntry && ($value = $cellEntry->getContent()) != "") {
+					$value = mysql_real_escape_string($value);
 					$sql = "INSERT INTO $listValueTable VALUES ('$row', '$value');";
 							// echo $sql;
 					$result = mysql_query($sql) or die('Insert to list values table Failed! ' . mysql_error());

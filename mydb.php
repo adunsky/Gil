@@ -7,7 +7,8 @@
 	$username = 'amosg';
 	$password = "96e346nv932&";
 	$appname = "Gilamos";
-	$databasename = "gilamos";
+	$databasename = "givaa";
+	define("theSpreadsheet", "SHIFTS_GIVAA", true);
 
 	$mysql_id = @mysql_connect($hostname, $username, $password);
 	if (!$mysql_id) {
