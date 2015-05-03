@@ -1,4 +1,5 @@
 Security authorization
+support multi client, by setting ss and DB based on client
 write logs and exceptions, control the level
 calendarServ.php breaks if DB is down
 script to download to SS from DB - fix time limit
