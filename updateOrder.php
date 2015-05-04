@@ -36,17 +36,22 @@
 		$name = $field["index"];
 		$value = $field["value"];
 		$type = $field["type"];
-		if ($type == "DATE") {
+		if (strpos($type, "STARTTIME") === 0 || strpos($type, "ENDTIME") === 0)
+			$type = "DATETIME";  // it behaves like DATETIME
+		if ($type == "DATE" || $type == "DATETIME") {
 			// need to add to the dates array to add to the events table
 			if ($date = strtotime($value)) {
+				//echo "Date ".$value." found in field ".$name."<br>\n";	
 				// format it to DB date format
-				$date = date('Y-m-d', $date);
+				$date = date('Y-m-d H:i:s', $date);
 				$dates[$name] = $date;
+				$value = $date;	// save it in YYYY-MM-DD format
+				//echo "Date after formating: ".$date."<br>\n";					
 			}
 			else	// not a valid date
 				$dates[$name] = "0000-00-00";
-			
-			syslog (LOG_INFO, "Date ".$date." found in field ".$name);
+				
+			syslog (LOG_DEBUG, "Date ".$date." found in field ".$name);
 		}
 		$value = mysql_real_escape_string($value);	// handle special characters
  		

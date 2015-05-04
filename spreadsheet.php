@@ -129,7 +129,7 @@ function release_named_lock($lockname) {
 
 
 function getCalcFields($order) {	
-	set_time_limit (30); // This may take a while
+	set_time_limit (60); // This may take a while
 	date_default_timezone_set("Asia/Jerusalem");
 	$profile = false;
 	
@@ -165,17 +165,22 @@ function getCalcFields($order) {
 		$type = $field["type"];
 
 		if ($isInput) { // it is an input field
-				if ($type == "DATE" && $value!="") {
+				if (strpos($type, "STARTTIME") === 0 || strpos($type, "ENDTIME") === 0)
+					$type = "DATETIME";  // it behaves like DATETIME
+				if (($type == "DATE" || $type == "DATETIME") && $value!="") {
 						// remove the time from the datetime field
 					if ($date = strtotime($value)) {
-						syslog(LOG_INFO, "Value before date: ".$value."\n");	
-						$value = date('d-m-Y', $date);
+						syslog(LOG_INFO, "Value before date: ".$value."\n");
+						if ($type == "DATE")
+							$value = date('d-m-Y', $date);
+						else { // DATETIME
+							$value = date('d-m-Y H:i:s', $date);
+						}
 						syslog(LOG_INFO, "After date: ".$value."\n");						
 					}
-					else 
-						$value = "";  // clear invalid date					
-				}		
- 
+					else	
+						$value = "";  // clear invalid date
+ 				}
  				if ($value == "")
  					$value = "_none"; // ensure non empty cells for the batch to work
  				else
@@ -218,7 +223,11 @@ function getCalcFields($order) {
 			if ($value == "_none")
 				$order[$i]["value"] = "";
 			else {	
-				if ($order[$i]["type"] == "DATE")
+				$type = $order[$i]["type"];
+				if (strpos($type, "STARTTIME") === 0 || strpos($type, "ENDTIME") === 0)
+					$type = "DATETIME";  // it behaves like DATETIME				
+				
+				if ($type == "DATE" || $type == "DATETIME")
 					// format the returned date
 					$value = str_replace('/', '-', $value);
 

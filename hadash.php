@@ -388,7 +388,7 @@ function createEventsTable($worksheetFeed, $eventsTable) {
 
 		$sql = "DROP TABLE IF EXISTS $eventsTable;";
 		$result = mysql_query($sql) or die('Drop table Failed! ' . mysql_error());
-		$sql = "CREATE TABLE $eventsTable ( calendarID INT(32), fieldIndex INT(32), orderID INT(32), eventDate DATE, eventID VARCHAR(128), updated TINYINT);";
+		$sql = "CREATE TABLE $eventsTable ( calendarID INT(32), fieldIndex INT(32), orderID INT(32), eventDate DATETIME, eventID VARCHAR(128), updated TINYINT);";
 				// echo $sql;
 		$result = mysql_query($sql) or die('Create Events table Failed! ' . mysql_error());
 		

@@ -59,7 +59,18 @@
 		      <div class="form-group col-sm-12" ng-if="field.type=='DATE'">
 		       <div class="col-sm-7">
 		         <p class="input-group">
-		             <input type="text" class="form-control" name="{{field.name}}" id="{{field.name}}" datetime-picker="dd-MM-yyyy" ng-model="field.value" value="{{field.value}}" enable-time="false" close-on-date-selection="true" is-open="field.dateTimeCalendarisOpen" ng-disabled="{{field.fieldType=='Read Only'}}"/>
+		             <input type="text" class="form-control" name="{{field.name}}" id="{{field.name}}" datetime-picker="dd-MM-yyyy" ng-model="field.value" value="{{field.value}}" enable-time="false" close-on-date-selection="true" is-open="field.dateTimeCalendarisOpen" />
+		             <span class="input-group-btn">
+		                 <button type="button" class="btn btn-default" ng-click="openDateTimeCalendar($event, field)" ng-disabled="{{field.fieldType=='Read Only'}}"><i class="fa fa-calendar"></i></button>
+		             </span>
+		         </p>
+		       </div>
+		       	<label class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
+		       </div> 
+		      <div class="form-group col-sm-12" ng-if="field.type=='DATETIME'">
+		       <div class="col-sm-7">
+		         <p class="input-group">
+		             <input type="text" class="form-control" name="{{field.name}}" id="{{field.name}}" datetime-picker="dd-MM-yyyy HH:mm" ng-model="field.value" value="{{field.value}}" enable-time="true" close-on-date-selection="true" is-open="field.dateTimeCalendarisOpen" />
 		             <span class="input-group-btn">
 		                 <button type="button" class="btn btn-default" ng-click="openDateTimeCalendar($event, field)" ng-disabled="{{field.fieldType=='Read Only'}}"><i class="fa fa-calendar"></i></button>
 		             </span>
@@ -67,6 +78,8 @@
 		       </div>
 		       	<label class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
 		       </div>        
+		       
+		              
 		   </div>
 		   
 	     <div class="form-group col-sm-12" style="display:{{inProgress?'none':'block'}}">

@@ -25,12 +25,15 @@
 			if ($value == '_none')
 				$value = "";
 			$type = $field["type"];
-			if ($type == "DATE") {
+			if ($type == "DATE" || $type == "DATETIME") {
 				// need to add to the dates array to add to the events table
 				$value = str_replace('/', '-', $value);
 				if ($date = strtotime($value)) {
 					// format it to DB date format
-					$date = date('Y-m-d', $date);
+					if ($type == "DATE")
+						$date = date('Y-m-d', $date);
+					else // DATETIME
+						$date = date('Y-m-d H:i', $date);							
 					$dates[$name] = $date;
 				}
 				else	// not a valid date

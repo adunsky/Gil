@@ -59,6 +59,22 @@
 					// For Hyperlinks set the default value in case no value is set
 					$row[$i]["value"] = $row[$i]["default"];			
 				}
+				$type = $row[$i]["type"];
+					
+
+				if (strpos($type, "STARTTIME") === 0 || strpos($type, "ENDTIME") === 0) {
+					$type = "DATETIME";  // it behaves like DATETIME
+					$row[$i]["type"] = $type;
+				}
+				if ($type == "DATE" || $type == "DATETIME")	 {
+					// format the datetime for the UI
+					if ($date = strtotime($row[$i]["value"])) {
+						if ($type == "DATE")
+							$row[$i]["value"] = date('d-m-Y', $date);
+						else // DATETIME	
+							$row[$i]["value"] = date('Y-m-d H:i', $date);
+					}	
+				}			
 			}
 			
 		}
@@ -69,9 +85,18 @@
 	
 	if ($orderID == 0) {// event not found - set the default value for each field
 		for($i=0; $i < $numFields ; $i++) {
-			if ($row[$i]["type"] == "DATE" && $row[$i]["default"] != "") {
-				if ($date = strtotime($row[$i]["default"]))
-					$row[$i]["value"] = date('d-m-Y', $date);	
+			$type = $row[$i]["type"];
+			if (strpos($type, "STARTTIME") === 0 || strpos($type, "ENDTIME") === 0) {
+				$type = "DATETIME";  // it behaves like DATETIME
+				$row[$i]["type"] = $type;
+			}
+			if (($type == "DATE" || $type == "DATETIME") && $row[$i]["default"] != "") {
+				if ($date = strtotime($row[$i]["default"])) {
+					if ($type == "DATE")
+						$row[$i]["value"] = date('d-m-Y', $date);
+					else // DATETIME	
+						$row[$i]["value"] = date('Y-m-d H:i', $date);	
+				}
 			}
 			else
 				$row[$i]["value"] = $row[$i]["default"];  // return default in all values		

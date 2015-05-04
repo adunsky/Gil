@@ -77,14 +77,7 @@ while (true) {
 	    		$calendarNum = $event["calendarID"];
 	    		$fieldIndex = $event["fieldIndex"];
 	    		$date = $event["eventDate"];
-	    		/*
-   			$location = $event["location"];
-   			$dateArray = explode(" ", $order["date1"], 2);
-   			// Format the date and time to calendar format
-   			$date1 = $dateArray[0]."T".$dateArray[1]."Z";
-   			//echo "date: ".$date1;
-   			$customerID = $order["customerID"];
-   			*/
+
 	         echo "found event for order ". $orderID." Date: ".$date."<br>\n";
 	         
 				$sql = "SELECT * FROM $calendarsTable WHERE number = '$calendarNum';";
@@ -103,6 +96,53 @@ while (true) {
 					$eventName = $order[$titleField];
 					$location = $order[$locationField];						
 				}
+				
+
+				$date1 = "";
+				$date2 = "";
+				// query the fields table to find if it is a start time
+				$sql = "SELECT * FROM $fieldTable WHERE `index`='$fieldIndex';";
+				$result = mysql_query($sql) or die('Select field Failed! ' . mysql_error()); 
+				if ((mysql_num_rows($result) > 0) && ($field = mysql_fetch_array($result, MYSQL_ASSOC))) {
+					$type1 = $field["type"];
+					if (strpos($type1, "STARTTIME") === 0) {
+						$twinNum = substr($type1, strlen("STARTTIME")); // this is the index on the start-end twin
+						$type2 = "ENDTIME".$twinNum;
+						
+						// query the field table for the end date
+						$sql = "SELECT * FROM $fieldTable WHERE type='$type2';";
+						$result = mysql_query($sql) or die('Select field Failed! ' . mysql_error()); 
+						if ((mysql_num_rows($result) > 0) && ($field = mysql_fetch_array($result, MYSQL_ASSOC))) {
+							$fieldIndex2 = $field["index"];							
+							$date2 = $order[$fieldIndex2];	// found the endtime
+							$date1 = $date;						// this is the start time
+						}			
+					}
+
+				}
+
+				// query the fields table to find if it is an end time
+				$sql = "SELECT * FROM $fieldTable WHERE `index`='$fieldIndex';";
+				$result = mysql_query($sql) or die('Select field Failed! ' . mysql_error()); 
+				if ((mysql_num_rows($result) > 0) && ($field = mysql_fetch_array($result, MYSQL_ASSOC))) {
+					$type1 = $field["type"];
+					if (strpos($type1, "ENDTIME") === 0) {
+						$twinNum = substr($type1, strlen("ENDTIME")); // this is the index on the start-end twin
+						$type2 = "STARTTIME".$twinNum;
+						// echo "looking for: ".$type2."<br>\n";
+						// query the field table for the end date
+						$sql = "SELECT * FROM $fieldTable WHERE type='$type2';";
+						$result = mysql_query($sql) or die('Select field Failed! ' . mysql_error()); 
+						if ((mysql_num_rows($result) > 0) && ($field = mysql_fetch_array($result, MYSQL_ASSOC))) {
+							$fieldIndex2 = $field["index"];							
+							$date1 = $order[$fieldIndex2];	// found the start time
+							$date2 = $date;	// this is the end time
+							// echo "Found starttime: ".$date1."<br>\n";
+						}			
+					}
+
+				}				
+			
 
 	  		}
 			else { 
@@ -150,12 +190,38 @@ while (true) {
 
 			$calEvent->setSummary($eventName);
 			$calEvent->setLocation($location);
-		
+			$allDay = false;
+			if ($date1 == "" || $date2 == "") {
+				$allDay = true;
+				$date1 = $date2 = $date;	// It is an all day event
+			}
 			$start = new Google_Service_Calendar_EventDateTime();
-			$start->setDate($date);
+			$start->setTimeZone("Asia/Jerusalem");
+			$timestamp1 = strtotime($date1);
+			if ($allDay) {
+				// format it without the time
+				$date = date("Y-m-d", $timestamp1);
+				$start->setDate($date);				
+			}	// format with time
+			else {
+				$date = date("Y-m-d\TH:i:s", $timestamp1);
+				$start->setDateTime($date);
+				echo "Start: ".$date."<br>\n";
+			}
 			$calEvent->setStart($start);
+
+			$timestamp2 = strtotime($date2);			
 			$end = new Google_Service_Calendar_EventDateTime();
-			$end->setDate($date);
+			$end->setTimeZone("Asia/Jerusalem");
+			if ($allDay) {
+				$end->setDate($date);	// no time set - all day event
+			}		
+			else { 
+				// set the end time
+				$endDate = date('Y-m-d\TH:i:s', $timestamp2); // Back to string
+				$end->setDateTime($endDate);
+				echo "End: ".$endDate."<br>\n";
+			}
 			$calEvent->setEnd($end);
 			//$calEvent->setDescription($description);
 			// all day event ?

@@ -30,6 +30,12 @@
 						$field["type"] = $fieldata["type"];
 						$field["default"] = $fieldata["default"];
 						$type = $field["type"];
+						// convert STARTTIME and ENDTIME to DATETIME		
+						if (strpos($type, "STARTTIME") === 0 || strpos($type, "ENDTIME") === 0) {
+							//echo "found start/end time";
+							$type = "DATETIME";  // it behaves like DATETIME
+							$field["type"] = $type;
+						}						
 						if ($type == "LIST") {
 							// get the list values
 							$field["listValues"] = [];
