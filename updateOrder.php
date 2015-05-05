@@ -49,7 +49,7 @@
 				//echo "Date after formating: ".$date."<br>\n";					
 			}
 			else	// not a valid date
-				$dates[$name] = "0000-00-00";
+				$dates[$name] = "0000-00-00 00:00:00";
 				
 			syslog (LOG_DEBUG, "Date ".$date." found in field ".$name);
 		}
@@ -93,7 +93,7 @@
 			if (mysql_num_rows($ev) == 0) {
 				// event record doesn't exist in table - insert it	
 				syslog (LOG_INFO, "Adding new event for Calendar: ".$calendarID." Field: ".$key."Date: ".$dates[$key]);
-				if (strtotime($dates[$key]) && $dates[$key] != "0000-00-00") { // ignore invalid dates			
+				if (strtotime($dates[$key]) && $dates[$key] != "0000-00-00 00:00:00") { // ignore invalid dates			
 		   		$sql = "INSERT INTO $eventsTable VALUES ('$calendarID', '$key', '$orderID', '$dates[$key]', '', 0 )";
 		   		if (!mysql_query($sql)) die('Insert event Failed !' . mysql_error());
 		   	}

@@ -176,7 +176,7 @@ while (true) {
 				$new = true;
 			}
 
-			if (!strtotime($date) || ($date == '0000-00-00')) {
+			if (!strtotime($date) || ($date == '0000-00-00 00:00:00')) {
 				echo "Removing event with invalid date: ".$date."<br>\n";
 				// The new event date is empty or not valid - remove the event from the calendar
 				if (!$new && $calEvent)
