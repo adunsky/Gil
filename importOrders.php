@@ -5,6 +5,9 @@
 	require_once "mydb.php";
 	require_once "spreadsheet.php";
 
+	// get arguments from command line		
+	parse_str(implode('&', array_slice($argv, 1)), $_GET);
+	
 	$inputSpreadsheet = $_GET['input'];
 	$dbName = $_GET['db'];
 	//echo $dbName;
