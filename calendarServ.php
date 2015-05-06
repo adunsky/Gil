@@ -29,8 +29,6 @@ require_once "mydb.php";
 	
 	$dbName = $_GET['db'];
 	//echo $dbName;
-	$ssName = $_GET['ss'];
-	//echo $ssName;
 			
 	if (!selectDB($dbName))
 		return;	

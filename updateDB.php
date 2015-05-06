@@ -34,11 +34,18 @@ use Google\Spreadsheet\ServiceRequestFactory;
 		echo "Command: ".$command."<br>\n";
 		$dbName = $_GET['db'];
 		//echo $dbName;
-		$ssName = $_GET['ss'];
-		//echo $ssName;
 				
 		if (!selectDB($dbName))
 			return;	
+			
+		$ssName = getClientSS($dbName);
+		if ($ssName)
+			setSSName($ssName);
+		else {
+			echo "spreadsheet not found for DB: ".$dbName;
+			return;		
+		}					
+			
 		setSSName($ssName);
  		set_time_limit (0); // This may take a while
 		$spreadsheet = initGoogleAPI(); // from spreadsheet.php

@@ -36,12 +36,18 @@ use Google\Spreadsheet\ServiceRequestFactory;
 		//echo $command;
 		$dbName = $_GET['db'];
 		//echo $dbName;
-		$ssName = $_GET['ss'];
-		//echo $ssName;
-				
+
 		if (!selectDB($dbName))
 			return;	
-		setSSName($ssName);		
+			
+		$ssName = getClientSS($dbName);
+		if ($ssName)
+			setSSName($ssName);
+		else {
+			echo "spreadsheet not found for DB: ".$dbName;
+			return;		
+		}		
+					
  		set_time_limit (0); // This may take a while
 		$spreadsheet = initGoogleAPI(); // from spreadsheet.php
 		$worksheetFeed = $spreadsheet->getWorksheets();
