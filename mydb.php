@@ -7,18 +7,12 @@
 	$username = 'amosg';
 	$password = "96e346nv932&";
 	$appname = "Gilamos";
-	$databasename = "gilamos";  // "givaa"
-	define("theSpreadsheet", "Take3", true);	// "SHIFTS_GIVAA"
+	//$databasename = "gilamos";  // "givaa"
 
 	$mysql_id = @mysql_connect($hostname, $username, $password);
 	if (!$mysql_id) {
 		echo "MySql connection failed ! <br>";
 	}
-	$dbSelected = @mysql_select_db($databasename, $mysql_id);
-	if (!$dbSelected) {
-		echo "DB selection failed ! <br>";
-	}
-	mysql_set_charset("utf8");
 	
 	$mainTable = '_main';
 	$formsTable = '_forms';
@@ -27,6 +21,20 @@
 	$listValueTable = '_listValues';
 	$calendarsTable = '_calendars';
 	$eventsTable = '_events';
-	$usersTable = '_users';		
+	$usersTable = '_users';	
+	
+	
+function selectDB($dbName)	{
+	global $mysql_id, $globalDBName;
+	
+	$dbSelected = @mysql_select_db($dbName, $mysql_id);
+	if (!$dbSelected) {
+		echo "DB selection failed ! <br>";
+		return false;
+	}
+	$globalDBName = $dbName;
+	mysql_set_charset("utf8");	
+	return true;
+}
 ?>
 	

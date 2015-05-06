@@ -29,6 +29,7 @@ use Google\Spreadsheet\ServiceRequestFactory;
 use Google\Spreadsheet\Batch;
 
 
+
 /************************************************
   If we have an access token, we can carry on.
   Otherwise, we'll get one with the help of an
@@ -37,11 +38,36 @@ use Google\Spreadsheet\Batch;
   we have to list them manually. We also supply
   the service account
  ************************************************/
+
+function setSSName($ssName) {
+	global $theSpreadsheet;
+	
+	$theSpreadsheet = $ssName;
+
+} 
+ 
+ 
+function getClientSS($DBname) {
+		global $globalDBName;
+
+		$currentDB = $globalDBName; // save current DB
+		if (selectDB("customers")) {
+	      $sql =  "SELECT * FROM customers WHERE dbName='$DBname';";
+	      $result = mysql_query($sql);
+      	$customer = mysql_fetch_array($result);
+      	$ssName = $customer["ssName"];
+      	if ($currentDB && $currentDB != "")
+      		selectDB($currentDB); // set it back to original	
+      	return $ssName;
+		}	
+		return NULL;
+} 
  
 function initGoogleAPI($spreadsheetName = NULL) {
-	
+	global $theSpreadsheet;
+		
 	if (!$spreadsheetName)
-		$spreadsheetName = constant("theSpreadsheet");
+		$spreadsheetName = $theSpreadsheet;
 		
 	syslog (LOG_INFO, "Spreadsheet name: ".$spreadsheetName."<br>\n");
 	if (isset($_SESSION["spreadsheet"] ) && false) { // need to serialize it

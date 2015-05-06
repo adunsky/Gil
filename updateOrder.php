@@ -11,9 +11,20 @@
    //echo "postdata: " . $postdata;
 
    $data = json_decode($postdata, true);
+  	$dbName = $data["dbName"]; 
 	$order = $data["order"];
 	$orderID = $data["orderID"]; 
-	
+	if (!selectDB($dbName)) {
+		syslog(LOG_ERR, "Failed to select client DB: "+$dbName);
+		return;	
+	}
+	$ssName = getClientSS($dbName);
+	if ($ssName)
+		setSSName($ssName);
+	else {
+		syslog(LOG_ERR, "Failed to get client spreadsheet");	
+		return;
+	}	
 	$order = getCalcFields($order);  // get from spreadsheet
 
 	if ($orderID) {

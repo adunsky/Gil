@@ -3,14 +3,19 @@
    * Collect all Details from Angular HTTP Request.
    */ 
 	require_once "mydb.php";
-		 
+	 
    //var_dump($_GET);
-	
+	$dbName = $_GET['db'];
+	//echo $dbName;
+			
 	$eventID = $_GET["eventID"];
 	$row = [];
 	$orderID = 0;
 	$formID = 1; // This is the default form
-	
+
+	if (!selectDB($dbName))
+		return;	
+
 	// First get all the fields
 	$sql = "SELECT * FROM $fieldTable;";
 	$result = mysql_query($sql) or die('get fields Failed! ' . mysql_error()); 

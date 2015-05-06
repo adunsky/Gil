@@ -61,7 +61,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, myServi
       	$scope.getOrder = function () {
 			   var parameters = location.search.substring(1).split("&");
 			   var eventID = null;
-			
+	
 			   var temp = parameters[0].split("=");
 			   if (temp != "") {
 			   	eventID = unescape(temp[1]);
@@ -70,7 +70,13 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, myServi
 			   	eventID = 0;
 			   }
 
-	     		$http.get("getOrder.php", { params: { eventID: eventID }})
+			   temp = parameters[1].split("=");
+			   if (temp[1] != "") {
+			   	var param2 = temp[1].split("/");
+			   	$scope.dbName = unescape(param2[0]);
+			   }
+
+	     		$http.get("getOrder.php", { params: { eventID: eventID, db: $scope.dbName } })
 	     		.success(function(data) {
 	             $scope.message = "From PHP file : "+data;
 	             console.log($scope.message);
@@ -93,7 +99,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, myServi
 			
       	$scope.getFormFields = function (form) {
 				if (!$scope.forms) {
-		     		$http.get("getForms.php")
+		     		$http.get("getForms.php", { params: { db: $scope.dbName } })
 		     		.success(function(data) {
 		             $scope.message = "From PHP file : "+data;
 		             console.log($scope.message);
@@ -164,6 +170,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, myServi
 	      		$scope.updateValues(); 
 	      		// get the order ID and send to PHP
 					$updatedOrder = {};
+					$updatedOrder.dbName = $scope.dbName;						
 					$updatedOrder.order = $scope.order;	      		
 					$updatedOrder.orderID = $scope.orderID;	      		
 	      		
@@ -210,7 +217,11 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, myServi
 					$scope.inProgress = true;
 	      		setProgress(); 	      		
 	      		$scope.updateValues(); 
-	            var content = angular.toJson($scope.order);
+					$updatedOrder = {};
+					$updatedOrder.dbName = $scope.dbName;						
+					$updatedOrder.order = $scope.order;	      		
+	      		
+	            var content = angular.toJson($updatedOrder);
 	            var request = $http({
 	                    method: "post",
 	                    url: "calcOrder.php",

@@ -6,7 +6,12 @@
 	require_once "spreadsheet.php";
 
 	$inputSpreadsheet = $_GET['input'];
-
+	$dbName = $_GET['db'];
+	//echo $dbName;
+			
+	if (!selectDB($dbName))
+		return;	
+	
 	$orders = importOrders($inputSpreadsheet);
 	foreach ($orders as $order) {
 		

@@ -29,9 +29,19 @@ require realpath(dirname(__FILE__) . '/php-google-spreadsheet-client-master/vend
 use Google\Spreadsheet\DefaultServiceRequest;
 use Google\Spreadsheet\ServiceRequestFactory;
 
+		// get arguments from command line		
+		parse_str(implode('&', array_slice($argv, 1)), $_GET);
+		
 		$command = $_GET['cmd'];
 		//echo $command;
-
+		$dbName = $_GET['db'];
+		//echo $dbName;
+		$ssName = $_GET['ss'];
+		//echo $ssName;
+				
+		if (!selectDB($dbName))
+			return;	
+		setSSName($ssName);		
  		set_time_limit (0); // This may take a while
 		$spreadsheet = initGoogleAPI(); // from spreadsheet.php
 		$worksheetFeed = $spreadsheet->getWorksheets();
@@ -91,7 +101,7 @@ function createMainTable($worksheetFeed, $fieldTable, $mainTable)	{
 		
 		// echo $sql;
 		$result = mysql_query($mainSql) or die('Create Main table Failed! ' . mysql_error());
-		echo "Table ".$mainTable." created with ".($col)." columns<br>"; 		
+		echo "Table ".$mainTable." created with ".($col)." columns<br>\n"; 		
 	}
 	else {
 		echo " Columns not found in table" ;
@@ -107,7 +117,7 @@ function createFieldTypeTable($worksheetFeed, $fieldTable, $listValueTable) {
 		$sql = "CREATE TABLE $fieldTable ( `name` VARCHAR(64), `index` INT(32), `type` VARCHAR(32), `input` VARCHAR(32), `default` VARCHAR(256));";
 				// echo $sql;
 		$result = mysql_query($sql) or die('Create Field Type table Failed! ' . mysql_error());
-		echo "Table ".$fieldTable." created<br>"; 
+		echo "Table ".$fieldTable." created<br>\n"; 
 		
 		// create listValue table
 		$sql = "DROP TABLE IF EXISTS $listValueTable;";
@@ -115,7 +125,7 @@ function createFieldTypeTable($worksheetFeed, $fieldTable, $listValueTable) {
 		$sql = "CREATE TABLE $listValueTable (`index` INT(32), `value` VARCHAR(64));";
 				// echo $sql;
 		$result = mysql_query($sql) or die('Create listValue table Failed! ' . mysql_error());
-		echo "Table ".$listValueTable." created<br>"; 
+		echo "Table ".$listValueTable." created<br>\n"; 
 		
 		$worksheet = $worksheetFeed->getByTitle('CellType');
 		$cellFeed = $worksheet->getCellFeed();
@@ -164,7 +174,7 @@ function createFormTables($worksheetFeed, $formsTable, $formFieldsTable) {
 				// echo $sql;
 		$result = mysql_query($sql) or die('Create Forms table Failed! ' . mysql_error());
 	
-		echo "Table ".$formsTable." created<br>"; 
+		echo "Table ".$formsTable." created<br>\n"; 
 
 		$sql = "DROP TABLE IF EXISTS $formFieldsTable;";
 		$result = mysql_query($sql) or die('Drop table Failed! ' . mysql_error());
@@ -172,7 +182,7 @@ function createFormTables($worksheetFeed, $formsTable, $formFieldsTable) {
 				// echo $sql;
 		$result = mysql_query($sql) or die('Create fields table Failed! ' . mysql_error());
 		
-		echo "Table ".$formFieldsTable." created<br>"; 
+		echo "Table ".$formFieldsTable." created<br>\n"; 
 		
 		$worksheet = $worksheetFeed->getByTitle('Forms');
 		$cellFeed = $worksheet->getCellFeed();
@@ -189,7 +199,7 @@ function createFormTables($worksheetFeed, $formsTable, $formFieldsTable) {
 			$sql = "INSERT INTO $formsTable VALUES ('$title', '$formNumber');";
 					// echo $sql;
 			$result = mysql_query($sql) or die('Insert to forms table Failed! ' . mysql_error());
-			echo "Table ".$title." inserted to forms table<br>"; 
+			echo "Table ".$title." inserted to forms table<br>\n"; 
 			
 			// now insert the fields of the form
 			$row = 2;
@@ -216,7 +226,7 @@ function createFormTables($worksheetFeed, $formsTable, $formFieldsTable) {
 
 function removeCalendars($worksheetFeed, $calendarsTable, $eventsTable) {
 		// First remove the existing Google calendars
-		echo "Removing calendars...<br>\n";
+		echo "Removing calendars...<br>\n\n";
 		$sql = "SHOW TABLES LIKE '$calendarsTable';";		
 		$result = mysql_query($sql) or die('Show calendars table Failed! ' . mysql_error());
 		if (mysql_num_rows($result) > 0)	{
@@ -256,7 +266,7 @@ function createCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 				// echo $sql;
 		$result = mysql_query($sql) or die('Create Calendars table Failed! ' . mysql_error());
 	
-		echo "Table ".$calendarsTable." created<br>"; 
+		echo "Table ".$calendarsTable." created<br>\n"; 
 		
 		$worksheet = $worksheetFeed->getByTitle('Calendars');
 		$cellFeed = $worksheet->getCellFeed();
@@ -350,7 +360,7 @@ function createUsersTable($worksheetFeed, $usersTable, $calendarsTable) {
 				// echo $sql;
 		$result = mysql_query($sql) or die('Create Users table Failed! ' . mysql_error());
 		
-		echo "Table ".$usersTable." created<br>"; 
+		echo "Table ".$usersTable." created<br>\n"; 
 	
 		$worksheet = $worksheetFeed->getByTitle('Users');
 		$cellFeed = $worksheet->getCellFeed();
@@ -392,7 +402,7 @@ function createEventsTable($worksheetFeed, $eventsTable) {
 				// echo $sql;
 		$result = mysql_query($sql) or die('Create Events table Failed! ' . mysql_error());
 		
-		echo "Table ".$eventsTable." created<br>"; 
+		echo "Table ".$eventsTable." created<br>\n"; 
 
 }
 
@@ -406,7 +416,7 @@ function updateListValueTable($worksheetFeed, $listValueTable) {
 		$sql = "CREATE TABLE $listValueTable (`index` INT(32), `value` VARCHAR(64));";
 				// echo $sql;
 		$result = mysql_query($sql) or die('Create listValue table Failed! ' . mysql_error());
-		echo "Table ".$listValueTable." created<br>"; 
+		echo "Table ".$listValueTable." created<br>\n"; 
 		
 		$worksheet = $worksheetFeed->getByTitle('CellType');
 		$cellFeed = $worksheet->getCellFeed();

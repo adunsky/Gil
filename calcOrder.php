@@ -10,8 +10,18 @@
    $postdata = file_get_contents("php://input");
    //echo "postdata: " . $postdata;
 
-   $order = json_decode($postdata, true);
-
+   $data = json_decode($postdata, true);
+  	$dbName = $data["dbName"]; 
+	$order = $data["order"];
+	
+	$ssName = getClientSS($dbName);
+	if ($ssName)
+		setSSName($ssName);
+	else {
+		syslog(LOG_ERR, "Failed to get client spreadsheet");	
+		return;
+	}
+	
 	$order = getCalcFields($order);  // get from spreadsheet
 
 	$i = 0;

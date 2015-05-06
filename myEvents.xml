@@ -187,7 +187,7 @@ function deleteMarkers() {
 
 
 function openForm(id) {
-	window.open("http://h06dolon1.securedcloudassets.com/Gilamos?id=" + id + "#/newOrder");
+	window.open("http://h06dolon1.securedcloudassets.com/Gilamos?id=" + id + "&db=" + dbName + "#/newOrder");
 
 }
 
@@ -270,7 +270,7 @@ function drawEvents() {
 }
 
 function newOrder() {
-	window.open("http://h06dolon1.securedcloudassets.com/Gilamos/#/newOrder");
+	window.open("http://h06dolon1.securedcloudassets.com/Gilamos?id=0&db=" + dbName + "/#/newOrder");
 
 }
 
@@ -304,10 +304,20 @@ function mapInit () {
  * Retrieve the initial set of events and and set things up to do the same
  * periodically.
  */
+ 
+var dbName; 
+ 
 function setupEventRetrieval() {
 	
 	console.log("loading...");
-	
+
+   var parameters = location.search.substring(1).split("&");
+
+   var url = parameters[0].split("=");
+   url = unescape(url[1]);
+   var gadgetParam = url.split("=");
+   dbName = unescape(gadgetParam[1]);
+			   	
   // Ask the container for the next few events.
   getEvents();
 
