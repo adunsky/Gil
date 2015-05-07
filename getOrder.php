@@ -7,15 +7,25 @@
    //var_dump($_GET);
 	$dbName = $_GET['db'];
 	//echo $dbName;
-			
-	$eventID = $_GET["eventID"];
+	
 	$row = [];
 	$orderID = 0;
 	$formID = 1; // This is the default form
 
 	if (!selectDB($dbName))
 		return;	
-
+			
+	$eventID = $_GET["eventID"];
+	if ($eventID == "0") { // it is a new order - verify the user email
+		//echo $eventID;
+		$user = $_GET["user"];	
+		if ($eventID == 0 && !authUserForm($user, $formID)) {
+			echo "The user is not authorized to perform this action.";
+			return;	
+		}
+	}
+	
+	
 	// First get all the fields
 	$sql = "SELECT * FROM $fieldTable;";
 	$result = mysql_query($sql) or die('get fields Failed! ' . mysql_error()); 

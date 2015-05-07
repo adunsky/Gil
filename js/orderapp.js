@@ -54,29 +54,25 @@ orderApp.config(function($routeProvider){
 
 
 
-orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, myService){
+orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $location, myService){
 			$scope.order = myService.getOrder();
 			$scope.inProgress = false;
 			
       	$scope.getOrder = function () {
-			   var parameters = location.search.substring(1).split("&");
-			   var eventID = null;
-	
-			   var temp = parameters[0].split("=");
-			   if (temp != "") {
-			   	eventID = unescape(temp[1]);
-			   }
-			   else {
-			   	eventID = 0;
-			   }
+     		
+			   var eventID;
+				
+				var argv = $location.search();      		
+    			if (argv.id)
+    				eventID = argv.id;
+    			if (argv.db)
+    				$scope.dbName = argv.db;
+    			if (argv.user)
+     				$scope.user = argv.user;
+     			else 
+     				$scope.user = ""; 	// The user is verified only for new orders			
 
-			   temp = parameters[1].split("=");
-			   if (temp[1] != "") {
-			   	var param2 = temp[1].split("/");
-			   	$scope.dbName = unescape(param2[0]);
-			   }
-
-	     		$http.get("getOrder.php", { params: { eventID: eventID, db: $scope.dbName } })
+	     		$http.get("getOrder.php", { params: { eventID: eventID, db: $scope.dbName, user: $scope.user } })
 	     		.success(function(data) {
 	             $scope.message = "From PHP file : "+data;
 	             console.log($scope.message);
@@ -90,7 +86,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, myServi
 							}
 		      	 }
 	        		 catch (e) {
-	            		console.log("did not receive a valid Json: " + e);
+	            		alert("Error: "+$scope.message);
 	            		myService.setOrder(null);
 	        		 } 
 				}); 
@@ -113,7 +109,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, myServi
 								}
 			      	 }
 		        		 catch (e) {
-		            		console.log("did not receive a valid Json: " + e);
+		            		alert("Error: "+$scope.message);
 		            		myService.setForms(null);
 		        		 } 
 	

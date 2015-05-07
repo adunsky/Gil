@@ -48,7 +48,7 @@ use Google\Spreadsheet\ServiceRequestFactory;
 			
 		setSSName($ssName);
  		set_time_limit (0); // This may take a while
-		$spreadsheet = initGoogleAPI(); // from spreadsheet.php
+		$spreadsheet = initGoogleAPI($ssName); // from spreadsheet.php
 		$worksheetFeed = $spreadsheet->getWorksheets();
 
 		if ($command == "updateLists") {

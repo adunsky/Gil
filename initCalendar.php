@@ -111,7 +111,8 @@ function shareCalendar($calID, $email) {
 
 function deleteCalendars($calendars) {
 	 
-	$service = initCalendar();		
+	$service = initCalendar();
+	$failed = false;	
 	foreach ($calendars as $calendar) {
 		try {
 			$service->calendars->delete($calendar);
@@ -119,10 +120,13 @@ function deleteCalendars($calendars) {
 		}
 		catch(Exception $e) {
 		  echo 'Exception: ' .$e->getMessage(). "<br>\n";
-		  //return false;
+		  $failed = true;
 		}
 	}
-	return true;
+	if ($failed)
+		return false;
+	else	
+		return true;	
 } // delete
 
 

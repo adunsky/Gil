@@ -36,5 +36,27 @@ function selectDB($dbName)	{
 	mysql_set_charset("utf8");	
 	return true;
 }
+
+
+function authUserForm($user, $formID) {
+	global $calendarsTable, $usersTable;
+	
+	$sql = "SELECT * FROM $calendarsTable WHERE formNumber='$formID';";
+	$cal = mysql_query($sql) or die('get calendar-form Failed! ' . mysql_error()); 
+	while ($calData = mysql_fetch_array($cal, MYSQL_ASSOC)) {	
+		$calNum = $calData["number"];
+		$sql = "SELECT * FROM $usersTable WHERE email='$user' AND calendarNum='$calNum';";
+		$usr = mysql_query($sql) or die('get user data Failed! ' . mysql_error()); 
+		if (mysql_num_rows($usr) > 0) {
+			// found the calendar in the user table
+			syslog(LOG_INFO, "User authorization approved: ".$user);
+			return true;	
+		}		
+	}
+	syslog(LOG_INFO, "User authorization failed: ".$user);
+	return false;
+}
+
+
 ?>
 	

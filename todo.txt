@@ -1,10 +1,10 @@
 Security authorization
-support multi client, by setting ss and DB based on client
 write logs and exceptions, control the level
 calendarServ.php breaks if DB is down
 script to download to SS from DB - fix time limit
 Fix dates without leading 0
 Allow adding fields in updateDB
+Remove calendars one-by-one to ensure removal from DB
 Allow removing users and calendars in updateDB
 Lock spreadsheet for writing/reading - test
 Check returned message from updateOrder.php - test

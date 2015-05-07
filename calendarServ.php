@@ -18,12 +18,12 @@
  
  
 include_once "google-api-php-client-master/examples/templates/base.php";
-session_start();
 
 require_once realpath(dirname(__FILE__) . '/google-api-php-client-master/autoload.php');
 
 require_once "mydb.php";
-
+session_start();
+   
 	// get arguments from command line		
 	parse_str(implode('&', array_slice($argv, 1)), $_GET);
 	
@@ -262,7 +262,7 @@ require_once "mydb.php";
 						$calEvent = $updatedEvent;
 					}
 					
-					$calEvent->setDescription("<p>Order ID :".$orderID."</p><br><a href='http://h06dolon1.securedcloudassets.com/Gilamos?id=".$eventID."&db=".$dbName."#/newOrder'>Update</a>");
+					$calEvent->setDescription("<p>Order ID :".$orderID."</p><br><a href='http://h06dolon1.securedcloudassets.com/Gilamos/#/newOrder?id=".$eventID."&db=".$dbName."'>Update</a>");
 					$updatedEvent = $service->events->update($calendarID, $calEvent->getId(), $calEvent);
 					$sql = "UPDATE $eventsTable set eventID='$eventID', updated='1' WHERE calendarID='$calendarNum' AND fieldIndex='$fieldIndex' AND orderID='$orderID';";
 					$result = mysql_query($sql) or die('Update event Failed! ' . mysql_error());

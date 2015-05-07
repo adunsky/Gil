@@ -21,7 +21,7 @@
 		syslog(LOG_ERR, "Failed to get client spreadsheet");	
 		return;
 	}
-	
+	initGoogleAPI($ssName);	
 	$order = getCalcFields($order);  // get from spreadsheet
 
 	$i = 0;

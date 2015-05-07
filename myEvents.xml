@@ -187,7 +187,7 @@ function deleteMarkers() {
 
 
 function openForm(id) {
-	window.open("http://h06dolon1.securedcloudassets.com/Gilamos?id=" + id + "&db=" + dbName + "#/newOrder");
+	window.open("http://h06dolon1.securedcloudassets.com/Gilamos/#/newOrder?id=" + id + "&db=" + dbName + "&user=" + user);
 
 }
 
@@ -269,17 +269,12 @@ function drawEvents() {
 
 }
 
-function newOrder() {
-	window.open("http://h06dolon1.securedcloudassets.com/Gilamos?id=0&db=" + dbName + "/#/newOrder");
-
-}
-
 var map = null;
 
 function mapInit () {
   var main = document.getElementById('main');
 
-	var html = '<a href="#" onclick="newOrder()" class="basic">חדש</a><br>';
+	var html = '<a href="#" onclick="openForm(0)" class="basic">חדש</a><br>';
   	html += '<div id="map-canvas"></div>';
   	
  	main.innerHTML = html;
@@ -333,6 +328,7 @@ function setupEventRetrieval() {
 
 }
 
+var user;
 
 /**
  * The container has replied with the preferences
@@ -341,6 +337,7 @@ function setupEventRetrieval() {
 function getPrefsCallback(prefs) {
   // Store interesting user preferences.
   timeOffset = prefs.current_time_offset;
+  user = prefs.viewer;
 
   // Continue initialization.
   setupEventRetrieval();
