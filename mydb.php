@@ -7,7 +7,19 @@
 	$username = 'amosg';
 	$password = "96e346nv932&";
 	$appname = "Gilamos";
-	//$databasename = "gilamos";  // "givaa"
+
+	//  new ones:	 
+	$clientid = '785966582104-ab859l88mtgu200tsssapjerfkeqgbri.apps.googleusercontent.com';
+	$clientmail = '785966582104-ab859l88mtgu200tsssapjerfkeqgbri@developer.gserviceaccount.com';
+	$clientkeypath = 'gilamos-f3d01bb7176e.p12';
+
+
+	// old ones - use it to clean the calendars
+ /*
+	$clientid = '457875993449-48gmkqssiulu00va3vtrlvg297pv1j8u.apps.googleusercontent.com';
+	$clientmail = '457875993449-48gmkqssiulu00va3vtrlvg297pv1j8u@developer.gserviceaccount.com';
+	$clientkeypath = 'API Project-0ffd21d566b5.p12';
+*/
 
 	$mysql_id = @mysql_connect($hostname, $username, $password);
 	if (!$mysql_id) {

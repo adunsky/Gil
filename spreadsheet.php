@@ -64,26 +64,22 @@ function getClientSS($DBname) {
 } 
  
 function initGoogleAPI($spreadsheetName = NULL) {
-	global $theSpreadsheet, $spreadsheet;
+	global $theSpreadsheet, $spreadsheet, $clientid, $clientmail, $clientkeypath, $appName;
 		
 	if (!$spreadsheetName)
 		$spreadsheetName = $theSpreadsheet;
 		
 	//echo 	"Spreadsheet name: ".$spreadsheetName."<br>\n";
 	syslog (LOG_INFO, "Spreadsheet name: ".$spreadsheetName."<br>\n");
-	if (isset($_SESSION["spreadsheet"] ) && false) { // need to serialize it
+	if (isset($_SESSION["spreadsheet"] ) && false) { // it doesn't work - need to serialize it
 		syslog(LOG_INFO, "spreadsheet found");
 		$spreadsheetService = $_SESSION["spreadsheet"];	
 	}
 	else {
-	
-		$clientid = '457875993449-48gmkqssiulu00va3vtrlvg297pv1j8u.apps.googleusercontent.com';
-		$clientmail = '457875993449-48gmkqssiulu00va3vtrlvg297pv1j8u@developer.gserviceaccount.com';
-		$clientkeypath = 'API Project-0ffd21d566b5.p12';
 		
 		try {
 			$client = new Google_Client();
-			$client->setApplicationName("Gilamos");
+			$client->setApplicationName($appName);
 			$client->setClientId($clientid);	 
 			
 			if (isset($_SESSION['service_token'])) {

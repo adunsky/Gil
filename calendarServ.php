@@ -33,11 +33,6 @@ session_start();
 	if (!selectDB($dbName))
 		return;	
 	
-	 
-	$clientid = '457875993449-48gmkqssiulu00va3vtrlvg297pv1j8u.apps.googleusercontent.com';
-	$clientmail = '457875993449-48gmkqssiulu00va3vtrlvg297pv1j8u@developer.gserviceaccount.com';
-	$clientkeypath = 'API Project-0ffd21d566b5.p12';
-	
 	$client = new Google_Client();
 	$client->setApplicationName($appname);
 	$client->setClientId($clientid);
@@ -262,7 +257,7 @@ session_start();
 						$calEvent = $updatedEvent;
 					}
 					
-					$calEvent->setDescription("<p>Order ID :".$orderID."</p><br><a href='http://h06dolon1.securedcloudassets.com/Gilamos/#/newOrder?id=".$eventID."&db=".$dbName."'>Update</a>");
+					$calEvent->setDescription("<p>Order ID :".$orderID."</p><br><a href='http://www.googlemesh.com/Gilamos/#/newOrder?id=".$eventID."&db=".$dbName."'>Update</a>");
 					$updatedEvent = $service->events->update($calendarID, $calEvent->getId(), $calEvent);
 					$sql = "UPDATE $eventsTable set eventID='$eventID', updated='1' WHERE calendarID='$calendarNum' AND fieldIndex='$fieldIndex' AND orderID='$orderID';";
 					$result = mysql_query($sql) or die('Update event Failed! ' . mysql_error());
