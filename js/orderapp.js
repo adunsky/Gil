@@ -158,6 +158,12 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 			    field.dateTimeCalendarisOpen = true;
 			};
       
+			$scope.timeOptions = {
+			    //readonlyInput: true,
+			    showMeridian: false
+			};
+  
+
 	      $scope.updateOrder = function () {
 	      		document.body.style.cursor = 'wait';
 	      		$scope.progress = 0;

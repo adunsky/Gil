@@ -5,8 +5,8 @@ script to download to SS from DB - fix time limit
 Fix dates without leading 0
 Allow adding fields in updateDB
 Remove calendars one-by-one to ensure removal from DB
-Allow removing users and calendars in updateDB
-Lock spreadsheet for writing/reading - test
+Allow removing users and calendars in updateDB (remove events)
+
 Check returned message from updateOrder.php - test
 map size according to window height + return from street view 
 optimize calendar and spreadsheet auth

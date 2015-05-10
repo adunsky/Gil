@@ -283,7 +283,7 @@ function updateCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 							$calID = createCalendar($worksheetFeed, $name);
 						
 						// add it to calendar table
-						$sql = "INSERT INTO $calendarsTable VALUES ('$calNumber', '$name', '$row', '$filter', 0, 0, 0, '$calID');";
+						$sql = "INSERT INTO $calendarsTable VALUES ('$calNumber', '$name', '$row', '$filter', 0, 0, 0, 0, 0, '$calID');";
 						$result = mysql_query($sql) or die('Insert calendar Failed! ' . mysql_error());
 					}
 					
@@ -312,7 +312,12 @@ function updateCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 			$fieldCell = $cellFeed->getCell($row, $col++);
 			if ($fieldCell)
 				$locationFieldName = $fieldCell->getContent();
-				
+			$fieldCell = $cellFeed->getCell($row, $col++);
+			if ($fieldCell)
+				$colorFieldName = $fieldCell->getContent();
+			else 
+				$colorFieldName = 0;	
+								
 			// find the form ID
 			$sql = "SELECT * FROM $formsTable WHERE title='$formName';";			
 			$result = mysql_query($sql) or die('Get form Failed! ' . mysql_error());	
@@ -331,8 +336,16 @@ function updateCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 			if ($field = mysql_fetch_array($result))
 				$locationFieldIndex = $field["index"];				
 
+			// find the color field index	
+			$sql = "SELECT * FROM $fieldTable WHERE name='$colorFieldName';";			
+			$result = mysql_query($sql) or die('Get color field Failed! ' . mysql_error());	
+			if ($field = mysql_fetch_array($result))
+				$colorFieldIndex = $field["index"];
+			else 
+				$colorFieldIndex = 0;			
+
 			// update the calendar table with the calendar details
-			$sql = "UPDATE $calendarsTable set formNumber=$formID, titleField=$titleFieldIndex, locationField=$locationFieldIndex WHERE name='$calendarName';";			
+			$sql = "UPDATE $calendarsTable set formNumber=$formID, titleField=$titleFieldIndex, locationField=$locationFieldIndex, colorField=$colorFieldIndex WHERE name='$calendarName';";			
 			mysql_query($sql) or die('Update calendar details Failed! ' . mysql_error());	
 				
 			$cellEntry = $cellFeed->getCell(++$row, 1);		
