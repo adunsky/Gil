@@ -234,26 +234,36 @@ function removeCalendars($worksheetFeed, $calendarsTable, $eventsTable) {
 		// First remove the existing Google calendars
 		echo "Removing calendars...<br>\n\n";
 		$sql = "SHOW TABLES LIKE '$calendarsTable';";		
-		$result = mysql_query($sql) or die('Show calendars table Failed! ' . mysql_error());
+		$result = mysql_query($sql) or die('Find calendars table Failed! ' . mysql_error());
 		if (mysql_num_rows($result) > 0)	{
 			// calendars table exists
+			$failed = false;
 			$calendars = [];
 			$sql = "SELECT * FROM $calendarsTable;";			
-			$result = mysql_query($sql) or die('Get calendars Failed! ' . mysql_error());	
-			while ($cal = mysql_fetch_array($result)) {
+			$res = mysql_query($sql) or die('Get calendars Failed! ' . mysql_error());	
+			while ($cal = mysql_fetch_array($res)) {
 				$calID = $cal["calID"];
-				if (!array_search($calID, $calendars))
-					// add to calendars list if not already there
-					array_push($calendars, $calID);	
-			}		
-			if (!deleteCalendars($calendars))
-				die('Remove Google calendars Failed!');
-			// Empty the calendars table
-			$sql = "DELETE FROM $calendarsTable;";
-			$result = mysql_query($sql) or die('DELETE calendars Failed! ' . mysql_error());
-			// Empty the events table
-			$sql = "DELETE FROM $eventsTable;";
-			$result = mysql_query($sql) or die('DELETE events Failed! ' . mysql_error());
+				$calNum = $cal["number"];
+				if (!array_search($calID, $calendars)) {
+					if (deleteCalendar($calID)) {
+						// Empty the calendars table
+						$sql = "DELETE FROM $calendarsTable WHERE calID='$calID';";
+						$result = mysql_query($sql) or die('DELETE calendar from DB Failed! ' . mysql_error());
+						// Empty the events table
+						$sql = "DELETE FROM $eventsTable WHERE calendarID='$calNum';";
+						$result = mysql_query($sql) or die('DELETE events Failed! ' . mysql_error());					
+						
+						// add to calendars list if not already there
+						array_push($calendars, $calID);	
+					}
+					else {
+						echo "Deletion of Google calendar ID: ".$calID. " Failed!<br>\n";
+						$failed = true;
+					}
+				}
+			}
+			if ($failed)
+					die("Removing calendars failed !"); 
 		
 		}
 

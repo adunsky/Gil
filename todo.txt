@@ -2,8 +2,8 @@ Security authorization - get user email through gadget
 write logs and exceptions, control the level
 calendarServ.php breaks if DB is down
 script to download to SS from DB - fix time limit
-Fix dates without leading 0
-Allow adding fields in updateDB
+Fix dates without leading 0 in backup
+Allow adding and removing fields in updateDB
 Remove calendars one-by-one to ensure removal from DB
 Allow removing users and calendars in updateDB (remove events)
 

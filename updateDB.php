@@ -135,6 +135,13 @@ function updateListValueTable($worksheetFeed, $listValueTable) {
 
 
 function createFieldTypeTable($worksheetFeed, $fieldTable, $listValueTable) {
+		global $mainTable;
+	
+		// get the current number of fields in case we need to add to Main
+		$sql = "SELECT * FROM $fieldTable;";
+		$result = mysql_query($sql) or die('Select Fields table Failed! ' . mysql_error());
+		$fieldsCount = mysql_num_rows($result);
+		
 		// create fieldType table
 		$sql = "DROP TABLE IF EXISTS $fieldTable;";
 		$result = mysql_query($sql) or die('Drop table Failed! ' . mysql_error());
@@ -173,6 +180,19 @@ function createFieldTypeTable($worksheetFeed, $fieldTable, $listValueTable) {
 					// echo $sql;
 			$result = mysql_query($sql) or die('Insert to fields table Failed! ' . mysql_error());
 
+			if ($row-1 > $fieldsCount) { // new fields added
+				echo "Adding column: ".$name." to Main table <br>\n";
+				// add the extra columns to the Main table	
+				if ($type == 'TEXT' || $type == 'LIST')		// translate TEXT in the worksheet to VARCHAR(64)
+					$DBtype = 'VARCHAR(64)';
+				elseif ($type == 'Hyperlink' || $type == 'EmbedHyperlink')
+						$DBtype = 'VARCHAR(256)';	// For long links
+				else	
+					$DBtype = 'VARCHAR(32)'; // DATE field		
+						
+				$sql = "ALTER TABLE $mainTable ADD `$row` $DBtype;";
+				$result = mysql_query($sql) or die('Add column to main table Failed! ' . mysql_error());
+			}
 			if ($type == "LIST") {
 				// Add list values to list table
 				$col = 5;	
@@ -187,6 +207,8 @@ function createFieldTypeTable($worksheetFeed, $fieldTable, $listValueTable) {
 			}
 			$cellEntry = $cellFeed->getCell(++$row, 1);
 		}
+	
+		
 }
 
 function createFormTables($worksheetFeed, $formsTable, $formFieldsTable) {

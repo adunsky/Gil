@@ -98,6 +98,7 @@ function shareCalendar($calID, $email) {
 		$scope->setValue($email);
 		$rule->setScope($scope);
 		$rule->setRole("reader");
+		//$rule->setRole("owner");
 		
 		$createdRule = $service->acl->insert($calID, $rule);
 		echo "Rule: ".$createdRule->getId()."<br>\n";			
@@ -107,24 +108,22 @@ function shareCalendar($calID, $email) {
 }
 
 
-function deleteCalendars($calendars) {
+function deleteCalendar($calendar) {
 	 
 	$service = initCalendar();
-	$failed = false;	
-	foreach ($calendars as $calendar) {
-		try {
-			$service->calendars->delete($calendar);
-			echo "calendar deleted: ".$calendar."<br>\n";
-		}
-		catch(Exception $e) {
-		  echo 'Exception: ' .$e->getMessage(). "<br>\n";
-		  $failed = true;
-		}
+	$success = true;	
+
+	try {
+		$service->calendars->delete($calendar);
+		echo "calendar deleted: ".$calendar."<br>\n";
 	}
-	if ($failed)
-		return false;
-	else	
-		return true;	
+	catch(Exception $e) {
+	  echo 'Exception: ' .$e->getMessage(). "<br>\n";
+	  $success = false;
+	}
+
+	return $success;
+	
 } // delete
 
 

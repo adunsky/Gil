@@ -198,7 +198,7 @@ session_start();
 				$calEvent->setLocation($location);
 				if ($color) {
 					echo "Color: " . $color."<br\n";
-					$calEvent->setColorID(getColor($color));				
+					$calEvent->setColorId(getColor($color));				
 				}
 				$allDay = false;
 				if ($date1 == "" || $date2 == "" || $date1 == $date2) {
@@ -248,7 +248,7 @@ session_start();
 				$gadget->setTitle("Gil's Gadget");
 				
 				$calEvent->gadget = $gadget;
-	*/			
+		
 				$attendee1 = new Google_Service_Calendar_EventAttendee();
 				$attendee1->setEmail('gildavidov7@gmail.com');
 				// ...
@@ -256,7 +256,7 @@ session_start();
 				                   // ...
 				                  );
 				//$calEvent->attendees = $attendees;
-	
+	*/		
 				try {
 					if($new) {
 						$updatedEvent = $service->events->insert($calendarID, $calEvent);
@@ -290,24 +290,17 @@ session_start();
 
 
 $Colors  =  array( 
- 
-		"black" =>	"#000000", // 0,0,0
- 	 	"silver"	=> "#C0C0C0", //	192,192,192
- 	 	"gray" =>	"#808080", //	128,128,128
- 	 	"white" => "#FFFFFF", //	255,255,255
- 	 	"maroon" =>	"#800000", //	128,0,0
- 	 	"red" => "#FF0000", //	255,0,0
- 	 	"purple" =>	"#800080", //	128,0,128
- 	 	"fuchsia" => "#FF00FF", //	255,0,255
- 	 	"green" =>	"#008000", //	0,128,0
- 	 	"lime" =>	"#00FF00", //	0,255,0
- 	 	"olive" =>	"#808000", //	128,128,0
- 	 	"yellow" => "#FFFF00", //	255,255,0
- 	 	"navy" =>	"#000080", //	0,0,128
- 	 	"blue" =>	"#0000FF", //	0,0,255
- 	 	"teal" => 	"#008080", //	0,128,128
- 	 	"aqua" =>	"#00FFFF", // 0,255,255 
- 	 	"cyan" =>	"#00FFFF"	// 0,255,255
+  		"cyan" => "1",
+		"teal" => "2",
+		"purple" => "3",
+		"Magenta" => "4",
+		"yellow" => "5",
+		"orange" => "6",
+		"Turquoise" => "7",
+		"silver" => "8",
+		"blue" => "9",
+		"green" => "10",
+		"red" => "11"
  );
 
         //  GetColor  returns  an  associative  array  with  the  red,  green  and  blue 
