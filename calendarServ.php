@@ -114,7 +114,7 @@ session_start();
 						if (strpos($type1, "STARTTIME") === 0) {
 							$twinNum = substr($type1, strlen("STARTTIME")); // this is the index of the start-end twin
 							$type2 = "ENDTIME".$twinNum;
-							
+							echo "found end time: ".$type2."<br>\n";							
 							// query the field table for the end date
 							$sql = "SELECT * FROM $fieldTable WHERE type='$type2';";
 							$result = mysql_query($sql) or die('Select field Failed! ' . mysql_error()); 

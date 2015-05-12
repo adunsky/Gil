@@ -145,7 +145,11 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 		    					// add an empty string to the list if not already there
 								if ($scope.form.fields[i].value != "")		    					
 		    						$scope.form.fields[i].listValues.push("");
-		    				}  				
+		    				}
+		    				if ($scope.form.fields[i].type == 'DATETIME') {
+		    					// the control expects format yyyy-mm-ddThh:mm
+		    					$scope.form.fields[i].value = $scope.form.fields[i].value.replace(" ", "T");
+		    				}	    				  				
 		      				
 		      		}    		
 			}
@@ -256,6 +260,24 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 			
          
 	        
+})
+.directive('progressBar', function() {		// This code is needed to support ie
+  return {
+    restrict: 'A',
+    link: function(scope, element, attrs) {
+      var watchFor = attrs.progressBarWatch;
+      
+      // update now
+      var val = scope[watchFor];
+      element.attr('aria-valuenow', val)
+        .css('width', val+"%");
+      
+      // watch for the value
+      scope.$watch(watchFor, function(val) {
+        element.attr('aria-valuenow', val)
+          .css('width', val+"%");
+      })
+    }
+  }
 });
-
 
