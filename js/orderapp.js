@@ -146,7 +146,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 								if ($scope.form.fields[i].value != "")		    					
 		    						$scope.form.fields[i].listValues.push("");
 		    				}
-		    				if ($scope.form.fields[i].type == 'DATETIME') {
+		    				if ($scope.form.fields[i].type == 'DATETIME' && $scope.form.fields[i].fieldType == "Edit") {
 		    					// the control expects format yyyy-mm-ddThh:mm
 		    					$scope.form.fields[i].value = $scope.form.fields[i].value.replace(" ", "T");
 		    				}	    				  				
