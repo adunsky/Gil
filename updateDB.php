@@ -305,7 +305,7 @@ function updateCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 							$calID = createCalendar($worksheetFeed, $name);
 						
 						// add it to calendar table
-						$sql = "INSERT INTO $calendarsTable VALUES ('$calNumber', '$name', '$row', '$filter', 0, 0, 0, 0, 0, '$calID');";
+						$sql = "INSERT INTO $calendarsTable VALUES ('$calNumber', '$name', '$row', '$filter', 0, 0, 0, 0, '$calID');";
 						$result = mysql_query($sql) or die('Insert calendar Failed! ' . mysql_error());
 					}
 					
