@@ -201,7 +201,8 @@ session_start();
 					$calEvent->setColorId(getColor($color));				
 				}
 				$allDay = false;
-				if ($date1 == "" || $date2 == "" || $date1 == $date2 || !strtotime($date2)) {
+				// if there are no 2 valid dates it is an all day event
+				if ($date1 == "" || $date2 == "" || $date1 == $date2 || !strtotime($date1) || !strtotime($date2)) {
 					$allDay = true;
 					$date1 = $date2 = $date;	// It is an all day event
 				}
