@@ -202,13 +202,16 @@ session_start();
 				}
 				$allDay = false;
 				// if there are no 2 valid dates it is an all day event
-				if ($date1 == "" || $date2 == "" || $date1 == $date2 || !strtotime($date1) || !strtotime($date2)) {
+				$timestamp1 = strtotime($date1);
+				$timestamp2 = strtotime($date2);	
+											
+				if ($date1 == "" || $date2 == "" || !$timestamp2 || !$timestamp1 || $timestamp1 >= $timestamp2) {
 					$allDay = true;
 					$date1 = $date2 = $date;	// It is an all day event
 				}
 				$start = new Google_Service_Calendar_EventDateTime();
 				$start->setTimeZone("Asia/Jerusalem");
-				$timestamp1 = strtotime($date1);
+
 				if ($allDay) {
 					// format it without the time
 					$date = date("Y-m-d", $timestamp1);
@@ -221,7 +224,6 @@ session_start();
 				}
 				$calEvent->setStart($start);
 	
-				$timestamp2 = strtotime($date2);			
 				$end = new Google_Service_Calendar_EventDateTime();
 				$end->setTimeZone("Asia/Jerusalem");
 				if ($allDay) {
