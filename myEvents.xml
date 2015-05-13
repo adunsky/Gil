@@ -215,7 +215,7 @@ function drawMarker(e, bounds) {
 		marker.win = new google.maps.InfoWindow({ content: e.title + '<br><a href="#" onclick="openForm(\''+e.id+'\')">Update</a>' });
 		// on click - open the stable window
 		google.maps.event.addListener(marker, 'click', function() {
-				this.win.open(map, marker);
+			openForm(e.id);
 		});
 		// on mouseover - open the tooltip		
 		google.maps.event.addListener(marker, 'mouseover', function() {
