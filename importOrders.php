@@ -41,9 +41,13 @@
 		$values = "'null' ";
 		$dates = [];
 		$newOrder = [];
+		$count = 0;
 		while ($field = mysql_fetch_array($fields, MYSQL_ASSOC)) {
 
 			list($key, $value) = each($order);
+			if ($count++ == 0)
+				list($key, $value) = each($order);	// skip the id column			
+			
 			$field["value"] = $value;
 
 			$name = $field["index"];
@@ -88,7 +92,11 @@
 				
 			$values = "'null' ";
 			$dates = [];
+			$count = 0;
 			foreach ($order as $field) {
+				if ($count++ ==0)
+					continue;	// skip the id column								
+				
 				$name = $field["index"];
 				$value = $field["value"];
 				//echo "Index: ".$name." value: ".$value."<br>\n";
