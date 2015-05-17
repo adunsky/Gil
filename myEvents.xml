@@ -211,9 +211,10 @@ function drawMarker(e, bounds) {
 		bounds.extend(Locations[e.location]);
   	  		map.fitBounds(bounds); 
 		          
-		marker.info = new google.maps.InfoWindow({ content: e.title });
+		marker.info = new google.maps.InfoWindow({ content: e.title, disableAutoPan: true });
 		marker.win = new google.maps.InfoWindow({ content: e.title + '<br><a href="#" onclick="openForm(\''+e.id+'\')">Update</a>' });
 		// on click - open the stable window
+		
 		google.maps.event.addListener(marker, 'click', function() {
 			openForm(e.id);
 		});
