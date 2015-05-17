@@ -212,9 +212,9 @@ function drawMarker(e, bounds) {
   	  		map.fitBounds(bounds); 
 		          
 		marker.info = new google.maps.InfoWindow({ content: e.title, disableAutoPan: true });
-		marker.win = new google.maps.InfoWindow({ content: e.title + '<br><a href="#" onclick="openForm(\''+e.id+'\')">Update</a>' });
-		// on click - open the stable window
-		
+		// marker.win = new google.maps.InfoWindow({ content: e.title + '<br><a href="#" onclick="openForm(\''+e.id+'\')">Update</a>' });
+
+		// on click - open the form
 		google.maps.event.addListener(marker, 'click', function() {
 			openForm(e.id);
 		});
