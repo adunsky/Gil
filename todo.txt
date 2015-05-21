@@ -1,3 +1,6 @@
+Default start hour - 8:00 am
+DateTime control display format
+Maintain service user info in customers DB ?
 Security authorization - get user email through gadget
 write logs and exceptions, control the level
 calendarServ.php breaks if DB is down

@@ -27,7 +27,7 @@
 	}	
 	initGoogleAPI($ssName);	
 	$order = getCalcFields($order);  // get from spreadsheet
-
+	//var_dump($order);
 	if ($orderID) {
 		// check if order exists
 		$sql = "SELECT * FROM $mainTable WHERE id = $orderID;";
