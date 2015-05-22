@@ -132,9 +132,9 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 			getTimezoneOffset = function () {
 				var offset = new Date().getTimezoneOffset()/60;
 			    var hours = Math.abs(parseInt(offset));
-			    var minutes = (Math.abs(offset) - hours)*10;
+			    var minutes = (Math.abs(offset) - hours)*60;
 
-			    if (offset == Math.abs(offset)) // positive
+			    if (offset > 0) // positive
 			    	var sign="-";
 			    else
 			    	var sign="+";
@@ -163,8 +163,10 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 		    						$scope.form.fields[i].listValues.push("");
 		    				}
 		    				if ($scope.form.fields[i].type == 'DATETIME' && $scope.form.fields[i].fieldType == "Edit") {
-		    					// the control expects format yyyy-mm-ddThh:mm
-		    					$scope.form.fields[i].value = $scope.form.fields[i].value.replace(" ", "T") + getTimezoneOffset();
+		    					// the control expects format yyyy-mm-ddThh:mm+timezoneOffset
+		    					var date = new Date($scope.form.fields[i].value);
+		    					if ($scope.form.fields[i].value != "" && (date !== "Invalid Date") && !isNaN(date))
+		    						$scope.form.fields[i].value = $scope.form.fields[i].value.replace(" ", "T") + getTimezoneOffset();
 		    				}	    				  				
 		      				
 		      		}    		
