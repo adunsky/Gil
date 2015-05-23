@@ -165,7 +165,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 		    				if ($scope.form.fields[i].type == 'DATETIME' && $scope.form.fields[i].fieldType == "Edit") {
 		    					// the control expects format yyyy-mm-ddThh:mm+timezoneOffset
 		    					var date = new Date($scope.form.fields[i].value);
-		    					if ($scope.form.fields[i].value != "" && (date !== "Invalid Date") && !isNaN(date))
+		    					if ($scope.form.fields[i].value != "")
 		    						$scope.form.fields[i].value = $scope.form.fields[i].value.replace(" ", "T") + getTimezoneOffset();
 		    				}	    				  				
 		      				
