@@ -59,7 +59,7 @@
 		      <div class="form-group col-sm-12" ng-if="field.type=='DATE'">
 		       <div class="col-sm-7">
 		         <p class="input-group">
-		             <input type="text" class="form-control" name="{{field.name}}" id="{{field.name}}" datetime-picker="dd-MM-yyyy" ng-model="field.value" value="{{field.value}}" enable-time="false" close-on-date-selection="true" is-open="field.dateTimeCalendarisOpen" />
+		             <input type="text" class="form-control" name="{{field.name}}" id="{{field.name}}" ng-readonly="true" datetime-picker="dd-MM-yyyy" ng-model="field.value" value="{{field.value}}" enable-time="false" close-on-date-selection="true" is-open="field.dateTimeCalendarisOpen" />
 		             <span class="input-group-btn">
 		                 <button type="button" class="btn btn-default" ng-click="openDateTimeCalendar($event, field)" ng-disabled="{{field.fieldType=='Read Only'}}"><i class="fa fa-calendar"></i></button>
 		             </span>
@@ -70,7 +70,7 @@
 		      <div class="form-group col-sm-12" ng-if="field.type=='DATETIME'">
 		       <div class="col-sm-7">
 		         <p class="input-group">
-		             <input type="text" class="form-control" name="{{field.name}}" id="{{field.name}}" datetime-picker="dd-MM-yyyy HH:mm" ng-model="field.value" value="{{field.value}}" enable-time="true" close-on-date-selection="true" is-open="field.dateTimeCalendarisOpen" timepicker-options="timeOptions"/>
+		             <input type="text" class="form-control" name="{{field.name}}" id="{{field.name}}" ng-readonly="true" datetime-picker="dd-MM-yyyy HH:mm" ng-model="field.value" value="{{field.value}}" enable-time="true" close-on-date-selection="true" is-open="field.dateTimeCalendarisOpen" timepicker-options="timeOptions"/>
 		             <span class="input-group-btn">
 		                 <button type="button" class="btn btn-default" ng-click="openDateTimeCalendar($event, field)" ng-disabled="{{field.fieldType=='Read Only'}}"><i class="fa fa-calendar"></i></button>
 		             </span>
