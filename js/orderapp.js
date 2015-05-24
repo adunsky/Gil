@@ -182,9 +182,13 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
       
 			$scope.timeOptions = {
 			    //readonlyInput: true,
+			    startingTime: "08:00",
 			    showMeridian: false
 			};
-  
+			$scope.dateOptions = {
+			    //readonlyInput: true,
+			    showWeeks: false
+			};
 
 	      $scope.updateOrder = function () {
 	      		document.body.style.cursor = 'wait';
