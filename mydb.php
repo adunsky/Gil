@@ -3,11 +3,12 @@
    * db definition
    */ 
    
-   $hostname = 'localhost';
+   	$hostname = 'localhost';
 	$username = 'amosg';
 	$password = "96e346nv932&";
 	$appname = "Gilamos";
 
+/*
 	//  new ones:	 
 	$clientid = '785966582104-ab859l88mtgu200tsssapjerfkeqgbri.apps.googleusercontent.com';
 	$clientmail = '785966582104-ab859l88mtgu200tsssapjerfkeqgbri@developer.gserviceaccount.com';
@@ -15,7 +16,7 @@
 
 
 	// old ones - use it to clean the calendars
- /*
+
 	$clientid = '457875993449-48gmkqssiulu00va3vtrlvg297pv1j8u.apps.googleusercontent.com';
 	$clientmail = '457875993449-48gmkqssiulu00va3vtrlvg297pv1j8u@developer.gserviceaccount.com';
 	$clientkeypath = 'API Project-0ffd21d566b5.p12';
@@ -49,6 +50,26 @@ function selectDB($dbName)	{
 	return true;
 }
 
+ 
+function getClientInfo($DBname) {
+		global $globalDBName, $clientid, $clientmail, $clientkeypath, $lang;
+
+		$currentDB = $globalDBName; // save current DB
+		if (selectDB("customers")) {
+	      $sql =  "SELECT * FROM customers WHERE dbName='$DBname';";
+	      $result = mysql_query($sql);
+      	$customer = mysql_fetch_array($result);
+      	$ssName = $customer["ssName"];
+      	$clientid = $customer["clientID"];
+      	$clientmail = $customer["clientMail"];
+      	$clientkeypath = $customer["clientKeyPath"];
+      	$lang = $customer["lang"];
+      	if ($currentDB && $currentDB != "")
+      		selectDB($currentDB); // set it back to original	
+      	return $ssName;
+		}	
+		return NULL;
+} 
 
 function authUserForm($user, $formID) {
 	global $calendarsTable, $usersTable;

@@ -14,7 +14,7 @@
 	$dbName = $_GET['db'];
 	//echo $dbName;
 			
-	$ssName = getClientSS($dbName);
+	$ssName = getClientInfo($dbName);
 	if ($ssName)
 		setSSName($ssName);
 	else {

@@ -38,7 +38,7 @@ use Google\Spreadsheet\ServiceRequestFactory;
 		if (!selectDB($dbName))
 			return;	
 			
-		$ssName = getClientSS($dbName);
+		$ssName = getClientInfo($dbName);
 		if ($ssName)
 			setSSName($ssName);
 		else {

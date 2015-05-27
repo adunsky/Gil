@@ -46,8 +46,8 @@ orderApp.config(function($routeProvider){
                 templateUrl: 'newOrder.html'
           })
 
-          .when('/updateOrder',{
-                templateUrl: 'updateOrder.html'
+          .when('/ltrForm',{
+                templateUrl: 'ltrForm.html'
           });
 
 });
@@ -301,4 +301,20 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
       })
     }
   }
+})
+
+.directive('ngInput', function () {
+    return function (scope, element, attrs) {
+        element.bind("keypress", function (event) {
+        	// prevent '=' or '+' input at the begining of an input text:
+            if((event.currentTarget.selectionEnd === 0 || event.currentTarget.selectionStart === 0) &&
+            	(event.which === "=".charCodeAt(0) || event.which === "+".charCodeAt(0))) {
+                //scope.$apply(function (){
+                //    scope.$eval(attrs.ngEnter);
+                //});
+
+                event.preventDefault();
+            }
+        });
+    };
 });

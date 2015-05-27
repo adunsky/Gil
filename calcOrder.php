@@ -14,7 +14,7 @@
   	$dbName = $data["dbName"]; 
 	$order = $data["order"];
 	
-	$ssName = getClientSS($dbName);
+	$ssName = getClientInfo($dbName);
 	if ($ssName)
 		setSSName($ssName);
 	else {

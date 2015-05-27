@@ -9,6 +9,8 @@
 	if (!selectDB($dbName))
 		return;			 
 	
+	getClientInfo($dbName);
+
 	$sql = "SELECT * FROM $formsTable;";
 	$result = mysql_query($sql) or die('get fields Failed! ' . mysql_error()); 
 	if (mysql_num_rows($result) > 0)	{
@@ -16,7 +18,11 @@
 		$forms = [];
 		while ($form = mysql_fetch_array($result, MYSQL_ASSOC)) {
 			$formID = $form["number"];
-			
+			if ($lang == 'eng') // Left to right form
+				$form["dir"] = "ltr";
+			else  // right to left form
+				$form["dir"] = "rtl";
+
 			$fieldsql = "SELECT * FROM $formFieldsTable WHERE formNumber = '$formID';";
 			$fieldresult = mysql_query($fieldsql) or die('get fields Failed! ' . mysql_error()); 
 			if (mysql_num_rows($fieldresult) > 0)	{

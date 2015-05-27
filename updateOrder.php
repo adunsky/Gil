@@ -18,7 +18,7 @@
 		syslog(LOG_ERR, "Failed to select client DB: "+$dbName);
 		return;	
 	}
-	$ssName = getClientSS($dbName);
+	$ssName = getClientInfo($dbName);
 	if ($ssName)
 		setSSName($ssName);
 	else {

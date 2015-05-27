@@ -33,6 +33,7 @@ session_start();
 	if (!selectDB($dbName))
 		return;	
 	
+	getClientInfo($dbName);
 	$client = new Google_Client();
 	$client->setApplicationName($appname);
 	$client->setClientId($clientid);
@@ -234,22 +235,20 @@ session_start();
 					echo "End: ".$endDate."<br>\n";
 				}
 				$calEvent->setEnd($end);
-				//$calEvent->setDescription($description);
-				// all day event ?
-	/*
-				
+	
+				/*
 				$gadget = new Google_Service_Calendar_EventGadget();
-				$gadget->setDisplay("chip");
-				$gadget->setIconLink("https://localhost/gil/done.jpg");
-				$gadget->setLink("https://amosgery.5gbfree.com/gil/myEvents1.xml");
-				//$gadget->setType("application/x-google-gadgets+xml");
+				$gadget->setDisplay("icon");
+				$gadget->setIconLink("https://www.thefreedictionary.com/favicon.ico");
+				$gadget->setLink("https://googlemesh.com/Gilamos/hello.xml");
+				$gadget->setType("application/x-google-gadgets+xml");
 			  	$gadget->setHeight(236);
-			   $gadget->setWidth(600);
-				$gadget->setType("html");
+			   	$gadget->setWidth(600);
+				//$gadget->setType("html");
 				$gadget->setTitle("Gil's Gadget");
 				
 				$calEvent->gadget = $gadget;
-		
+				/*
 				$attendee1 = new Google_Service_Calendar_EventAttendee();
 				$attendee1->setEmail('gildavidov7@gmail.com');
 				// ...
@@ -257,7 +256,8 @@ session_start();
 				                   // ...
 				                  );
 				//$calEvent->attendees = $attendees;
-	*/		
+				*/
+	
 				try {
 					if($new) {
 						$updatedEvent = $service->events->insert($calendarID, $calEvent);
@@ -266,7 +266,7 @@ session_start();
 						$calEvent = $updatedEvent;
 					}
 					
-					$calEvent->setDescription("<p>Order ID :".$orderID."</p><br><a href='http://www.googlemesh.com/Gilamos/#/newOrder?id=".$eventID."&db=".$dbName."'>Update</a>");
+					$calEvent->setDescription("<p>Order ID :".$orderID."</p><br><a href='http://googlemesh.com/Gilamos/#/newOrder?id=".$eventID."&db=".$dbName."'>Update</a>");
 					$updatedEvent = $service->events->update($calendarID, $calEvent->getId(), $calEvent);
 					$sql = "UPDATE $eventsTable set eventID='$eventID', updated='1' WHERE calendarID='$calendarNum' AND fieldIndex='$fieldIndex' AND orderID='$orderID';";
 					$result = mysql_query($sql) or die('Update event Failed! ' . mysql_error());
