@@ -238,6 +238,16 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 	      		$scope.order[fieldIndex].value = $scope.form.fields[i].value;
 	      	}         
 			}
+
+			$scope.validate = function(value) {
+				var i = 0
+				// do not allow '=' or '+' at the begining of an input text due to the spreadsheet limitation
+				while (value[i] && value[i] != "" && (value[i] == '=' || value[i] == '+'))
+					i++; // proceed until no '=' or '+' at the beginning 
+
+				return value.substring(i, value.length);	
+
+			}
   
 	      $scope.calcOrder = function () {
 	      		document.body.style.cursor = 'wait';
@@ -302,19 +312,3 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
     }
   }
 })
-
-.directive('ngInput', function () {
-    return function (scope, element, attrs) {
-        element.bind("keypress", function (event) {
-        	// prevent '=' or '+' input at the begining of an input text:
-            if((event.currentTarget.selectionEnd === 0 || event.currentTarget.selectionStart === 0) &&
-            	(event.which === "=".charCodeAt(0) || event.which === "+".charCodeAt(0))) {
-                //scope.$apply(function (){
-                //    scope.$eval(attrs.ngEnter);
-                //});
-
-                event.preventDefault();
-            }
-        });
-    };
-});
