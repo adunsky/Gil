@@ -1,6 +1,9 @@
 Add validation for "+=-" etc..
 Support english forms
-New calendar configuration
+New calendar configuration:
+	- remove fieldIndex from eventsTable
+	- fix updateDB for calendars
+	- write script to create calendars and events without importing data
 Maintain service user info in customers DB ?
 Web page
 Default start hour - 8:00 am

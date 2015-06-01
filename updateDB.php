@@ -271,60 +271,31 @@ function createFormTables($worksheetFeed, $formsTable, $formFieldsTable) {
 
 
 function updateCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fieldTable) {
-		// Just add new defined calendars
+		// add new calendars at the end of the list or update form, title, location fields
+		// Read the calendars worksheet
 		$worksheet = $worksheetFeed->getByTitle('Calendars');
 		$cellFeed = $worksheet->getCellFeed();
 		
-		$col = 2;
-		
-		// loop on columns to find all calendars
-		$cellEntry = $cellFeed->getCell(1,$col);		
-		while ($cellEntry && ($name = $cellEntry->getContent()) != "") {
-
-			// insert calendar to calendars table
-			$calNumber = $col-1;
-			$calID = null;
-			// loop on rows to find all date fields per calendar
-			$row = 2;
-			$fieldCell = $cellFeed->getCell($row, 1);
-			while ($fieldCell && ($fieldCell->getContent()) != "") {
-				$calCell = $cellFeed->getCell($row, $col);
-				if ($calCell)	
-					$filter = $calCell->getContent();	// The correct title with spaces	
-				else 	
-					$filter = "";
-					
-		
-				if ($filter != "") {
-					// Check if calendar exist
-					$sql = "SELECT * FROM $calendarsTable WHERE number ='$calNumber' AND name='$name' AND fieldIndex='$row' AND filter='$filter';";
-					$result = mysql_query($sql) or die('Select calendar Failed! ' . mysql_error());
-					if (mysql_num_rows($result) == 0) {
-						// calendar doesn't exist - create it and add to the table
-						if (!$calID)
-							$calID = createCalendar($worksheetFeed, $name);
-						
-						// add it to calendar table
-						$sql = "INSERT INTO $calendarsTable VALUES ('$calNumber', '$name', '$row', '$filter', 0, 0, 0, 0, '$calID');";
-						$result = mysql_query($sql) or die('Insert calendar Failed! ' . mysql_error());
-					}
-					
-				} 
-				$fieldCell = $cellFeed->getCell(++$row, 1);
-			}
-			$cellEntry = $cellFeed->getCell(1,++$col);				
-		}
-			
-		// Read the calendar-form mapping worksheet
-		$worksheet = $worksheetFeed->getByTitle('Calendar-Form');
-		$cellFeed = $worksheet->getCellFeed();
-		
 		$row = 2;
+		$calNumber = 0;
+		$calID = 0;
+		$prevCalName = "";
 		// loop on rows = calendars
 		$cellEntry = $cellFeed->getCell($row, 1);		
 		while ($cellEntry && ($calendarName = $cellEntry->getContent()) != "") {
+			if ($calendarName != $prevCalName) {
+				// a new calendar
+				$calID = 0;
+			}
+			$prevCalName = $calendarName;
+			// a new calendar number
+			$calNumber++;
+
 			// go over columns to get the details per calendar
 			$col = 2;
+			$fieldCell = $cellFeed->getCell($row, $col++);
+			if ($fieldCell)
+				$fieldName = $fieldCell->getContent();
 			$fieldCell = $cellFeed->getCell($row, $col++);
 			if ($fieldCell)
 				$formName = $fieldCell->getContent();
@@ -339,7 +310,13 @@ function updateCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 				$colorFieldName = $fieldCell->getContent();
 			else 
 				$colorFieldName = 0;	
-								
+
+			// find the key field index	
+			$sql = "SELECT * FROM $fieldTable WHERE name='$fieldName';";			
+			$result = mysql_query($sql) or die('Get field index Failed! ' . mysql_error());	
+			if ($field = mysql_fetch_array($result))
+				$fieldIndex = $field["index"];	
+
 			// find the form ID
 			$sql = "SELECT * FROM $formsTable WHERE title='$formName';";			
 			$result = mysql_query($sql) or die('Get form Failed! ' . mysql_error());	
@@ -356,20 +333,28 @@ function updateCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 			$sql = "SELECT * FROM $fieldTable WHERE name='$locationFieldName';";			
 			$result = mysql_query($sql) or die('Get location field Failed! ' . mysql_error());	
 			if ($field = mysql_fetch_array($result))
-				$locationFieldIndex = $field["index"];				
+				$locationFieldIndex = $field["index"];
 
-			// find the color field index	
-			$sql = "SELECT * FROM $fieldTable WHERE name='$colorFieldName';";			
-			$result = mysql_query($sql) or die('Get color field Failed! ' . mysql_error());	
-			if ($field = mysql_fetch_array($result))
-				$colorFieldIndex = $field["index"];
-			else 
-				$colorFieldIndex = 0;			
 
-			// update the calendar table with the calendar details
-			$sql = "UPDATE $calendarsTable set formNumber=$formID, titleField=$titleFieldIndex, locationField=$locationFieldIndex, colorField=$colorFieldIndex WHERE name='$calendarName';";			
-			mysql_query($sql) or die('Update calendar details Failed! ' . mysql_error());	
-				
+			// Check if calendar exist
+			$sql = "SELECT * FROM $calendarsTable WHERE number ='$calNumber';";
+			$result = mysql_query($sql) or die('Select calendar Failed! ' . mysql_error());
+			if (mysql_num_rows($result) == 0) {
+				// it is a new calendar with a new number
+				if (!$calID) {
+					// calendar doesn't exist - create it and add to the table
+					$calID = createCalendar($worksheetFeed, $calendarName);
+				}
+				if ($calID) {
+					$sql = "INSERT INTO $calendarsTable VALUES ('$calNumber', '$calendarName', '$fieldIndex', '$formID', '$titleFieldIndex', '$locationFieldIndex', '$calID');";
+					$result = mysql_query($sql) or die('Insert calendar Failed! ' . mysql_error());
+				}
+			}				
+			else {
+				// calendar exist - update it
+				$sql = "UPDATE $calendarsTable SET formNumber='$formID', titleField='$titleFieldIndex', locationField='$locationFieldIndex' WHERE number='$calNumber' AND name='$calendarName' AND fieldIndex='$fieldIndex';";
+				$result = mysql_query($sql) or die('Update calendar Failed! ' . mysql_error());
+			}
 			$cellEntry = $cellFeed->getCell(++$row, 1);		
 		}
 

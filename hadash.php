@@ -52,10 +52,11 @@ use Google\Spreadsheet\ServiceRequestFactory;
 		$spreadsheet = initGoogleAPI(); // from spreadsheet.php
 		$worksheetFeed = $spreadsheet->getWorksheets();
 		if ($command == "clean") {
-			// remove the google calendars
+			// remove the google calendars and table
 			removeCalendars($worksheetFeed, $calendarsTable, $eventsTable);
 		}
-		if ($command == "new") {
+		if ($command == "new") { 
+			// recreate the DB - remove all the data !!!
 			// Create FieldType table
 			createFieldTypeTable($worksheetFeed, $fieldTable, $listValueTable);
 		
@@ -75,6 +76,16 @@ use Google\Spreadsheet\ServiceRequestFactory;
 			
 			// Create Users table		
 			createUsersTable($worksheetFeed, $usersTable, $calendarsTable);
+		}
+		if ($command == "calendars") { // recreate calendars and events 
+			// remove the google calendars
+			removeCalendars($worksheetFeed, $calendarsTable, $eventsTable);					
+			// Create calendar and tables
+			createCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fieldTable);
+			// Create events table		
+			createEventsTable($worksheetFeed, $eventsTable); 
+			// Create Users table		
+			createUsersTable($worksheetFeed, $usersTable, $calendarsTable);					
 		}
 
 function createMainTable($worksheetFeed, $fieldTable, $mainTable)	{
@@ -278,59 +289,35 @@ function createCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 		$result = mysql_query($sql) or die('Drop table Failed! ' . mysql_error());
 	
 		// Create Calendars table		
-		$sql = "CREATE TABLE $calendarsTable ( number INT(32), name VARCHAR(64), fieldIndex INT(32), filter VARCHAR(64), formNumber INT(32), titleField INT(32) , locationField INT(32), colorField INT(32),calID VARCHAR(128));";
+		$sql = "CREATE TABLE $calendarsTable ( number INT(32), name VARCHAR(64), fieldIndex INT(32), formNumber INT(32), titleField INT(32) , locationField INT(32), calID VARCHAR(128));";
 				// echo $sql;
 		$result = mysql_query($sql) or die('Create Calendars table Failed! ' . mysql_error());
 	
 		echo "Table ".$calendarsTable." created<br>\n"; 
 		
+		// Read the calendars worksheet
 		$worksheet = $worksheetFeed->getByTitle('Calendars');
 		$cellFeed = $worksheet->getCellFeed();
 		
-		$col = 2;
-		
-		// loop on columns to find all calendars
-		$cellEntry = $cellFeed->getCell(1,$col);		
-		while ($cellEntry && ($name = $cellEntry->getContent()) != "") {
-
-			// insert calendar to calendars table
-			$calNumber = $col-1;
-			$calID = null;
-			// loop on rows to find all date fields per calendar
-			$row = 2;
-			$fieldCell = $cellFeed->getCell($row, 1);
-			while ($fieldCell && ($fieldCell->getContent()) != "") {
-				$calCell = $cellFeed->getCell($row, $col);
-				if ($calCell)	
-					$filter = $calCell->getContent();	// The correct title with spaces	
-				else 	
-					$filter = "";
-					
-				if ($filter != "") {
-					// create google calendar
-					if (!$calID)
-						$calID = createCalendar($worksheetFeed, $name);
-					
-					// add date to calendar table
-					$sql = "INSERT INTO $calendarsTable VALUES ('$calNumber', '$name', '$row', '$filter', 0, 0, 0, 0, '$calID');";
-					$result = mysql_query($sql) or die('Insert field Failed! ' . mysql_error());
-					
-				} 
-				$fieldCell = $cellFeed->getCell(++$row, 1);
-			}
-			$cellEntry = $cellFeed->getCell(1,++$col);				
-		}
-			
-		// Read the calendar-form mapping worksheet
-		$worksheet = $worksheetFeed->getByTitle('Calendar-Form');
-		$cellFeed = $worksheet->getCellFeed();
-		
 		$row = 2;
+		$calNumber = 0;
+		$calID = 0;
+		$prevCalName = "";
 		// loop on rows = calendars
 		$cellEntry = $cellFeed->getCell($row, 1);		
 		while ($cellEntry && ($calendarName = $cellEntry->getContent()) != "") {
+			if ($calendarName != $prevCalName) {
+				// a new calendar
+				$calID = 0;
+			}
+			$prevCalName = $calendarName;
+			$calNumber++;
+
 			// go over columns to get the details per calendar
 			$col = 2;
+			$fieldCell = $cellFeed->getCell($row, $col++);
+			if ($fieldCell)
+				$fieldName = $fieldCell->getContent();
 			$fieldCell = $cellFeed->getCell($row, $col++);
 			if ($fieldCell)
 				$formName = $fieldCell->getContent();
@@ -345,7 +332,13 @@ function createCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 				$colorFieldName = $fieldCell->getContent();
 			else 
 				$colorFieldName = 0;	
-								
+
+			// find the key field index	
+			$sql = "SELECT * FROM $fieldTable WHERE name='$fieldName';";			
+			$result = mysql_query($sql) or die('Get field index Failed! ' . mysql_error());	
+			if ($field = mysql_fetch_array($result))
+				$fieldIndex = $field["index"];	
+
 			// find the form ID
 			$sql = "SELECT * FROM $formsTable WHERE title='$formName';";			
 			$result = mysql_query($sql) or die('Get form Failed! ' . mysql_error());	
@@ -363,19 +356,17 @@ function createCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 			$result = mysql_query($sql) or die('Get location field Failed! ' . mysql_error());	
 			if ($field = mysql_fetch_array($result))
 				$locationFieldIndex = $field["index"];
-								
-			// find the color field index	
-			$sql = "SELECT * FROM $fieldTable WHERE name='$colorFieldName';";			
-			$result = mysql_query($sql) or die('Get color field Failed! ' . mysql_error());	
-			if ($field = mysql_fetch_array($result))
-				$colorFieldIndex = $field["index"];
-			else 
-				$colorFieldIndex = 0;			
 
-			// update the calendar table with the calendar details
-			$sql = "UPDATE $calendarsTable set formNumber=$formID, titleField=$titleFieldIndex, locationField=$locationFieldIndex, colorField=$colorFieldIndex WHERE name='$calendarName';";			
-			mysql_query($sql) or die('Update calendar details Failed! ' . mysql_error());	
-				
+			if (!$calID) {
+				// new calendar - create it and add to the table
+				$calID = createCalendar($worksheetFeed, $calendarName);	
+			}
+			if ($calID) {
+				// add it to the table
+				$sql = "INSERT INTO $calendarsTable VALUES ('$calNumber', '$calendarName', '$fieldIndex', '$formID', '$titleFieldIndex', '$locationFieldIndex', '$calID');";
+				$result = mysql_query($sql) or die('Insert calendar Failed! ' . mysql_error());
+			}
+
 			$cellEntry = $cellFeed->getCell(++$row, 1);		
 		}
 
@@ -427,7 +418,7 @@ function createEventsTable($worksheetFeed, $eventsTable) {
 
 		$sql = "DROP TABLE IF EXISTS $eventsTable;";
 		$result = mysql_query($sql) or die('Drop table Failed! ' . mysql_error());
-		$sql = "CREATE TABLE $eventsTable ( calendarID INT(32), fieldIndex INT(32), orderID INT(32), eventDate DATETIME, eventID VARCHAR(128), updated TINYINT);";
+		$sql = "CREATE TABLE $eventsTable ( calendarID INT(32), orderID INT(32), eventDate DATETIME, eventID VARCHAR(128), updated TINYINT);";
 				// echo $sql;
 		$result = mysql_query($sql) or die('Create Events table Failed! ' . mysql_error());
 		

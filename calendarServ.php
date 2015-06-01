@@ -73,27 +73,37 @@ session_start();
 			// select rows with update time > curr time			
 	
 				$sql = "SELECT * FROM $eventsTable WHERE updated='0';";
-				$result = mysql_query($sql) or die('Select event Failed! ' . mysql_error()); 
+				if (!$result = mysql_query($sql)) {
+					echo 'Select event table Failed! ' . mysql_error(); 
+					continue;
+				}
 				if ((mysql_num_rows($result) > 0) && ($event = mysql_fetch_array($result, MYSQL_ASSOC))) {
 					$orderID = $event["orderID"];
 		    		$eventID = $event["eventID"];
 		    		$calendarNum = $event["calendarID"];
-		    		$fieldIndex = $event["fieldIndex"];
 		    		$date = $event["eventDate"];
 	
 		         echo "found event for order ". $orderID." Date: ".$date."<br>\n";
 		         
 					$sql = "SELECT * FROM $calendarsTable WHERE number = '$calendarNum';";
-					$result = mysql_query($sql) or die('Select calendar Failed! ' . mysql_error()); 
+					if (!$result = mysql_query($sql)) {
+						echo 'Select calendar table Failed! ' . mysql_error(); 
+						continue;
+					}
 					if ((mysql_num_rows($result) > 0) && ($calendar = mysql_fetch_array($result, MYSQL_ASSOC))) {
 						// Found the calendar details and the google calendar ID
+						$fieldIndex = $calendar["fieldIndex"];
 						$calendarID = $calendar["calID"];
 						$titleField = $calendar["titleField"];
 						$locationField = $calendar["locationField"];				
-						$colorField = $calendar["colorField"];						
+						//$colorField = $calendar["colorField"];
+						$colorField = 0;	// not used						
 					}
 					$sql = "SELECT * FROM $mainTable WHERE id='$orderID';";
-					$result = mysql_query($sql) or die('Select order Failed! ' . mysql_error()); 
+					if (!$result = mysql_query($sql)) {
+						echo 'Select main table Failed! ' . mysql_error(); 
+						continue;
+					}
 					if ((mysql_num_rows($result) > 0) && ($order = mysql_fetch_array($result, MYSQL_ASSOC))) {
 						// Found the order 
 						$eventName = $order[$titleField];
@@ -109,7 +119,10 @@ session_start();
 					$date2 = "";
 					// query the fields table to find if it is a start time
 					$sql = "SELECT * FROM $fieldTable WHERE `index`='$fieldIndex';";
-					$result = mysql_query($sql) or die('Select field Failed! ' . mysql_error()); 
+					if (!$result = mysql_query($sql)) {
+						echo 'Select field table Failed! ' . mysql_error(); 
+						continue;
+					}
 					if ((mysql_num_rows($result) > 0) && ($field = mysql_fetch_array($result, MYSQL_ASSOC))) {
 						$type1 = $field["type"];
 						if (strpos($type1, "STARTTIME") === 0) {
@@ -118,7 +131,10 @@ session_start();
 							echo "found end time: ".$type2."<br>\n";							
 							// query the field table for the end date
 							$sql = "SELECT * FROM $fieldTable WHERE type='$type2';";
-							$result = mysql_query($sql) or die('Select field Failed! ' . mysql_error()); 
+							if (!$result = mysql_query($sql)) {
+								echo 'Select field table Failed! ' . mysql_error(); 
+								continue;
+							}
 							if ((mysql_num_rows($result) > 0) && ($field = mysql_fetch_array($result, MYSQL_ASSOC))) {
 								$fieldIndex2 = $field["index"];							
 								$date2 = $order[$fieldIndex2];	// found the endtime
@@ -130,7 +146,10 @@ session_start();
 	
 					// query the fields table to find if it is an end time
 					$sql = "SELECT * FROM $fieldTable WHERE `index`='$fieldIndex';";
-					$result = mysql_query($sql) or die('Select field Failed! ' . mysql_error()); 
+					if (!$result = mysql_query($sql)) {
+						echo 'Select field table Failed! ' . mysql_error(); 
+						continue;
+					}
 					if ((mysql_num_rows($result) > 0) && ($field = mysql_fetch_array($result, MYSQL_ASSOC))) {
 						$type1 = $field["type"];
 						if (strpos($type1, "ENDTIME") === 0) {
@@ -139,7 +158,10 @@ session_start();
 							// echo "looking for: ".$type2."<br>\n";
 							// query the field table for the end date
 							$sql = "SELECT * FROM $fieldTable WHERE type='$type2';";
-							$result = mysql_query($sql) or die('Select field Failed! ' . mysql_error()); 
+							if (!$result = mysql_query($sql)) {
+								echo 'Select field table Failed! ' . mysql_error(); 
+								continue;
+							}
 							if ((mysql_num_rows($result) > 0) && ($field = mysql_fetch_array($result, MYSQL_ASSOC))) {
 								$fieldIndex2 = $field["index"];							
 								$date1 = $order[$fieldIndex2];	// found the start time
@@ -161,39 +183,48 @@ session_start();
 				
 				$calEvent = null;
 				//echo "eventID= ".$eventID."<br>\n";
-				if ($eventID && $eventID != ""){
-					// look for the event in the calendar
-					$params = [];
-					$params["maxResults"] = 2500;	// max number of events per calendar
-			    	$list = $service->events->listEvents($calendarID, $params);	
-					foreach($list["items"] as $eventx) {
-						// echo "eventx ID= ".$eventx["htmlLink"]."<br>\n";
-						if ($eventID == $eventx["id"] || strpos($eventx["htmlLink"], $eventID ) != false) {
-			    			echo " found event in calendar: ". $calendarID."<br>\n";
-			    			$calEvent = $eventx;
-			    			break;
-						}	
-					
+				try {
+					if ($eventID && $eventID != ""){
+						// look for the event in the calendar
+						$params = [];
+						$params["maxResults"] = 2500;	// max number of events per calendar
+				    	$list = $service->events->listEvents($calendarID, $params);	
+						foreach($list["items"] as $eventx) {
+							// echo "eventx ID= ".$eventx["htmlLink"]."<br>\n";
+							if ($eventID == $eventx["id"] || strpos($eventx["htmlLink"], $eventID ) != false) {
+				    			echo " found event in calendar: ". $calendarID."<br>\n";
+				    			$calEvent = $eventx;
+				    			break;
+							}	
+						
+						}
 					}
-				}
-				$new = false;
-				if (!$calEvent) {
-					echo "Event doesn't exist - creating new...<br>\n";
-					$calEvent = new Google_Service_Calendar_Event();
-					$new = true;
-				}
-	
-				if (!strtotime($date) || ($date == '0000-00-00 00:00:00')) {
-					echo "Removing event with invalid date: ".$date."<br>\n";
-					// The new event date is empty or not valid - remove the event from the calendar
-					if (!$new && $calEvent)
-						$service->events->delete($calendarID, $calEvent->getId());
-					// Remove the event from the events table
-					$sql = "DELETE FROM $eventsTable WHERE calendarID='$calendarNum' AND fieldIndex='$fieldIndex' AND orderID='$orderID' AND eventID = '$eventID';";
-					$result = mysql_query($sql) or die('Delete event Failed! ' . mysql_error());
-					continue; // Don't continue to process this event
+					$new = false;
+					if (!$calEvent) {
+						echo "Event doesn't exist - creating new...<br>\n";
+						$calEvent = new Google_Service_Calendar_Event();
+						$new = true;
+					}
+		
+					if (!strtotime($date) || ($date == '0000-00-00 00:00:00')) {
+						echo "Removing event with invalid date: ".$date."<br>\n";
+						// The new event date is empty or not valid - remove the event from the calendar
+						if (!$new && $calEvent)
+							$service->events->delete($calendarID, $calEvent->getId());
+						// Remove the event from the events table
+						$sql = "DELETE FROM $eventsTable WHERE calendarID='$calendarNum' AND orderID='$orderID' AND eventID = '$eventID';";
+						if (!$result = mysql_query($sql)) {
+							echo 'Delete from events table Failed! ' . mysql_error(); 
+						}
+						continue; // Don't continue to process this event
+					}
 				}		
-				
+				//catch exception
+				catch(Exception $e) {
+					  echo 'Exception: ' .$e->getMessage(). "<br>";
+					  sleep(1);
+					  continue;
+				}					
 	
 				$calEvent->setSummary($eventName);
 				$calEvent->setLocation($location);
@@ -268,8 +299,11 @@ session_start();
 					
 					$calEvent->setDescription("<p>Order ID :".$orderID."</p><br><a href='http://googlemesh.com/Gilamos/#/newOrder?id=".$eventID."&db=".$dbName."'>Update</a>");
 					$updatedEvent = $service->events->update($calendarID, $calEvent->getId(), $calEvent);
-					$sql = "UPDATE $eventsTable set eventID='$eventID', updated='1' WHERE calendarID='$calendarNum' AND fieldIndex='$fieldIndex' AND orderID='$orderID';";
-					$result = mysql_query($sql) or die('Update event Failed! ' . mysql_error());
+					$sql = "UPDATE $eventsTable set eventID='$eventID', updated='1' WHERE calendarID='$calendarNum' AND orderID='$orderID';";
+					if (!$result = mysql_query($sql)) {
+						echo 'Update events table Failed! ' . mysql_error(); 
+						continue;
+					}
 			
 	
 				}
