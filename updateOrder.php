@@ -25,7 +25,9 @@
 		syslog(LOG_ERR, "Failed to get client spreadsheet");	
 		return;
 	}	
-	initGoogleAPI($ssName);	
+	for ($i=0; initGoogleAPI($ssName) == null && $i<5; $i++)
+		syslog(LOG_ERR, "InitGoogleApi Failed"); // retry 5 times to initialize
+
 	$order = getCalcFields($order);  // get from spreadsheet
 	//var_dump($order);
 	if ($orderID) {
@@ -63,7 +65,7 @@
 			else	// not a valid date
 				$dates[$name] = "0000-00-00 00:00:00";
 				
-			syslog (LOG_DEBUG, "Date ".$date." found in field ".$name);
+			//syslog (LOG_DEBUG, "Date ".$date." found in field ".$name);
 		}
 		$value = mysql_real_escape_string($value);	// handle special characters
  		
@@ -74,7 +76,7 @@
 		}
 		else {	// new order
 				$values .= ", '$value'";
-		}	
+		}
 	}
 	// Update the main table 	
 	if (!$orderID) {
@@ -112,7 +114,7 @@
 		   	//else echo "Invalid date: ".$dates[$key]."<br>\n";
 			}
 			else {  // event record exist -  update it with the new date and set updated to 0
-					syslog (LOG_INFO, "Updating existing event for Calendar: ".$calendarID." Field: ".$key."Date: ".$dates[$key]);
+				syslog (LOG_INFO, "Updating existing event for Calendar: ".$calendarID." Field: ".$key."Date: ".$dates[$key]);
 		   		$sql = "UPDATE $eventsTable set eventDate='$dates[$key]', updated='0' WHERE calendarID='$calendarID' AND orderID='$orderID'";
 		   		if (!mysql_query($sql)) die('Update event Failed !' . mysql_error());
 			}
