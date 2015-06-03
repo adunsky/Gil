@@ -12,7 +12,7 @@
 
    $data = json_decode($postdata, true);
   	$dbName = $data["dbName"]; 
-	$order = $data["order"];
+	$origOrder = $data["order"];
 	$orderID = $data["orderID"]; 
 	if (!selectDB($dbName)) {
 		syslog(LOG_ERR, "Failed to select client DB: "+$dbName);
@@ -28,7 +28,15 @@
 	for ($i=0; initGoogleAPI($ssName) == null && $i<5; $i++)
 		syslog(LOG_ERR, "InitGoogleApi Failed"); // retry 5 times to initialize
 
-	$order = getCalcFields($order);  // get from spreadsheet
+	$order = getCalcFields($origOrder);  // get from spreadsheet
+	if (!$order)
+		$order = getCalcFields($origOrder);  // retry once
+
+	if (!$order) {
+		echo "Spreadsheet returned unknown error, please retry";
+		return; 
+	}
+
 	//var_dump($order);
 	if ($orderID) {
 		// check if order exists
