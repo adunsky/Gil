@@ -213,14 +213,14 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 	            request.success(function (data) {
 	                $scope.message = "From PHP file : "+data;
 	                console.log($scope.message);
-						 if (!isNaN(data)) {	                
+					if (!isNaN(data)) {	                
 	                	$scope.orderID = data; // PHP returned a valid ID number
 	                	$scope.inProgress = false;
 	                	alert("Order ID: "+$scope.orderID+" updated successfully");
   						 	window.close();	                	
 	                }
 	                else {
-	                	$scope.orderID = data; // PHP returned a valid ID number
+	                	//$scope.orderID = data; // PHP returned invalid ID number
 	                	$scope.inProgress = false;
 	                	alert("Error: "+$scope.message);
 	                }	
