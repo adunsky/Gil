@@ -109,9 +109,14 @@ function initGoogleAPI($spreadsheetName = NULL) {
 		}
 	}
 	syslog(LOG_INFO, "service initiated<br>");
-	$spreadsheetFeed = $spreadsheetService->getSpreadsheets();
-	$spreadsheet = $spreadsheetFeed->getByTitle($spreadsheetName);
-
+	try {
+		$spreadsheetFeed = $spreadsheetService->getSpreadsheets();
+		$spreadsheet = $spreadsheetFeed->getByTitle($spreadsheetName);
+	}
+	catch(Exception $e) {
+		echo 'Exception: ' .$e->getMessage(). "<br>";
+		return null;	
+	}	
 
 	return $spreadsheet;
 }
