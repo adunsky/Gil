@@ -180,6 +180,7 @@ function getCalcFields($order) {
 		// batch update
 		$batchRequest = new Google\Spreadsheet\Batch\BatchRequest();
 		
+		syslog(LOG_INFO, "Writing to spreadsheet...");
 		foreach ($order as $field) {
 			$col = $field["index"];
 			$value = $field["value"];
@@ -192,13 +193,13 @@ function getCalcFields($order) {
 					if (($type == "DATE" || $type == "DATETIME") && $value!="") {
 							// remove the time from the datetime field
 						if ($date = strtotime($value)) {
-							syslog(LOG_INFO, "Value before date: ".$value."\n");
+							//syslog(LOG_INFO, "Value before date: ".$value."\n");
 							if ($type == "DATE")
 								$value = date('d-m-Y', $date);
 							else { // DATETIME
 								$value = date('d-m-Y H:i:s', $date);
 							}
-							syslog(LOG_INFO, "After date: ".$value."\n");						
+							//syslog(LOG_INFO, "After date: ".$value."\n");						
 						}
 						else	
 							$value = "";  // clear invalid date
@@ -229,6 +230,7 @@ function getCalcFields($order) {
 		}	
 		//sleep(5);
 			// now get the computed values
+		syslog(LOG_INFO, "Reading from spreadsheet...");		
 		$listFeed = $worksheet->getListFeed();
 		
 		$entries = $listFeed->getEntries();
@@ -271,6 +273,7 @@ function getCalcFields($order) {
 		echo 'Exception: ' .$e->getMessage(). "<br>";
 		return null;	
 	}
+	syslog(LOG_INFO, "Read spreadsheet done");
 	return $order;
 }
 
