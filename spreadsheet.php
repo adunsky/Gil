@@ -51,17 +51,18 @@ function initGoogleAPI($spreadsheetName = NULL) {
 	global $theSpreadsheet, $spreadsheet, $clientid, $clientmail, $clientkeypath, $appName;
 		
 	if (!$spreadsheetName)
-		$spreadsheetName = $theSpreadsheet;
+		$spreadsheetName = $theSpreadsheet;		// the default spreadsheet
 		
 	//echo 	"Spreadsheet name: ".$spreadsheetName."<br>\n";
-	syslog (LOG_INFO, "Spreadsheet name: ".$spreadsheetName."<br>\n");
-	if (isset($_SESSION["spreadsheet"] ) && false) { // it doesn't work - need to serialize it
-		syslog(LOG_INFO, "spreadsheet found");
-		$spreadsheetService = $_SESSION["spreadsheet"];	
-	}
-	else {
+
+	try {
+		syslog (LOG_INFO, "Init Google service, Spreadsheet name: ".$spreadsheetName."<br>\n");
+		if (isset($_SESSION["spreadsheet"] ) && false) { // it doesn't work - need to serialize it
+			syslog(LOG_INFO, "spreadsheet found");
+			$spreadsheetService = $_SESSION["spreadsheet"];	
+		}
+		else {
 		
-		try {
 			$client = new Google_Client();
 			$client->setApplicationName($appName);
 			$client->setClientId($clientid);	 
@@ -101,23 +102,16 @@ function initGoogleAPI($spreadsheetName = NULL) {
 				syslog(LOG_ERR, "could not access spreadsheet");
 				return null;
 			} 
+
 		}
-		//catch exception
-		catch(Exception $e) {
-			echo 'Exception: ' .$e->getMessage(). "<br>";
-			return null;	
-		}
-	}
-	syslog(LOG_INFO, "service initiated<br>");
-	try {
 		$spreadsheetFeed = $spreadsheetService->getSpreadsheets();
 		$spreadsheet = $spreadsheetFeed->getByTitle($spreadsheetName);
 	}
 	catch(Exception $e) {
-		echo 'Exception: ' .$e->getMessage(). "<br>";
+		syslog (LOG_ERR, "Exception: " .$e->getMessage());
 		return null;	
 	}	
-
+	syslog(LOG_INFO, "service initiated<br>");
 	return $spreadsheet;
 }
 
@@ -159,7 +153,8 @@ function getCalcFields($order) {
 	//$spreadsheet = initGoogleAPI();
 	if ($spreadsheet == null)
 		return null;
-	try {	
+	try {
+		syslog(LOG_INFO, "Getting access to Main worksheet");	
 		$worksheetFeed = $spreadsheet->getWorksheets();
 		$worksheet = $worksheetFeed->getByTitle('Main');
 		$cellFeed = $worksheet->getCellFeed();
@@ -265,12 +260,13 @@ function getCalcFields($order) {
 		}
 		if ($profile) {	
 			$currTime = date("h:i:s");
-			syslog (LOG_INFO, " End SS read : ".$currTime."\n"); 
+			syslog (LOG_INFO, " End SS read : ".$currTime); 
 		}
 	}
 	//catch exception
 	catch(Exception $e) {
-		echo 'Exception: ' .$e->getMessage(). "<br>";
+		release_named_lock('mylock');
+		syslog (LOG_ERR, "Exception: " .$e->getMessage());
 		return null;	
 	}
 	syslog(LOG_INFO, "Read spreadsheet done");
