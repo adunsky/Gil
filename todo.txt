@@ -1,3 +1,8 @@
+Search capabilities (fields in description)
+Optimize event updates
+test reduced calendars
+
+
 Add validation for "+=-" etc..
 Support english forms
 New calendar configuration:

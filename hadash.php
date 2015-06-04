@@ -131,7 +131,7 @@ function createFieldTypeTable($worksheetFeed, $fieldTable, $listValueTable) {
 		// create fieldType table
 		$sql = "DROP TABLE IF EXISTS $fieldTable;";
 		$result = mysql_query($sql) or die('Drop table Failed! ' . mysql_error());
-		$sql = "CREATE TABLE $fieldTable ( `name` VARCHAR(64), `index` INT(32), `type` VARCHAR(32), `input` VARCHAR(32), `default` VARCHAR(256));";
+		$sql = "CREATE TABLE $fieldTable ( `name` VARCHAR(64), `index` INT(32), `type` VARCHAR(32), `input` VARCHAR(32), `searchable` VARCHAR(32), `default` VARCHAR(256));";
 				// echo $sql;
 		$result = mysql_query($sql) or die('Create Field Type table Failed! ' . mysql_error());
 		echo "Table ".$fieldTable." created<br>\n"; 
@@ -150,25 +150,35 @@ function createFieldTypeTable($worksheetFeed, $fieldTable, $listValueTable) {
 		$row = 2;
 		$cellEntry = $cellFeed->getCell($row, 1);	
 		while ($cellEntry && ($name = $cellEntry->getContent()) != "") {
-			$cellEntry = $cellFeed->getCell($row, 2);	
+			$col = 2;
+			$cellEntry = $cellFeed->getCell($row, $col++);	
 			$type = $cellEntry->getContent();
  
-			$cellEntry = $cellFeed->getCell($row, 3);	
-			$input = $cellEntry->getContent();
-			
-			$cellEntry = $cellFeed->getCell($row, 4);
+			$cellEntry = $cellFeed->getCell($row, $col++);	
+			if (!$cellEntry)
+				$input = 'N';
+			else
+				$input = $cellEntry->getContent();
+
+			$cellEntry = $cellFeed->getCell($row, $col++);
+			if (!$cellEntry)
+				$searchable = 'N';
+			else
+				$searchable = $cellEntry->getContent();
+
+			$cellEntry = $cellFeed->getCell($row, $col++);
 			if ($cellEntry)
 				$default = $cellEntry->getContent();
 			else 
 				$default = "";
 							
-			$sql = "INSERT INTO $fieldTable VALUES ('$name', '$row', '$type', '$input', '$default');";
+			$sql = "INSERT INTO $fieldTable VALUES ('$name', '$row', '$type', '$input', '$searchable', '$default');";
 					// echo $sql;
 			$result = mysql_query($sql) or die('Insert to fields table Failed! ' . mysql_error());
 
 			if ($type == "LIST") {
 				// Add list values to list table
-				$col = 5;	
+
 				$cellEntry = $cellFeed->getCell($row, $col);	
 				while ($cellEntry && ($value = $cellEntry->getContent()) != "") {
 					$value = mysql_real_escape_string($value);
@@ -318,15 +328,27 @@ function createCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 			$fieldCell = $cellFeed->getCell($row, $col++);
 			if ($fieldCell)
 				$fieldName = $fieldCell->getContent();
+			else
+				$fieldName = 0;
+
 			$fieldCell = $cellFeed->getCell($row, $col++);
 			if ($fieldCell)
 				$formName = $fieldCell->getContent();
+			else
+				$formName = 0;
+
 			$fieldCell = $cellFeed->getCell($row, $col++);
 			if ($fieldCell)
 				$eventTitleFieldName = $fieldCell->getContent();
+			else
+				$eventTitleFieldName = 0;
+
 			$fieldCell = $cellFeed->getCell($row, $col++);
 			if ($fieldCell)
 				$locationFieldName = $fieldCell->getContent();
+			else
+				$locationFieldName = 0;
+
 			$fieldCell = $cellFeed->getCell($row, $col++);
 			if ($fieldCell)
 				$colorFieldName = $fieldCell->getContent();
@@ -337,25 +359,34 @@ function createCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 			$sql = "SELECT * FROM $fieldTable WHERE name='$fieldName';";			
 			$result = mysql_query($sql) or die('Get field index Failed! ' . mysql_error());	
 			if ($field = mysql_fetch_array($result))
-				$fieldIndex = $field["index"];	
+				$fieldIndex = $field["index"];
+			else
+				die('Failed to find field: '.$fieldName);
 
 			// find the form ID
 			$sql = "SELECT * FROM $formsTable WHERE title='$formName';";			
 			$result = mysql_query($sql) or die('Get form Failed! ' . mysql_error());	
 			if ($form = mysql_fetch_array($result))
-				$formID = $form["number"];				
+				$formID = $form["number"];
+			else				
+				die('Failed to find form: '.$formName);
 
 			// find the title field index	
 			$sql = "SELECT * FROM $fieldTable WHERE name='$eventTitleFieldName';";			
 			$result = mysql_query($sql) or die('Get title field Failed! ' . mysql_error());	
 			if ($field = mysql_fetch_array($result))
-				$titleFieldIndex = $field["index"];				
-				
+				$titleFieldIndex = $field["index"];	
+			else				
+				die('Failed to find field: '.$eventTitleFieldName);
+
 			// find the location field index	
 			$sql = "SELECT * FROM $fieldTable WHERE name='$locationFieldName';";			
 			$result = mysql_query($sql) or die('Get location field Failed! ' . mysql_error());	
 			if ($field = mysql_fetch_array($result))
 				$locationFieldIndex = $field["index"];
+			else				
+				die('Failed to find field: '.$locationFieldName);
+
 
 			if (!$calID) {
 				// new calendar - create it and add to the table

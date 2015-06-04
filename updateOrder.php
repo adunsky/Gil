@@ -28,10 +28,11 @@
 	for ($i=0; initGoogleAPI($ssName) == null && $i<5; $i++)
 		syslog(LOG_ERR, "InitGoogleApi Failed"); // retry 5 times to initialize
 
-	$order = getCalcFields($origOrder);  // get from spreadsheet
-	if (!$order) {
+	$i=0;
+	// call spreadsheet to calculate fields
+	while (!($order = getCalcFields($origOrder)) && $i++ < 5) {
+		// retry call to spreadsheet 
 		syslog(LOG_ERR, "getCalcFields Failed. retrying...");
-		$order = getCalcFields($origOrder);  // retry once
 	}
 	if (!$order) {
 		syslog(LOG_ERR, "getCalcFields Failed after retry");
@@ -124,13 +125,13 @@
 		   	//else echo "Invalid date: ".$dates[$key]."<br>\n";
 			}
 			else {  // event record exist -  update it with the new date and set updated to 0
-				syslog (LOG_INFO, "Updating existing event for Calendar: ".$calendarID." Field: ".$key."Date: ".$dates[$key]);
+				syslog (LOG_INFO, "Updating existing event for Calendar: ".$calendarID." Field: ".$key." Date: ".$dates[$key]);
 		   		$sql = "UPDATE $eventsTable set eventDate='$dates[$key]', updated='0' WHERE calendarID='$calendarID' AND orderID='$orderID'";
 		   		if (!mysql_query($sql)) die('Update event Failed !' . mysql_error());
 			}
 		}
 	}
-	
+	syslog (LOG_INFO, "Order update complete: ".$orderID);
 	echo $orderID;
 	
 	

@@ -145,7 +145,7 @@ function createFieldTypeTable($worksheetFeed, $fieldTable, $listValueTable) {
 		// create fieldType table
 		$sql = "DROP TABLE IF EXISTS $fieldTable;";
 		$result = mysql_query($sql) or die('Drop table Failed! ' . mysql_error());
-		$sql = "CREATE TABLE $fieldTable ( `name` VARCHAR(64), `index` INT(32), `type` VARCHAR(32), `input` VARCHAR(32), `default` VARCHAR(256));";
+		$sql = "CREATE TABLE $fieldTable ( `name` VARCHAR(64), `index` INT(32), `type` VARCHAR(32), `input` VARCHAR(32), `searchable` VARCHAR(32), `default` VARCHAR(256));";
 				// echo $sql;
 		$result = mysql_query($sql) or die('Create Field Type table Failed! ' . mysql_error());
 		echo "Table ".$fieldTable." created<br>"; 
@@ -164,19 +164,30 @@ function createFieldTypeTable($worksheetFeed, $fieldTable, $listValueTable) {
 		$row = 2;
 		$cellEntry = $cellFeed->getCell($row, 1);	
 		while ($cellEntry && ($name = $cellEntry->getContent()) != "") {
-			$cellEntry = $cellFeed->getCell($row, 2);	
+			$col = 2;
+			$cellEntry = $cellFeed->getCell($row, $col++);	
 			$type = $cellEntry->getContent();
  
-			$cellEntry = $cellFeed->getCell($row, 3);	
-			$input = $cellEntry->getContent();
-			
-			$cellEntry = $cellFeed->getCell($row, 4);
+			$cellEntry = $cellFeed->getCell($row, $col++);	
+			if (!$cellEntry)
+				$input = 'N';
+			else
+				$input = $cellEntry->getContent();
+
+			$cellEntry = $cellFeed->getCell($row, $col++);
+			if (!$cellEntry)
+				$searchable = 'N';
+			else
+				$searchable = $cellEntry->getContent();
+
+			$cellEntry = $cellFeed->getCell($row, $col++);
 			if ($cellEntry)
 				$default = $cellEntry->getContent();
 			else 
 				$default = "";
-							
-			$sql = "INSERT INTO $fieldTable VALUES ('$name', '$row', '$type', '$input', '$default');";
+					
+			echo "$name, $row, $type, $input, $searchable, $default <br>";				
+			$sql = "INSERT INTO $fieldTable VALUES ('$name', '$row', '$type', '$input', '$searchable', '$default');";
 					// echo $sql;
 			$result = mysql_query($sql) or die('Insert to fields table Failed! ' . mysql_error());
 
@@ -195,7 +206,7 @@ function createFieldTypeTable($worksheetFeed, $fieldTable, $listValueTable) {
 			}
 			if ($type == "LIST") {
 				// Add list values to list table
-				$col = 5;	
+	
 				$cellEntry = $cellFeed->getCell($row, $col);	
 				while ($cellEntry && ($value = $cellEntry->getContent()) != "") {
 					$value = mysql_real_escape_string($value);

@@ -24,10 +24,11 @@
 	for ($i=0; initGoogleAPI($ssName) == null && $i<5; $i++)
 		syslog(LOG_ERR, "InitGoogleApi Failed"); // retry 5 times to initialize
 
-	$order = getCalcFields($origOrder);  // get from spreadsheet
-	if (!$order) {
+	$i=0;
+	// call spreadsheet to calculate fields
+	while (!($order = getCalcFields($origOrder)) && $i++ < 5) {
+		// retry call to spreadsheet 
 		syslog(LOG_ERR, "getCalcFields Failed. retrying...");
-		$order = getCalcFields($origOrder);  // retry once
 	}
 	if (!$order) {
 		syslog(LOG_ERR, "getCalcFields Failed after retry");

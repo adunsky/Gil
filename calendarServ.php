@@ -108,6 +108,7 @@ session_start();
 						// Found the order 
 						$eventName = $order[$titleField];
 						$location = $order[$locationField];	
+
 						if ($colorField)
 							$color = $order[$colorField];	
 						else 
@@ -225,9 +226,16 @@ session_start();
 					  sleep(1);
 					  continue;
 				}					
-	
-				$calEvent->setSummary($eventName);
-				$calEvent->setLocation($location);
+				$eventChanged = false;
+				if ($calEvent->getSummary() != $eventName) {
+					$calEvent->setSummary($eventName);
+					echo "New title: ".$eventName;
+					$eventChanged = true;
+				}
+				if ($calEvent->getLocation() != $location) {
+					$calEvent->setLocation($location);
+					$eventChanged = true;
+				}
 				if ($color) {
 					echo "Color: " . $color."<br\n";
 					$calEvent->setColorId(getColor($color));				
@@ -239,7 +247,6 @@ session_start();
 					$date1 = $date2 = $date;	// It is an all day event
 				}
 				$start = new Google_Service_Calendar_EventDateTime();
-				$start->setTimeZone("Asia/Jerusalem");
 				$timestamp1 = strtotime($date1);
 				if ($allDay) {
 					// format it without the time
@@ -247,25 +254,39 @@ session_start();
 					$start->setDate($date);				
 				}	// format with time
 				else {
-					$date = date("Y-m-d\TH:i:s", $timestamp1);
+					$start->setTimeZone("Asia/Jerusalem");
+					$date = date('Y-m-d\TH:i:s', $timestamp1);
 					$start->setDateTime($date);
 					echo "Start: ".$date."<br>\n";
 				}
-				$calEvent->setStart($start);
+				$wasStart = $calEvent->getStart();
+				//echo "Was start: ";
+				//var_dump($wasStart);
+				if ($wasStart != $start) {
+					$calEvent->setStart($start);
+					//echo " New start: ";
+					//var_dump($start);
+					$eventChanged = true;
+				}					
+
 	
 				$timestamp2 = strtotime($date2);			
 				$end = new Google_Service_Calendar_EventDateTime();
-				$end->setTimeZone("Asia/Jerusalem");
 				if ($allDay) {
 					$end->setDate($date);	// no time set - all day event
 				}		
 				else { 
 					// set the end time
+					$end->setTimeZone("Asia/Jerusalem");
 					$endDate = date('Y-m-d\TH:i:s', $timestamp2); // Back to string
 					$end->setDateTime($endDate);
 					echo "End: ".$endDate."<br>\n";
 				}
-				$calEvent->setEnd($end);
+				if ($calEvent->getEnd() != $end) {
+					$calEvent->setEnd($end);
+					//var_dump($end);
+					$eventChanged = true;
+				}					
 	
 				/*
 				$gadget = new Google_Service_Calendar_EventGadget();
@@ -296,9 +317,18 @@ session_start();
 						$eventID = substr($updatedEvent["htmlLink"], $eidpos+4);
 						$calEvent = $updatedEvent;
 					}
-					
-					$calEvent->setDescription("<p>Order ID :".$orderID."</p><br><a href='http://googlemesh.com/Gilamos/#/newOrder?id=".$eventID."&db=".$dbName."'>Update</a>");
-					$updatedEvent = $service->events->update($calendarID, $calEvent->getId(), $calEvent);
+					$description = "<a href='http://googlemesh.com/Gilamos/#/newOrder?id=".$eventID."&db=".$dbName."'>Update</a>
+									<p>Order ID :".$orderID."<br>".getSearchFields($order)."</p>";
+					if ($calEvent->getDescription() != $description) {
+						//echo "old description: ".$calEvent->getDescription()."<br>";
+						//echo "new description: ".$description."<br>";
+						$calEvent->setDescription($description);
+						$eventChanged = true;
+					}
+					if ($eventChanged) {
+						$updatedEvent = $service->events->update($calendarID, $calEvent->getId(), $calEvent);
+						echo "Event updated<br>\n";
+					}
 					$sql = "UPDATE $eventsTable set eventID='$eventID', updated='1' WHERE calendarID='$calendarNum' AND orderID='$orderID';";
 					if (!$result = mysql_query($sql)) {
 						echo 'Update events table Failed! ' . mysql_error(); 
@@ -322,6 +352,28 @@ session_start();
 			}  
 	
 	} // while (true)
+
+
+
+function getSearchFields($order) {
+	global $fieldTable;
+	
+	$sql = "SELECT * FROM $fieldTable WHERE searchable='Y';";
+	if (!$result = mysql_query($sql)) {
+		echo 'Select search fields Failed! ' . mysql_error(); 
+		return "";
+	}
+	$str = "";
+	while ($field = mysql_fetch_array($result, MYSQL_ASSOC)) {
+		$searchFieldIndex = $field['index'];
+		$value = $order[$searchFieldIndex];
+		$str = $str."<b>".$field['name'].": </b>".$value."<br>";
+
+	}
+	return $str;
+
+}
+
 
 
 $Colors  =  array( 
