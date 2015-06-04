@@ -172,6 +172,7 @@ function getCalcFields($order) {
 		
 	   while (!($locked = get_named_lock('mylock'))) { // wait until unlocked
 	   	//echo "Waiting for spreadsheet to unlock <br>\n";
+	   	sleep(1);
 	   	syslog(LOG_INFO, "Waiting for spreadsheet to unlock ");
 	   }
 	

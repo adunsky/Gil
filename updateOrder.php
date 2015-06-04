@@ -29,11 +29,13 @@
 		syslog(LOG_ERR, "InitGoogleApi Failed"); // retry 5 times to initialize
 
 	$order = getCalcFields($origOrder);  // get from spreadsheet
-	if (!$order)
-		$order = getCalcFields($origOrder);  // retry once
-
 	if (!$order) {
-		echo "Spreadsheet returned unknown error, please retry";
+		syslog(LOG_ERR, "getCalcFields Failed. retrying...");
+		$order = getCalcFields($origOrder);  // retry once
+	}
+	if (!$order) {
+		syslog(LOG_ERR, "getCalcFields Failed after retry");
+		echo "Failed to update spreadsheet. Please retry";
 		return; 
 	}
 
@@ -114,8 +116,8 @@
 			$ev = mysql_query($sql) or die('get event from events table Failed! ' . mysql_error());
 			if (mysql_num_rows($ev) == 0) {
 				// event record doesn't exist in table - insert it	
-				syslog (LOG_INFO, "Adding new event for Calendar: ".$calendarID." Field: ".$key."Date: ".$dates[$key]);
-				if (strtotime($dates[$key]) && $dates[$key] != "0000-00-00 00:00:00") { // ignore invalid dates			
+				if (strtotime($dates[$key]) && $dates[$key] != "0000-00-00 00:00:00") { // ignore invalid dates	
+				syslog (LOG_INFO, "Adding new event for Calendar: ".$calendarID." Field: ".$key." Date: ".$dates[$key]);		
 		   		$sql = "INSERT INTO $eventsTable VALUES ('$calendarID', '$orderID', '$dates[$key]', '', 0 )";
 		   		if (!mysql_query($sql)) die('Insert event Failed !' . mysql_error());
 		   	}

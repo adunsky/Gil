@@ -12,7 +12,7 @@
 
    $data = json_decode($postdata, true);
   	$dbName = $data["dbName"]; 
-	$order = $data["order"];
+	$origOrder = $data["order"];
 	
 	$ssName = getClientInfo($dbName);
 	if ($ssName)
@@ -21,8 +21,19 @@
 		syslog(LOG_ERR, "Failed to get client spreadsheet");	
 		return;
 	}
-	initGoogleAPI($ssName);	
-	$order = getCalcFields($order);  // get from spreadsheet
+	for ($i=0; initGoogleAPI($ssName) == null && $i<5; $i++)
+		syslog(LOG_ERR, "InitGoogleApi Failed"); // retry 5 times to initialize
+
+	$order = getCalcFields($origOrder);  // get from spreadsheet
+	if (!$order) {
+		syslog(LOG_ERR, "getCalcFields Failed. retrying...");
+		$order = getCalcFields($origOrder);  // retry once
+	}
+	if (!$order) {
+		syslog(LOG_ERR, "getCalcFields Failed after retry");
+		echo "Failed to update spreadsheet. Please retry";
+		return; 
+	}
 
 	$i = 0;
 	foreach ($order as $field) {
