@@ -269,13 +269,15 @@ session_start();
 					$eventChanged = true;
 				}					
 
-	
-				$timestamp2 = strtotime($date2);			
 				$end = new Google_Service_Calendar_EventDateTime();
 				if ($allDay) {
-					$end->setDate($date);	// no time set - all day event
+					$timestamp2 = strtotime($date."+1 days"); // end date is one day later
+					$date2 = date("Y-m-d", $timestamp2);					
+					echo "End: ".$date2."\n";
+					$end->setDate($date2);	// no time set - all day event
 				}		
 				else { 
+					$timestamp2 = strtotime($date2);	
 					// set the end time
 					$end->setTimeZone("Asia/Jerusalem");
 					$endDate = date('Y-m-d\TH:i:s', $timestamp2); // Back to string
@@ -357,7 +359,7 @@ session_start();
 
 function getSearchFields($order) {
 	global $fieldTable;
-	
+
 	$sql = "SELECT * FROM $fieldTable WHERE searchable='Y';";
 	if (!$result = mysql_query($sql)) {
 		echo 'Select search fields Failed! ' . mysql_error(); 

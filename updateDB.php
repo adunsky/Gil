@@ -186,7 +186,7 @@ function createFieldTypeTable($worksheetFeed, $fieldTable, $listValueTable) {
 			else 
 				$default = "";
 					
-			echo "$name, $row, $type, $input, $searchable, $default <br>";				
+			echo "Field added: $name, $row, $type, $input, $searchable, $default <br>";				
 			$sql = "INSERT INTO $fieldTable VALUES ('$name', '$row', '$type', '$input', '$searchable', '$default');";
 					// echo $sql;
 			$result = mysql_query($sql) or die('Insert to fields table Failed! ' . mysql_error());

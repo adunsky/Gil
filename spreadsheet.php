@@ -20,7 +20,7 @@ require_once "google-api-php-client-master/autoload.php";
 
 require_once "mydb.php";
 
-session_start();
+//session_start();
    
 require "php-google-spreadsheet-client-master/vendor/autoload.php";
 
@@ -181,6 +181,7 @@ function getCalcFields($order) {
 			$value = $field["value"];
 			$isInput = $field["input"] == 'Y';
 			$type = $field["type"];
+			$name = $field["name"];
 	
 			if ($isInput) { // it is an input field
 					if (strpos($type, "STARTTIME") === 0 || strpos($type, "ENDTIME") === 0)
@@ -206,6 +207,7 @@ function getCalcFields($order) {
 					$input = $cellFeed->getCell(2, $col);
 					if (empty($input)) {
 	        			// CellEntry doesn't exist. Use edit cell.
+	        			syslog(LOG_INFO, "Empty field updated manually: ".$name);
 	        			$cellFeed->editCell(2, $col, $value);
 	        		}
 	        		else {	
