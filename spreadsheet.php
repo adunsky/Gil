@@ -40,70 +40,67 @@ use Google\Spreadsheet\Batch;
  ************************************************/
 
 function setSSName($ssName) {
-	global $theSpreadsheet;
+	global $mainSpreadsheetName;
 	
-	$theSpreadsheet = $ssName;
+	$mainSpreadsheetName = $ssName;
 
 } 
  
 
 function initGoogleAPI($spreadsheetName = NULL) {
-	global $theSpreadsheet, $spreadsheet, $clientid, $clientmail, $clientkeypath, $appName;
+	global $mainSpreadsheetName, $spreadsheet, $clientid, $clientmail, $clientkeypath, $appName;
 		
 	if (!$spreadsheetName)
-		$spreadsheetName = $theSpreadsheet;		// the default spreadsheet
+		$spreadsheetName = $mainSpreadsheetName;		// the default spreadsheet
 		
 	//echo 	"Spreadsheet name: ".$spreadsheetName."<br>\n";
 
 	try {
 		syslog (LOG_INFO, "Init Google service, Spreadsheet name: ".$spreadsheetName."<br>\n");
-		if (isset($_SESSION["spreadsheet"] ) && false) { // it doesn't work - need to serialize it
-			syslog(LOG_INFO, "spreadsheet found");
-			$spreadsheetService = $_SESSION["spreadsheet"];	
+
+		$client = new Google_Client();
+		$client->setApplicationName($appName);
+		$client->setClientId($clientid);	 
+		
+		/*
+		if (isset($_SESSION['service_token'])) {
+		  $client->setAccessToken($_SESSION['service_token']);
+		  syslog(LOG_INFO, "Service token is set for session");
+		}
+		*/
+		$key = file_get_contents($clientkeypath);
+		$cred = new Google_Auth_AssertionCredentials(
+		    $clientmail,
+		    array('https://spreadsheets.google.com/feeds',
+		    		 'https://www.googleapis.com/auth/calendar'),
+		    $key
+		);
+		$client->setAssertionCredentials($cred);
+		
+		
+		if ($client->getAuth()->isAccessTokenExpired()) {
+		  $client->getAuth()->refreshTokenWithAssertion($cred);
+		}
+			   
+		if ($client->getAccessToken()) {
+			//$_SESSION['service_token'] = $client->getAccessToken();
+			
+			$obj_token  = json_decode($client->getAccessToken());
+			$accessToken = $obj_token->access_token;
+			  	
+			//var_dump($accessToken);
+			
+			$serviceRequest = new DefaultServiceRequest($accessToken);
+			ServiceRequestFactory::setInstance($serviceRequest);
+			
+			$spreadsheetService = new Google\Spreadsheet\SpreadsheetService();
+	
 		}
 		else {
-		
-			$client = new Google_Client();
-			$client->setApplicationName($appName);
-			$client->setClientId($clientid);	 
-			
-			if (isset($_SESSION['service_token'])) {
-			  $client->setAccessToken($_SESSION['service_token']);
-			}
-			$key = file_get_contents($clientkeypath);
-			$cred = new Google_Auth_AssertionCredentials(
-			    $clientmail,
-			    array('https://spreadsheets.google.com/feeds',
-			    		 'https://www.googleapis.com/auth/calendar'),
-			    $key
-			);
-			$client->setAssertionCredentials($cred);
-			
-			
-			if ($client->getAuth()->isAccessTokenExpired()) {
-			  $client->getAuth()->refreshTokenWithAssertion($cred);
-			}
-				   
-			if ($client->getAccessToken()) {
-				$_SESSION['service_token'] = $client->getAccessToken();
-				
-				$obj_token  = json_decode($client->getAccessToken());
-				$accessToken = $obj_token->access_token;
-				  	
-				//var_dump($accessToken);
-				
-				$serviceRequest = new DefaultServiceRequest($accessToken);
-				ServiceRequestFactory::setInstance($serviceRequest);
-				
-				$spreadsheetService = new Google\Spreadsheet\SpreadsheetService();
-				$_SESSION["spreadsheet"] = $spreadsheetService;		
-			}
-			else {
-				syslog(LOG_ERR, "could not access spreadsheet");
-				return null;
-			} 
+			syslog(LOG_ERR, "could not access spreadsheet");
+			return null;
+		} 
 
-		}
 		$spreadsheetFeed = $spreadsheetService->getSpreadsheets();
 		$spreadsheet = $spreadsheetFeed->getByTitle($spreadsheetName);
 	}
@@ -141,7 +138,7 @@ function release_named_lock($lockname) {
 
 
 function getCalcFields($order) {
-	global $spreadsheet;	
+	global $spreadsheet, $mainSpreadsheetName;	
 	set_time_limit (60); // This may take a while
 	date_default_timezone_set("Asia/Jerusalem");
 	$profile = false;
@@ -154,9 +151,11 @@ function getCalcFields($order) {
 	if ($spreadsheet == null)
 		return null;
 	try {
-		syslog(LOG_INFO, "Getting access to Main worksheet");	
+		syslog(LOG_INFO, "Getting worksheets");	
 		$worksheetFeed = $spreadsheet->getWorksheets();
+		syslog(LOG_INFO, "Getting Main worksheet");	
 		$worksheet = $worksheetFeed->getByTitle('Main');
+		syslog(LOG_INFO, "Getting cell feed");
 		$cellFeed = $worksheet->getCellFeed();
 		
 		// write order to spreadsheet
@@ -165,7 +164,7 @@ function getCalcFields($order) {
 			syslog(LOG_INFO, " Start SS write : ".$currTime); 
 		}
 		
-	   while (!($locked = get_named_lock('mylock'))) { // wait until unlocked
+	   while (!($locked = get_named_lock($mainSpreadsheetName))) { // wait until unlocked
 	   	//echo "Waiting for spreadsheet to unlock <br>\n";
 	   	sleep(1);
 	   	syslog(LOG_INFO, "Waiting for spreadsheet to unlock ");
@@ -236,7 +235,7 @@ function getCalcFields($order) {
 		//var_dump($values);
 	
 	
-		release_named_lock('mylock');
+		release_named_lock($mainSpreadsheetName);
 		
 	
 		$i = -1;
@@ -267,7 +266,7 @@ function getCalcFields($order) {
 	}
 	//catch exception
 	catch(Exception $e) {
-		release_named_lock('mylock');
+		release_named_lock($mainSpreadsheetName);
 		syslog (LOG_ERR, "Exception: " .$e->getMessage());
 		return null;	
 	}
