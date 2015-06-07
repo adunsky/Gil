@@ -51,6 +51,7 @@ use Google\Spreadsheet\ServiceRequestFactory;
  		set_time_limit (0); // This may take a while
 		$spreadsheet = initGoogleAPI(); // from spreadsheet.php
 		$worksheetFeed = $spreadsheet->getWorksheets();
+		syslog(LOG_INFO, "Running hadash, command: ".$command);
 		if ($command == "clean") {
 			// remove the google calendars and table
 			removeCalendars($worksheetFeed, $calendarsTable, $eventsTable);

@@ -51,6 +51,7 @@ use Google\Spreadsheet\ServiceRequestFactory;
 		$spreadsheet = initGoogleAPI($ssName); // from spreadsheet.php
 		$worksheetFeed = $spreadsheet->getWorksheets();
 
+		syslog(LOG_INFO, "Running updateDB, command: ".$command);
 		if ($command == "updateLists") {
 			// just update the list values
 			updateListValueTable($worksheetFeed, $listValueTable);

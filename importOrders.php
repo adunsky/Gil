@@ -12,7 +12,8 @@
 	
 	$dbName = $_GET['db'];
 	//echo $dbName;
-			
+	
+	syslog(LOG_INFO, "Running importOrders, command: ".$command);		
 	$ssName = getClientInfo($dbName);
 	if ($ssName)
 		setSSName($ssName);
