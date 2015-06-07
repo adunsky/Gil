@@ -104,14 +104,27 @@ function updateListValueTable($worksheetFeed, $listValueTable) {
 
 		$row = 2;
 		$cellEntry = $cellFeed->getCell($row, 1);	
+
+		$row = 2;
+		$cellEntry = $cellFeed->getCell($row, 1);	
 		while ($cellEntry && ($name = $cellEntry->getContent()) != "") {
-			$cellEntry = $cellFeed->getCell($row, 2);	
+			$col = 2;
+			$cellEntry = $cellFeed->getCell($row, $col++);	
 			$type = $cellEntry->getContent();
  
-			$cellEntry = $cellFeed->getCell($row, 3);	
-			$input = $cellEntry->getContent();
-			
-			$cellEntry = $cellFeed->getCell($row, 4);
+			$cellEntry = $cellFeed->getCell($row, $col++);	
+			if (!$cellEntry)
+				$input = 'N';
+			else
+				$input = $cellEntry->getContent();
+
+			$cellEntry = $cellFeed->getCell($row, $col++);
+			if (!$cellEntry)
+				$searchable = 'N';
+			else
+				$searchable = $cellEntry->getContent();
+
+			$cellEntry = $cellFeed->getCell($row, $col++);
 			if ($cellEntry)
 				$default = $cellEntry->getContent();
 			else 
@@ -119,7 +132,6 @@ function updateListValueTable($worksheetFeed, $listValueTable) {
 
 			if ($type == "LIST") {
 				// Add list values to list table
-				$col = 5;	
 				$cellEntry = $cellFeed->getCell($row, $col);	
 				while ($cellEntry && ($value = $cellEntry->getContent()) != "") {
 					$value = mysql_real_escape_string($value);
