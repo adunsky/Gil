@@ -241,6 +241,9 @@ function getCalcFields($order) {
 		$i = -1;
 		foreach ($values as $value) { // update the output values
 			if ($i > -1) {// skip the first column
+				if ($value == "#N/A")
+                    syslog(LOG_ERR, "Error: ".$i." : ".$value);
+                
 				if ($value == "_none")
 					$order[$i]["value"] = "";
 				else {	
