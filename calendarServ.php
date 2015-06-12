@@ -229,7 +229,7 @@ session_start();
 				$eventChanged = false;
 				if ($calEvent->getSummary() != $eventName) {
 					$calEvent->setSummary($eventName);
-					echo "New title: ".$eventName;
+					echo "New title: ".$eventName."<br>\n";
 					$eventChanged = true;
 				}
 				if ($calEvent->getLocation() != $location) {
@@ -273,7 +273,7 @@ session_start();
 				if ($allDay) {
 					$timestamp2 = strtotime($date."+1 days"); // end date is one day later
 					$date2 = date("Y-m-d", $timestamp2);					
-					echo "End: ".$date2."\n";
+					//echo "End: ".$date2."\n";
 					$end->setDate($date2);	// no time set - all day event
 				}		
 				else { 

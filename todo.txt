@@ -1,21 +1,23 @@
-Search capabilities (fields in description)
-Optimize event updates
-test reduced calendars
+//Search capabilities (fields in description)
+//Optimize event updates
+//test reduced calendars
 
 
-Add validation for "+=-" etc..
-Support english forms
-New calendar configuration:
-	- remove fieldIndex from eventsTable
-	- fix updateDB for calendars
-	- write script to create calendars and events without importing data
-Maintain service user info in customers DB ?
-Web page
+//Add validation for "+=-" etc..
+//Support english forms
+//New calendar configuration:
+//	- remove fieldIndex from eventsTable
+//	- fix updateDB for calendars
+//	- write script to create calendars and events without importing data
+//Maintain service user info in customers DB ?
+//Web page
 Default start hour - 8:00 am
 Event gadget - try
 Security authorization - get user credentials through oath2
+Track change by user
+Add support for attachments - Google drive
 write logs and exceptions, control the level
-calendarServ.php breaks if DB is down
+//calendarServ.php breaks if DB is down
 
 Allow adding and removing fields in updateDB
 Allow removing users and calendars in updateDB (remove events)

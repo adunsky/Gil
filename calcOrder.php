@@ -21,6 +21,7 @@
 		syslog(LOG_ERR, "Failed to get client spreadsheet");	
 		return;
 	}
+	syslog(LOG_INFO, "calcOrder called on ".$ssName);
 	for ($i=0; initGoogleAPI($ssName) == null && $i<5; $i++)
 		syslog(LOG_ERR, "InitGoogleApi Failed"); // retry 5 times to initialize
 
@@ -31,7 +32,7 @@
 		syslog(LOG_ERR, "getCalcFields Failed. retrying...");
 	}
 	if (!$order) {
-		syslog(LOG_ERR, "getCalcFields Failed after retry");
+		syslog(LOG_ERR, "getCalcFields Failed after $i retries");
 		echo "Failed to update spreadsheet. Please retry";
 		return; 
 	}

@@ -3,8 +3,7 @@
    * Collect all Details from Angular HTTP Request.
    */ 
 	require_once "mydb.php";
-	 
-   //var_dump($_GET);
+	   //var_dump($_GET);
 	$dbName = $_GET['db'];
 	//echo $dbName;
 	
@@ -14,8 +13,10 @@
 
 	if (!selectDB($dbName))
 		return;	
-			
+	
 	$eventID = $_GET["eventID"];
+	syslog(LOG_INFO, "getOrder called, eventID: ".$eventID);
+
 	if ($eventID == "0") { // it is a new order - verify the user email
 		//echo $eventID;
 		$user = $_GET["user"];	
@@ -24,7 +25,7 @@
 			return;	
 		}
 	}
-	
+
 	
 	// First get all the fields
 	$sql = "SELECT * FROM $fieldTable;";
@@ -53,6 +54,7 @@
 			$orderID = $event["orderID"];	
 			$calendarID = $event["calendarID"];
 			//echo $orderID;
+			syslog(LOG_INFO, "Found order ID: ".$orderID);
 	
 			$sql = "SELECT * FROM $calendarsTable WHERE number = '$calendarID';";
 			$result = mysql_query($sql) or die('get form from calendar Failed! ' . mysql_error()); 
@@ -102,6 +104,7 @@
 	}
 	if ($orderID == -1) {
 		echo "Invalid record ID";
+		syslog(LOG_ERR, "Order not found");
 		return;
 	}	
 		
@@ -125,7 +128,7 @@
 		}
 	
 	}
-	
+
 	$data = [];
 	$data["orderID"] = $orderID;
 	$data["formID"] = --$formID;	// subtract 1 since it is an array index
