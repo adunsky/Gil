@@ -13,7 +13,8 @@
    $data = json_decode($postdata, true);
   	$dbName = $data["dbName"]; 
 	$origOrder = $data["order"];
-	$orderID = $data["orderID"]; 
+	$orderID = $data["orderID"];
+
 	if (!selectDB($dbName)) {
 		syslog(LOG_ERR, "Failed to select client DB: "+$dbName);
 		return;	
@@ -24,7 +25,9 @@
 	else {
 		syslog(LOG_ERR, "Failed to get client spreadsheet");	
 		return;
-	}	
+	}
+
+	syslog(LOG_INFO, "updateOrder called on ".$ssName." orderID: ".$orderID);	
 	for ($i=0; initGoogleAPI($ssName) == null && $i<5; $i++)
 		syslog(LOG_ERR, "InitGoogleApi Failed"); // retry 5 times to initialize
 

@@ -1,0 +1,219 @@
+<html>
+  <head>
+    <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+    <script type="text/javascript">
+      var CLIENT_ID = '785966582104-p03j542fcviuklf0kka21ushko2i7k0a.apps.googleusercontent.com';
+      var SCOPES = 'https://www.googleapis.com/auth/drive';
+      //var APIKEY = 'AIzaSyADVqG1toXEK_WlLIJpVBLieme87dDu_r0';
+
+      /**
+       * Called when the client library is loaded to start the auth flow.
+       */
+      function handleClientLoad() {
+        //gapi.client.setApiKey(APIKEY);
+        window.setTimeout(checkAuth, 10);
+      }
+
+      /**
+       * Check if the current user has authorized the application.
+       */
+      function checkAuth() {
+        try {
+            gapi.auth.authorize(
+                {'client_id': CLIENT_ID, 
+                'scope': SCOPES, 
+                'cookie_policy': 'single_host_origin',
+                'immediate': true},
+                handleAuthResult);
+          }
+          catch (e) { 
+            alert(e.message); 
+          }
+      }
+
+      /**
+       * Called when authorization server replies.
+       *
+       * @param {Object} authResult Authorization result.
+       */
+      function handleAuthResult(authResult) {
+        var authButton = document.getElementById('authorizeButton');
+        var filePicker = document.getElementById('filePicker');
+        authButton.style.display = 'none';
+        filePicker.style.display = 'none';
+        if (authResult && !authResult.error) {
+          // Access token has been successfully retrieved, requests can be sent to the API.
+          //var folder = getFolder('orderID');
+          filePicker.style.display = 'block';
+          filePicker.onchange = uploadFile;
+          //gapi.auth.signOut(); 
+        } else {
+          // No access token could be retrieved, show the popup to start the authorization flow.
+          //authButton.style.display = 'block';
+          //authButton.onclick = function() {
+            //alert("Authorization failed !");
+            gapi.auth.authorize(
+                {'client_id': CLIENT_ID, 'scope': SCOPES, 'immediate': false},
+                handleAuthResult);
+          //};
+        }
+      }
+
+      function insertToParentFolder(folderName, fileData) {
+        var parentFolder = 'GoogMesh';
+        // Search if GoogMesh folder exists
+        $qString = "title = '"+parentFolder+"' and trashed = false and mimeType = 'application/vnd.google-apps.folder'";
+        gapi.client.drive.children.list({
+          'folderId' : 'root', 
+          'q' : $qString
+          }).
+          execute(function(resp) {
+            if (resp.items[0])  {
+              // GoogMesh folder exists - insert into it
+              insertToFolder(resp.items[0].id, folderName, fileData);
+
+            }
+            else {
+
+                // folder doesn't exist - create it
+                var request = gapi.client.request({
+                    'path': '/drive/v2/files/',
+                    'method': 'POST',
+                    'headers': {
+                        'Content-Type': 'application/json',
+                        //'Authorization': 'Bearer ' + access_token,             
+                    },
+                    'body':{
+                        "title" : parentFolder,
+                        "mimeType" : "application/vnd.google-apps.folder",
+                    }
+                }).
+                execute(function(file) {
+                  if (file)  {
+                    // GoogMesh folder exists - insert into it
+                    insertToFolder(file.id, folderName, fileData);
+
+                  }
+                });      
+            }
+          });
+      }
+
+      function insertToFolder(parentID, folderName, fileData, callback) {
+        // Search if folder exists
+        $qString = "title = '"+folderName+"'"+" and trashed = false and mimeType = 'application/vnd.google-apps.folder'";
+        gapi.client.drive.children.list({
+          'folderId' : parentID, 
+          'q' : $qString
+          }).
+          execute(function(resp) {
+            if (resp.items[0])  {
+              // folder exist - insert into it
+                insertFile(fileData, resp.items[0].id);
+                return true;
+            }
+            else {
+
+              // folder doesn't exist - create it
+              var request = gapi.client.request({
+                  'path': '/drive/v2/files/',
+                  'method': 'POST',
+                  'headers': {
+                      'Content-Type': 'application/json',
+                      //'Authorization': 'Bearer ' + access_token,             
+                  },
+                  'body':{
+                      "title" : folderName,
+                      'parents': [{"id": parentID}],
+                      "mimeType" : "application/vnd.google-apps.folder",
+                  }
+              });
+              if (!callback) {
+                  callback = function(file) {
+                    // folder created - insert into it
+                    insertFile(fileData, file.id);
+                    console.log("Folder: ");
+                    console.log(file);              
+                  };
+              }
+              request.execute(callback);
+            }
+          });
+            
+        
+      }
+
+      var folderID = "order1226";
+      /**
+       * Start the file upload.
+       *
+       * @param {Object} evt Arguments from the file selector.
+       */
+      function uploadFile(evt) {
+        gapi.client.load('drive', 'v2', function() {
+          var file = evt.target.files[0];
+          insertToParentFolder(folderID, file);
+        });
+      }
+
+      /**
+       * Insert new file.
+       *
+       * @param {File} fileData File object to read data from.
+       * @param {Function} callback Function to call when the request is complete.
+       */
+      function insertFile(fileData, parentID, callback) {
+        const boundary = '-------314159265358979323846';
+        const delimiter = "\r\n--" + boundary + "\r\n";
+        const close_delim = "\r\n--" + boundary + "--";
+
+        var reader = new FileReader();
+        reader.readAsBinaryString(fileData);
+        reader.onload = function(e) {
+          var contentType = fileData.type || 'application/octet-stream';
+          var metadata = {
+            'title': fileData.name,
+            'parents': [{"id": parentID}],
+            'mimeType': contentType
+          };
+
+          var base64Data = btoa(reader.result);
+          var multipartRequestBody =
+              delimiter +
+              'Content-Type: application/json\r\n\r\n' +
+              JSON.stringify(metadata) +
+              delimiter +
+              'Content-Type: ' + contentType + '\r\n' +
+              'Content-Transfer-Encoding: base64\r\n' +
+              '\r\n' +
+              base64Data +
+              close_delim;
+
+          var request = gapi.client.request({
+              'path': '/upload/drive/v2/files',
+              'method': 'POST',
+              'params': {'uploadType': 'multipart'},
+              'headers': {
+                'Content-Type': 'multipart/mixed; boundary="' + boundary + '"'
+              },
+              'body': multipartRequestBody});
+          if (!callback) {
+            callback = function(file) {
+              console.log("File: ");
+              console.log(file);
+              alert("Upload complete");
+
+            };
+          }
+          request.execute(callback);
+        }
+      }
+    </script>
+    <script type="text/javascript" src="https://apis.google.com/js/client.js?onload=handleClientLoad"></script>
+  </head>
+  <body>
+    <!--Add a file picker for the user to start the upload process -->
+    <input type="file" multiple=true id="filePicker" style="display: none" />
+    <input type="button" id="authorizeButton" style="display: none" value="Authorize" />
+  </body>
+</html>
