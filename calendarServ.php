@@ -371,7 +371,7 @@ function getSearchFields($order) {
 	while ($field = mysql_fetch_array($result, MYSQL_ASSOC)) {
 		$searchFieldIndex = $field['index'];
 		$value = $order[$searchFieldIndex];
-		$str = $str."<b>".$field['name'].": </b>".$value."<br>";
+		$str = $str."<b>".$field['name'].": </b>".$value." <br>";
 
 	}
 	return $str;
