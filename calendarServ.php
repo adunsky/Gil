@@ -319,7 +319,9 @@ session_start();
 						$eventID = substr($updatedEvent["htmlLink"], $eidpos+4);
 						$calEvent = $updatedEvent;
 					}
-					$description = "<a href='http://googlemesh.com/Gilamos/#/newOrder?id=".$eventID."&db=".$dbName."'>Update</a>
+					// set text direction for the description according to the language of the first word...
+					$linkTitle = $lang == 'eng' ? 'Update' : 'עדכון';
+					$description = "<a href='http://googlemesh.com/Gilamos/#/newOrder?id=".$eventID."&db=".$dbName."'>".$linkTitle."</a>
 									<p>Order ID :".$orderID."<br>".getSearchFields($order)."</p>";
 					if ($calEvent->getDescription() != $description) {
 						//echo "old description: ".$calEvent->getDescription()."<br>";
