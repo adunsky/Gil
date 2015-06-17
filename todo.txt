@@ -16,6 +16,10 @@ Event gadget - try
 Security authorization - get user credentials through oath2
 Track change by user
 Add support for attachments - Google drive
+	- take care of concurrent new orders
+	- how to handle multiple drive folders (accounts) for the same order
+	- add switch user option
+
 write logs and exceptions, control the level
 //calendarServ.php breaks if DB is down
 

@@ -11,7 +11,7 @@
        */
       function handleClientLoad() {
         //gapi.client.setApiKey(APIKEY);
-        window.setTimeout(checkAuth, 10);
+        window.setTimeout(checkAuth, 1);
       }
 
       /**
@@ -39,12 +39,13 @@
       function handleAuthResult(authResult) {
         var authButton = document.getElementById('authorizeButton');
         var filePicker = document.getElementById('filePicker');
-        authButton.style.display = 'none';
-        filePicker.style.display = 'none';
+        //authButton.style.display = 'none';
+        //filePicker.style.display = 'none';
         if (authResult && !authResult.error) {
           // Access token has been successfully retrieved, requests can be sent to the API.
           //var folder = getFolder('orderID');
-          filePicker.style.display = 'block';
+          //filePicker.style.display = 'block';
+          //filePicker.onclick = checkAuth();
           filePicker.onchange = uploadFile;
           //gapi.auth.signOut(); 
         } else {
@@ -209,11 +210,11 @@
         }
       }
     </script>
-    <script type="text/javascript" src="https://apis.google.com/js/client.js?onload=handleClientLoad"></script>
+    <script type="text/javascript" src="https://apis.google.com/js/client.js"></script>
   </head>
   <body>
     <!--Add a file picker for the user to start the upload process -->
-    <input type="file" multiple=true id="filePicker" style="display: none" />
+    <input type="file" multiple=true id="filePicker" style="display: block" onclick="checkAuth()"/>
     <input type="button" id="authorizeButton" style="display: none" value="Authorize" />
   </body>
 </html>

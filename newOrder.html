@@ -3,8 +3,19 @@
 <link ng-if="form.dir == 'ltr'" rel="stylesheet" href="css/styleEng.css">
 
 <h1 dir="{{form.dir}}">{{form.title}}</h1>
-<br>
+<script type="text/javascript" src="https://apis.google.com/js/client.js"></script>
 
+<div ng-if="form.dir=='ltr'" class="col-sm-6 col-sm-offset-5">
+    <!--Add a file picker for attachments -->
+    <button ng-if="form.dir=='rtl'" class="btn btn-link" ng-click="selectFile()">צרף מסמכים</button>
+    <button ng-if="form.dir=='ltr'" class="btn btn-link" ng-click="selectFile()">Attach Files</button>    
+    <input type="file" multiple=true file-on-change="initUpload" style="display:none" id="file"/>
+    <button ng-if="form.dir=='rtl'" class="btn btn-link" ng-click="openFolder()">הצג ספרייה</button>
+    <button ng-if="form.dir=='ltr'" class="btn btn-link" ng-click="openFolder()">Show Folder</button>    
+    <br><br>
+</div>
+
+<br>
 <div class="container col-sm-12">
 	<div ng-if="form.dir=='rtl'" class="readOnly col-sm-6">	
 	  <form role="form">
