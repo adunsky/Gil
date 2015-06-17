@@ -197,10 +197,10 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 	      		setProgress(); 
 	      		$scope.updateValues(); 
 	      		// get the order ID and send to PHP
-					$updatedOrder = {};
-					$updatedOrder.dbName = $scope.dbName;						
-					$updatedOrder.order = $scope.order;	      		
-					$updatedOrder.orderID = $scope.orderID;	      		
+				$updatedOrder = {};
+				$updatedOrder.dbName = $scope.dbName;						
+				$updatedOrder.order = $scope.order;	      		
+				$updatedOrder.orderID = $scope.orderID;	      		
 	      		
 	            var content = angular.toJson($updatedOrder);
 	            var request = $http({
@@ -214,10 +214,14 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 	                $scope.message = "From PHP file : "+data;
 	                console.log($scope.message);
 					if (!isNaN(data)) {	                
-	                	$scope.orderID = data; // PHP returned a valid ID number
-	                	$scope.inProgress = false;
-	                	alert("Order ID: "+$scope.orderID+" updated successfully");
-  						 	window.close();	                	
+	                	$scope.orderID = parseInt(data); // PHP returned a valid ID number
+	                	if ($scope.newDriveFolder && $scope.folderID) {
+	                		// rename the temporary drive folder
+	                		$scope.authRenameFolder($scope.folderID, FOLDER_PREFIX + $scope.orderID);
+	                	}
+	                	else {
+	                		$scope.close();
+  						}               	
 	                }
 	                else {
 	                	//$scope.orderID = data; // PHP returned invalid ID number
@@ -289,10 +293,333 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 	            });
 
 			};
-			
-         
+
+			// Code for file attachments
+
+			var CLIENT_ID = '785966582104-p03j542fcviuklf0kka21ushko2i7k0a.apps.googleusercontent.com';
+			var SCOPES = 'https://www.googleapis.com/auth/drive';
+			var FOLDER_PREFIX = '_order';
+
+
+   			$scope.initUpload = function(event){
+
+   			var files = null;
+   			if (event)	
+   				files = event.target.files;
+   			/**
+   			 * Check if the current user has authorized to upload to the drive
+   			 */
+   			try {
+   			    gapi.auth.authorize(
+   			        {'client_id': CLIENT_ID, 
+   			        'scope': SCOPES, 
+   			        'cookie_policy': 'single_host_origin',
+   			        'immediate': true},
+   			        function(authResult) {
+   			        	if (authResult && !authResult.error) {
+   				       		// authorization granted
+   				       		$scope.uploadFiles(files, $scope.orderID);
+   						}
+   						else {
+   							// try manual authorization
+   							gapi.auth.authorize(
+   							    {'client_id': CLIENT_ID, 
+   							     'scope': SCOPES, 
+   							     'cookie_policy': 'single_host_origin',
+   				   			     'immediate': false},
+   				   			    function(authResult) {
+   				   			       	if (authResult && !authResult.error) {
+   				   			       		// authorization granted
+   				   			       		$scope.uploadFiles(files, $scope.orderID);
+   				   					}
+   				   					else {
+   						    			alert("Authorization failed !")
+   						    		}	
+		     					});
+   		     			}	
+		        	});
+   				}
+   				catch (e) { 
+   				    alert(e.message); 
+   				}
+
+   			};
+
+			$scope.setFolderID = function(folderID) {
+
+				$scope.folderID = folderID;
+				if ($scope.orderID <= 0)
+					// new folder
+					$scope.newDriveFolder = true;
+			}
+
+			$scope.openFolder = function()
+			{
+        		if (!$scope.folderID) {
+        			// simulate file upload just to get the folder ID from Google drive
+        			$scope.initUpload(null);
+        		}
+        		$scope.openFolderWindow()
+			}
+
+
+			$scope.openFolderWindow = function()
+			{
+				if (!$scope.folderID)
+					window.setTimeout($scope.openFolderWindow, 1000);
+				else
+					window.open("https://drive.google.com/folderview?id="+$scope.folderID);
+			}   
+
+
+			$scope.selectFile = function()
+			{
+				$("#file").click();
+
+			}
+
+			/**
+			 * Start the file upload.
+			 *
+			 * @param {Object} evt Arguments from the file selector.
+			 */
+			$scope.uploadFiles = function(files, orderID) {
+			  	gapi.client.load('drive', 'v2', function() {
+			  		if ($scope.folderID) {
+			  			// folder already found - insert into it
+						$scope.insertFiles(files, $scope.folderID);
+			  		}
+			  		else	// need to find or create the parent folder
+			        	$scope.insertToParentFolder(orderID, files);
+			    });
+			}
+
+
+			$scope.insertToParentFolder = function(orderID, files) {
+			  var parentFolder = 'GoogMesh';
+			  // Search if GoogMesh folder exists
+			  $qString = "title = '"+parentFolder+"' and trashed = false and mimeType = 'application/vnd.google-apps.folder'";
+			  gapi.client.drive.children.list({
+			    'folderId' : 'root', 
+			    'q' : $qString
+			    }).
+			    execute(function(resp) {
+			      if (resp.items && resp.items[0])  {
+			        // GoogMesh folder exists - insert into it
+			        $scope.insertToFolder(resp.items[0].id, orderID, files);
+
+			      }
+			      else {
+
+			          // folder doesn't exist - create it
+			          var request = gapi.client.request({
+			              'path': '/drive/v2/files/',
+			              'method': 'POST',
+			              'headers': {
+			                  'Content-Type': 'application/json',
+			                  //'Authorization': 'Bearer ' + access_token,             
+			              },
+			              'body':{
+			                  "title" : parentFolder,
+			                  "mimeType" : "application/vnd.google-apps.folder",
+			              }
+			          }).
+			          execute(function(file) {
+			            if (file)  {
+			              // GoogMesh folder exists - insert into it
+			              $scope.insertToFolder(file.id, orderID, files);
+
+			            }
+			          });      
+			      }
+			    });
+			}
+
+			$scope.insertToFolder = function(parentID, orderID, files, callback) {
+			  var folderName = FOLDER_PREFIX+orderID;
+			  // Search if folder exists
+			  $qString = "title = '"+folderName+"'"+" and trashed = false and mimeType = 'application/vnd.google-apps.folder'";
+			  gapi.client.drive.children.list({
+			    'folderId' : parentID, 
+			    'q' : $qString
+			    }).
+			    execute(function(resp) {
+			      if (resp.items && resp.items[0])  {
+			      	if (orderID <= 0) {
+						// Temporary folder is in use - try a different one with --orderID
+						$scope.insertToFolder(parentID, --$scope.orderID, files);
+						return;
+			      	}
+			        // folder exist - insert into it
+			        if (files)
+			          	$scope.insertFiles(files, resp.items[0].id);
+			          
+			          $scope.setFolderID(resp.items[0].id);
+			      }
+			      else {
+
+			        // folder doesn't exist - create it
+			        var request = gapi.client.request({
+			            'path': '/drive/v2/files/',
+			            'method': 'POST',
+			            'headers': {
+			                'Content-Type': 'application/json',
+			                //'Authorization': 'Bearer ' + access_token,             
+			            },
+			            'body':{
+			                "title" : folderName,
+			                'parents': [{"id": parentID}],
+			                "mimeType" : "application/vnd.google-apps.folder",
+			            }
+			        });
+			        if (!callback) {
+			            callback = function(file) {
+			              	// folder created - insert into it
+		              		if (files) 
+		              			$scope.insertFiles(files, file.id);
+				            
+				            $scope.setFolderID(file.id);
+				            console.log("Folder: ");
+			    	        console.log(file);              
+			            };
+			        }
+			        request.execute(callback);
+			      }
+			    });
+			      
+			  
+			}
+
+
+			$scope.insertFiles = function(files, parentID) {
+				$fileNames = "";
+				$count = 0;
+				for ($i=0 ; $i < files.length ; $i++) {
+					$scope.insertFile(files[$i], parentID, function(file) {
+						$scope.filesUploaded = true;
+						console.log("File: ");
+						console.log(file);
+						$fileNames += file.originalFilename + "\n";
+						if (++$count == files.length)
+							// This is the last file uploaded
+						  	alert("Files uploaded to Google drive:\n"+$fileNames);
+
+						});
+
+				}
+
+			}
+
+
+			/**
+			 * Insert new file.
+			 *
+			 * @param {File} fileData File object to read data from.
+			 * @param {Function} callback Function to call when the request is complete.
+			 */
+			$scope.insertFile = function(fileData, parentID, callback) {
+				const boundary = '-------314159265358979323846';
+				const delimiter = "\r\n--" + boundary + "\r\n";
+				const close_delim = "\r\n--" + boundary + "--";
+
+				var reader = new FileReader();
+				reader.readAsBinaryString(fileData);
+				reader.onload = function(e) {
+					var contentType = fileData.type || 'application/octet-stream';
+				  	var metadata = {
+				    	'title': fileData.name,
+				    	'parents': [{"id": parentID}],
+				    	'mimeType': contentType
+				    };
+
+				    var base64Data = btoa(reader.result);
+				    var multipartRequestBody =
+				        delimiter +
+				        'Content-Type: application/json\r\n\r\n' +
+				        JSON.stringify(metadata) +
+				        delimiter +
+				        'Content-Type: ' + contentType + '\r\n' +
+				        'Content-Transfer-Encoding: base64\r\n' +
+				        '\r\n' +
+				        base64Data +
+				        close_delim;
+
+				    var request = gapi.client.request({
+				        'path': '/upload/drive/v2/files',
+				        'method': 'POST',
+				        'params': {'uploadType': 'multipart'},
+				        'headers': {
+				          'Content-Type': 'multipart/mixed; boundary="' + boundary + '"'
+				        },
+				        'body': multipartRequestBody});
+				    request.execute(callback);
+				}
+			}
+
+
+			$scope.authRenameFolder = function(folderID, newName) {
+   			try {
+   			    gapi.auth.authorize(
+   			        {'client_id': CLIENT_ID, 
+   			        'scope': SCOPES, 
+   			        'cookie_policy': 'single_host_origin',
+   			        'immediate': true},
+   			        function(authResult) {
+   			        	if (authResult && !authResult.error) {
+   				       		// authorization granted
+   				       		$scope.renameFolder(folderID, newName);
+   						}
+   						else {
+   							// try manual authorization
+   							gapi.auth.authorize(
+   							    {'client_id': CLIENT_ID, 
+   							     'scope': SCOPES, 
+   							     'cookie_policy': 'single_host_origin',
+   				   			     'immediate': false},
+   				   			    function(authResult) {
+   				   			       	if (authResult && !authResult.error) {
+   				   			       		// authorization granted
+   				   			       		$scope.renameFolder(folderID, newName);
+   				   					}
+   				   					else {
+   						    			alert("Authorization failed !")
+   						    		}	
+		     					});
+   		     			}	
+		        	});
+   				}
+   				catch (e) { 
+   				    alert(e.message); 
+   				}
+
+
+
+			}
+			/**
+			 * Rename a file.
+			 *
+			 * @param {String} fileId <span style="font-size: 13px; ">ID of the file to rename.</span><br> * @param {String} newTitle New title for the file.
+			 */
+			$scope.renameFolder = function(fileId, newTitle) {
+			  	var body = {'title': newTitle};
+			  	var request = gapi.client.drive.files.patch({
+			    	'fileId': fileId,
+			    	'resource': body
+			  	});
+			  	request.execute(function(resp) {
+			    	console.log('New Title: ' + resp.title);
+			    	$scope.close();
+
+			  	});
+			}			
 	        
+	        $scope.close = function() {
+	            $scope.inProgress = false;
+                alert("Order ID: "+$scope.orderID+" updated successfully");
+				window.close();		        	
+	        }
 })
+
 .directive('progressBar', function() {		// This code is needed to support ie
   return {
     restrict: 'A',
@@ -312,3 +639,16 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
     }
   }
 })
+
+.directive('fileOnChange', function() {
+  return {
+    restrict: 'A',
+    link: function (scope, element, attrs) {
+      var onChangeHandler = scope.$eval(attrs.fileOnChange);
+      element.bind('change', onChangeHandler);
+    }
+  };
+})
+
+
+

@@ -44,7 +44,7 @@
 	}
 
 	//var_dump($order);
-	if ($orderID) {
+	if ($orderID > 0) {
 		// check if order exists
 		$sql = "SELECT * FROM $mainTable WHERE id = $orderID;";
 		$result = mysql_query($sql) or die('get order Failed! ' . mysql_error()); 
@@ -54,7 +54,7 @@
 		}
 	}
 
-	if ($orderID) // existing order
+	if ($orderID > 0) // existing order
 		$values = ""; 
 	else // new order
 		$values = "'null' "; // null for the auto generated ID
@@ -83,7 +83,7 @@
 		}
 		$value = mysql_real_escape_string($value);	// handle special characters
  		
-		if ($orderID) {	
+		if ($orderID > 0) {	
 				if ($values != "") // after the first name=value pair
 					$values .= ", ";
 				$values .= "`$name` = '$value'"; // reverse qoutes needed to support Hebrew text	
@@ -93,7 +93,7 @@
 		}
 	}
 	// Update the main table 	
-	if (!$orderID) {
+	if ($orderID <= 0) {
 	  	syslog (LOG_INFO, "Inserting new order");
 	   $sql = "INSERT INTO $mainTable VALUES ($values)";
 	   if (!mysql_query($sql)) die('Insert Order Failed !' . mysql_error());
