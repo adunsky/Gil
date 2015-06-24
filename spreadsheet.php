@@ -48,8 +48,14 @@ function setSSName($ssName) {
  
 
 function initGoogleAPI($spreadsheetName = NULL) {
-	global $mainSpreadsheetName, $spreadsheet, $clientid, $clientmail, $clientkeypath, $appName;
-		
+	global $mainSpreadsheetName, $spreadsheet, $globalDBName, $appName;
+
+	$customer = getClient($globalDBName, 1);	// always use the first client
+
+	$clientid = $customer["clientID"];
+	$clientmail = $customer["clientMail"];
+	$clientkeypath = $customer["clientKeyPath"];
+
 	if (!$spreadsheetName)
 		$spreadsheetName = $mainSpreadsheetName;		// the default spreadsheet
 		
@@ -236,7 +242,6 @@ function getCalcFields($order) {
 	
 	
 		release_named_lock($mainSpreadsheetName);
-		
 	
 		$i = -1;
 		foreach ($values as $value) { // update the output values

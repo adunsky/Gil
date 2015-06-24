@@ -5,8 +5,8 @@
 <h1 dir="{{form.dir}}">{{form.title}}</h1>
 <script type="text/javascript" src="https://apis.google.com/js/client.js"></script>
 
-<div ng-if="form.dir=='ltr'" class="col-sm-6 col-sm-offset-5">
     <!--Add a file picker for attachments -->
+<div ng-if="form.dir=='ltr'" class="col-sm-6 col-sm-offset-5">
     <button ng-if="form.dir=='rtl'" class="btn btn-link" ng-click="selectFile()">צרף מסמכים</button>
     <button ng-if="form.dir=='ltr'" class="btn btn-link" ng-click="selectFile()">Attach Files</button>    
     <input type="file" multiple=true file-on-change="initUpload" style="display:none" id="file"/>

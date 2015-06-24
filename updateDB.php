@@ -204,7 +204,7 @@ function createFieldTypeTable($worksheetFeed, $fieldTable, $listValueTable) {
 					// echo $sql;
 			$result = mysql_query($sql) or die('Insert to fields table Failed! ' . mysql_error());
 
-			if ($row-1 > $fieldsCount) { // new fields added
+			if ($fieldsCount && $row-1 > $fieldsCount) { // new fields added
 				echo "Adding column: ".$name." to Main table <br>\n";
 				// add the extra columns to the Main table	
 				if ($type == 'TEXT' || $type == 'LIST')		// translate TEXT in the worksheet to VARCHAR(64)
@@ -217,6 +217,7 @@ function createFieldTypeTable($worksheetFeed, $fieldTable, $listValueTable) {
 				$sql = "ALTER TABLE $mainTable ADD `$row` $DBtype;";
 				$result = mysql_query($sql) or die('Add column to main table Failed! ' . mysql_error());
 			}
+
 			if ($type == "LIST") {
 				// Add list values to list table
 	
@@ -300,6 +301,7 @@ function updateCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 		$worksheet = $worksheetFeed->getByTitle('Calendars');
 		$cellFeed = $worksheet->getCellFeed();
 		
+		$count = 0;
 		$row = 2;
 		$calNumber = 0;
 		$calID = 0;
@@ -310,6 +312,7 @@ function updateCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 			if ($calendarName != $prevCalName) {
 				// a new calendar
 				$calID = 0;
+				$count++;
 			}
 			$prevCalName = $calendarName;
 			// a new calendar number
@@ -367,10 +370,10 @@ function updateCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 				// it is a new calendar with a new number
 				if (!$calID) {
 					// calendar doesn't exist - create it and add to the table
-					$calID = createCalendar($worksheetFeed, $calendarName);
+					$calID = createCalendar($worksheetFeed, $calendarName, $calNumber);
 				}
 				if ($calID) {
-					$sql = "INSERT INTO $calendarsTable VALUES ('$calNumber', '$calendarName', '$fieldIndex', '$formID', '$titleFieldIndex', '$locationFieldIndex', '$calID');";
+					$sql = "INSERT INTO $calendarsTable VALUES ('$calNumber', '$count', $calendarName', '$fieldIndex', '$formID', '$titleFieldIndex', '$locationFieldIndex', '$calID');";
 					$result = mysql_query($sql) or die('Insert calendar Failed! ' . mysql_error());
 				}
 			}				
@@ -413,9 +416,10 @@ function createUsersTable($worksheetFeed, $usersTable, $calendarsTable) {
 				$result = mysql_query($sql) or die('Get calendar number Failed! ' . mysql_error());	
 				if ($calendar = mysql_fetch_array($result)) {
 					$calendarNum = $calendar["number"];
+					$count = $calendar["count"];
 					$calID = $calendar["calID"];	
 					
-					if (shareCalendar($calID, $email)) {
+					if (shareCalendar($calID, $email, $count)) {
 						// insert to users table
 						$sql = "INSERT INTO $usersTable VALUES ('$userName', '$email', '$calendarNum');";
 						$result = mysql_query($sql) or die('Insert field Failed! ' . mysql_error());

@@ -35,7 +35,7 @@
 	$calendarsTable = '_calendars';
 	$eventsTable = '_events';
 	$usersTable = '_users';	
-	
+	$clientIDTable = '_clientids';
 	
 function selectDB($dbName)	{
 	global $mysql_id, $globalDBName;
@@ -51,24 +51,45 @@ function selectDB($dbName)	{
 }
 
  
-function getClientInfo($DBname) {
-		global $globalDBName, $clientid, $clientmail, $clientkeypath, $lang;
+function getClientList($DBName) {
 
-		$currentDB = $globalDBName; // save current DB
-		if (selectDB("customers")) {
-	      $sql =  "SELECT * FROM customers WHERE dbName='$DBname';";
-	      $result = mysql_query($sql);
+	$sql = "SELECT * FROM customers.googleids WHERE customers.googleids.customerDBName='$DBName'";
+	$result = mysql_query($sql) or die('Select client IDs table failed! ' . mysql_error());
+	$clientList = [];
+	while ($client = mysql_fetch_array($result)) {
+		array_push($clientList, $client);
+	}
+
+	return $clientList;
+
+} 
+
+function getClientForCalendar($calNumber) {
+
+	return ceil($calNumber/25);	// every 25 calendars use a new client ID
+
+}
+
+function getClient($DBName, $number) {
+
+	$sql = "SELECT * FROM customers.googleids WHERE customers.googleids.customerDBName='$DBName' AND customers.googleids.clientNumber='$number'";
+	$result = mysql_query($sql) or die('Select client IDs table failed! ' . mysql_error());
+	$client = mysql_fetch_array($result);
+
+	return $client;
+
+} 
+
+function getClientInfo($DBname) {
+		global $lang;
+
+	    $sql =  "SELECT * FROM customers.customers WHERE customers.customers.dbName='$DBname';";
+	    $result = mysql_query($sql);
       	$customer = mysql_fetch_array($result);
       	$ssName = $customer["ssName"];
-      	$clientid = $customer["clientID"];
-      	$clientmail = $customer["clientMail"];
-      	$clientkeypath = $customer["clientKeyPath"];
       	$lang = $customer["lang"];
-      	if ($currentDB && $currentDB != "")
-      		selectDB($currentDB); // set it back to original	
+
       	return $ssName;
-		}	
-		return NULL;
 } 
 
 function authUserForm($user, $formID) {

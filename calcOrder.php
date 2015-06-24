@@ -10,10 +10,15 @@
    $postdata = file_get_contents("php://input");
    //echo "postdata: " . $postdata;
 
-   $data = json_decode($postdata, true);
+    $data = json_decode($postdata, true);
   	$dbName = $data["dbName"]; 
 	$origOrder = $data["order"];
 	
+	if (!selectDB($dbName)) {
+		syslog(LOG_ERR, "Failed to select client DB: "+$dbName);
+		return;	
+	}
+
 	$ssName = getClientInfo($dbName);
 	if ($ssName)
 		setSSName($ssName);

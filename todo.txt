@@ -1,7 +1,16 @@
 //Search capabilities (fields in description)
 //Optimize event updates
 //test reduced calendars
+Add atendees per calendar
+Add celltype unique - verify uniqueness on save
+Add folder name cell
+record creation time - for billing
+Add mandatory field per form
+Add email from form
 
+Use client list for scalability of calendars
+
+audit trail - store all changes per record, with user
 
 //Add validation for "+=-" etc..
 //Support english forms
@@ -15,18 +24,18 @@ Default start hour - 8:00 am
 Event gadget - try
 Security authorization - get user credentials through oath2
 Track change by user
-Add support for attachments - Google drive
-	- take care of concurrent new orders
+//Add support for attachments - Google drive
+//	- take care of concurrent new orders
 	- how to handle multiple drive folders (accounts) for the same order
 	- add switch user option
 
-write logs and exceptions, control the level
+//write logs and exceptions, control the level
 //calendarServ.php breaks if DB is down
 
 Allow adding and removing fields in updateDB
 Allow removing users and calendars in updateDB (remove events)
 
-Check returned message from updateOrder.php - test
+//Check returned message from updateOrder.php - test
 map size according to window height + return from street view 
 optimize calendar and spreadsheet auth
 

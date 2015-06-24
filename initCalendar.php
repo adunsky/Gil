@@ -26,9 +26,15 @@ require_once "mydb.php";
 require_once "spreadsheet.php";
 
 
-function initCalendar() {
-	global $clientid, $clientmail, $clientkeypath, $appName;
+function initCalendar($clientNumber) {
+	global $appName, $globalDBName;
 	
+	$customer = getClient($globalDBName, $clientNumber);
+
+	$clientid = $customer["clientID"];
+	$clientmail = $customer["clientMail"];
+	$clientkeypath = $customer["clientKeyPath"];
+
 	$client = new Google_Client();
 	$client->setApplicationName($appName);
 	$client->setClientId($clientid);
@@ -42,9 +48,12 @@ function initCalendar() {
 	  we have to list them manually. We also supply
 	  the service account
 	 ************************************************/
-	if (isset($_SESSION['service_token'])) {
-	  $client->setAccessToken($_SESSION['service_token']);
+	
+	if (isset($_SESSION[$clientid])) {
+	  echo "Got token from session\n";	
+	  $client->setAccessToken($_SESSION[$clientid]);
 	}
+
 	$key = file_get_contents($clientkeypath);
 	$cred = new Google_Auth_AssertionCredentials(
 	    $clientmail,
@@ -59,7 +68,7 @@ function initCalendar() {
 	}
 		   
 	if ($client->getAccessToken()) {
-		  	$_SESSION['service_token'] = $client->getAccessToken();
+		  	$_SESSION[$clientid] = $client->getAccessToken();
 		  	return $service;
 	} 
 	else {
@@ -70,27 +79,27 @@ function initCalendar() {
 }
 
 
-function createCalendar($worksheetFeed, $name) {
- 
-		$service = initCalendar();
+function createCalendar($worksheetFeed, $name, $calNumber) {
+
+ 		$clientNumber = getClientForCalendar($calNumber);
+		$service = initCalendar($clientNumber);
 		$calendar = new Google_Service_Calendar_Calendar();
 		$calendar->setSummary($name);
 		$calendar->setTimeZone("Asia/Jerusalem");
 		
 		$createdCalendar = $service->calendars->insert($calendar);
 		
-		echo "calendar id: ".$createdCalendar->getId()."<br>\n";
+		echo "Client: ".$clientNumber. " calendar id: ".$createdCalendar->getId()."<br>\n";
 		
 		return $createdCalendar->getId();		
 
 
 } // createCalendar
 
+function shareCalendar($calID, $email, $calNumber) {
 
-
-function shareCalendar($calID, $email) {
- 
-		$service = initCalendar();
+ 		$clientNumber = getClientForCalendar($calNumber);
+		$service = initCalendar($clientNumber);
 		$rule = new Google_Service_Calendar_AclRule();
 		$scope = new Google_Service_Calendar_AclRuleScope();
 		
@@ -108,9 +117,9 @@ function shareCalendar($calID, $email) {
 }
 
 
-function deleteCalendar($calendar) {
+function deleteCalendar($calendar, $number) {
 	 
-	$service = initCalendar();
+	$service = initCalendar(getClientForCalendar($number));
 	$success = true;	
 
 	try {
