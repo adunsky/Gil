@@ -315,7 +315,7 @@ require_once "mydb.php";
 		$gadget->setTitle("Gil's Gadget");
 		
 		$calEvent->gadget = $gadget;
-		*/
+		
 		$attendee1 = new Google_Service_Calendar_EventAttendee();
 		$attendee1->setEmail('gildavidov7@gmail.com');
 		// ...
@@ -323,7 +323,7 @@ require_once "mydb.php";
 		                   // ...
 		                  );
 		$calEvent->attendees = $attendees;
-		
+		*/
 
 		try {
 			if($new) {
