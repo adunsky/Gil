@@ -89,6 +89,9 @@ use Google\Spreadsheet\ServiceRequestFactory;
 			createUsersTable($worksheetFeed, $usersTable, $calendarsTable);					
 		}
 
+		syslog(LOG_INFO, "Hadash completed. DB: ".$dbName);
+
+
 function createMainTable($worksheetFeed, $fieldTable, $mainTable)	{
 
 	$sql = "DROP TABLE IF EXISTS $mainTable;";
