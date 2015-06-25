@@ -325,12 +325,12 @@ require_once "mydb.php";
 			$attendees = [];
 			foreach($participantList as $participant) {
 				$attendee = new Google_Service_Calendar_EventAttendee();
-				$attendee->setEmail($participant);
+				$attendee->setEmail(trim($participant));
 				array_push($attendees, $attendee);
 				echo "Participant added: ".$participant."\n";
 			}
-			if (count($attendees) > 0)
-				if (count(array_diff($attendees, $calEvent->getAttendees()))>0) {
+			if (count($attendees) > 0) {
+				//if (count(array_diff($attendees, $calEvent->getAttendees()))>0) {
 					// update the event attendees
 					$calEvent->attendees = $attendees;
 					$eventChanged = true;
