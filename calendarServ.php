@@ -130,7 +130,10 @@ require_once "mydb.php";
 					// Found the order 
 					$eventName = $order[$titleField];
 					$location = $order[$locationField];
-					$participantList = explode(",", $order[$participantsField]);	
+					if ($participantsField != "")
+						$participantList = explode(",", $order[$participantsField]);	
+					else
+						$participantList = "";
 
 					if ($colorField)
 						$color = $order[$colorField];	
@@ -326,7 +329,7 @@ require_once "mydb.php";
 				array_push($attendees, $attendee);
 			}
 			if (count($attendees) > 0)
-				if (count(array_diff($atendees, $calEvent->getAttendees()))>0) {
+				if (count(array_diff($attendees, $calEvent->getAttendees()))>0) {
 					// update the event attendees
 					$calEvent->attendees = $attendees;
 					$eventChanged = true;

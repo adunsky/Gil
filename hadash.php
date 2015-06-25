@@ -307,7 +307,7 @@ function createCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 		$result = mysql_query($sql) or die('Drop table Failed! ' . mysql_error());
 
 		// Create Calendars table		
-		$sql = "CREATE TABLE $calendarsTable ( number INT(32), count INT(32), name VARCHAR(64), fieldIndex INT(32), formNumber INT(32), titleField INT(32) , locationField INT(32), participants VARCHAR(128), calID VARCHAR(128) );";
+		$sql = "CREATE TABLE $calendarsTable ( number INT(32), count INT(32), name VARCHAR(64), fieldIndex INT(32), formNumber INT(32), titleField INT(32) , locationField INT(32), participants VARCHAR(256), calID VARCHAR(128) );";
 				// echo $sql;
 		$result = mysql_query($sql) or die('Create Calendars table Failed! ' . mysql_error());
 	
