@@ -133,7 +133,7 @@ require_once "mydb.php";
 					if ($participantsField > 0)
 						$participantList = explode(",", $order[$participantsField]);	
 					else
-						$participantList = "";
+						$participantList = [];
 
 					if ($colorField)
 						$color = $order[$colorField];	
