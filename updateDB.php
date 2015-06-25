@@ -334,34 +334,49 @@ function updateCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 				$locationFieldName = $fieldCell->getContent();
 			$fieldCell = $cellFeed->getCell($row, $col++);
 			if ($fieldCell)
-				$colorFieldName = $fieldCell->getContent();
+				$participantsField = $fieldCell->getContent();
 			else 
-				$colorFieldName = 0;	
+				$participantsField = 0;	
 
 			// find the key field index	
 			$sql = "SELECT * FROM $fieldTable WHERE name='$fieldName';";			
 			$result = mysql_query($sql) or die('Get field index Failed! ' . mysql_error());	
 			if ($field = mysql_fetch_array($result))
-				$fieldIndex = $field["index"];	
+				$fieldIndex = $field["index"];
+			else
+				die('Failed to find field index for calendar:'.$calendarName);
 
 			// find the form ID
 			$sql = "SELECT * FROM $formsTable WHERE title='$formName';";			
 			$result = mysql_query($sql) or die('Get form Failed! ' . mysql_error());	
 			if ($form = mysql_fetch_array($result))
-				$formID = $form["number"];				
+				$formID = $form["number"];
+			else				
+				die('Failed to find form: '.$formName);	
 
 			// find the title field index	
 			$sql = "SELECT * FROM $fieldTable WHERE name='$eventTitleFieldName';";			
 			$result = mysql_query($sql) or die('Get title field Failed! ' . mysql_error());	
 			if ($field = mysql_fetch_array($result))
-				$titleFieldIndex = $field["index"];				
+				$titleFieldIndex = $field["index"];
+			else				
+				die('Failed to find field: '.$eventTitleFieldName);
 				
 			// find the location field index	
 			$sql = "SELECT * FROM $fieldTable WHERE name='$locationFieldName';";			
 			$result = mysql_query($sql) or die('Get location field Failed! ' . mysql_error());	
 			if ($field = mysql_fetch_array($result))
 				$locationFieldIndex = $field["index"];
+			else				
+				die('Failed to find field: '.$locationFieldName);
 
+			// find the participants field index	
+			$sql = "SELECT * FROM $fieldTable WHERE name='$participantsField';";			
+			$result = mysql_query($sql) or die('Get participants field Failed! ' . mysql_error());	
+			if ($field = mysql_fetch_array($result))
+				$participantsFieldIndex = $field["index"];
+			else				
+				$participantsFieldIndex = 0;
 
 			// Check if calendar exist
 			$sql = "SELECT * FROM $calendarsTable WHERE number ='$calNumber';";
@@ -373,13 +388,13 @@ function updateCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 					$calID = createCalendar($worksheetFeed, $calendarName, $calNumber);
 				}
 				if ($calID) {
-					$sql = "INSERT INTO $calendarsTable VALUES ('$calNumber', '$count', $calendarName', '$fieldIndex', '$formID', '$titleFieldIndex', '$locationFieldIndex', '$calID');";
+					$sql = "INSERT INTO $calendarsTable VALUES ('$calNumber', '$count', $calendarName', '$fieldIndex', '$formID', '$titleFieldIndex', '$locationFieldIndex', '$participantsFieldIndex', '$calID');";
 					$result = mysql_query($sql) or die('Insert calendar Failed! ' . mysql_error());
 				}
 			}				
 			else {
 				// calendar exist - update it
-				$sql = "UPDATE $calendarsTable SET formNumber='$formID', titleField='$titleFieldIndex', locationField='$locationFieldIndex' WHERE number='$calNumber' AND name='$calendarName' AND fieldIndex='$fieldIndex';";
+				$sql = "UPDATE $calendarsTable SET formNumber='$formID', titleField='$titleFieldIndex', locationField='$locationFieldIndex', participants='$participantsFieldIndex' WHERE number='$calNumber' AND name='$calendarName' AND fieldIndex='$fieldIndex';";
 				$result = mysql_query($sql) or die('Update calendar Failed! ' . mysql_error());
 			}
 			$cellEntry = $cellFeed->getCell(++$row, 1);		

@@ -307,7 +307,7 @@ function createCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 		$result = mysql_query($sql) or die('Drop table Failed! ' . mysql_error());
 
 		// Create Calendars table		
-		$sql = "CREATE TABLE $calendarsTable ( number INT(32), count INT(32), name VARCHAR(64), fieldIndex INT(32), formNumber INT(32), titleField INT(32) , locationField INT(32), calID VARCHAR(128) );";
+		$sql = "CREATE TABLE $calendarsTable ( number INT(32), count INT(32), name VARCHAR(64), fieldIndex INT(32), formNumber INT(32), titleField INT(32) , locationField INT(32), participants VARCHAR(128), calID VARCHAR(128) );";
 				// echo $sql;
 		$result = mysql_query($sql) or die('Create Calendars table Failed! ' . mysql_error());
 	
@@ -361,9 +361,9 @@ function createCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 
 			$fieldCell = $cellFeed->getCell($row, $col++);
 			if ($fieldCell)
-				$colorFieldName = $fieldCell->getContent();
+				$participantsField = $fieldCell->getContent();
 			else 
-				$colorFieldName = 0;	
+				$participantsField = 0;	
 
 			// find the key field index	
 			$sql = "SELECT * FROM $fieldTable WHERE name='$fieldName';";			
@@ -397,6 +397,13 @@ function createCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 			else				
 				die('Failed to find field: '.$locationFieldName);
 
+			// find the participants field index	
+			$sql = "SELECT * FROM $fieldTable WHERE name='$participantsField';";			
+			$result = mysql_query($sql) or die('Get participants field Failed! ' . mysql_error());	
+			if ($field = mysql_fetch_array($result))
+				$participantsFieldIndex = $field["index"];
+			else				
+				die('Failed to find field: '.$participantsField);
 
 			if (!$calID) {
 				// new calendar - create it and add to the table
@@ -404,7 +411,7 @@ function createCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 			}
 			if ($calID) {
 				// add it to the table
-				$sql = "INSERT INTO $calendarsTable VALUES ('$calNumber', '$count', '$calendarName', '$fieldIndex', '$formID', '$titleFieldIndex', '$locationFieldIndex', '$calID');";
+				$sql = "INSERT INTO $calendarsTable VALUES ('$calNumber', '$count', '$calendarName', '$fieldIndex', '$formID', '$titleFieldIndex', '$locationFieldIndex', '$participantsFieldIndex', '$calID');";
 				$result = mysql_query($sql) or die('Insert calendar Failed! ' . mysql_error());
 			}
 

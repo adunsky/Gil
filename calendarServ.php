@@ -75,129 +75,138 @@ require_once "mydb.php";
 	while (true) {
 		
 		set_time_limit (0); // run forever
-			  
-		foreach ($clients as $client) {
-			// refresh clients if needed
-			if ($client->getAuth()->isAccessTokenExpired()) {
-			  echo "Refreshing client token: ".array_search($client, $clients)."<br>\n";	
-			  $client->getAuth()->refreshTokenWithAssertion($creds[array_search($client, $clients)]);
+		try {	  
+			foreach ($clients as $client) {
+				// refresh clients if needed
+				if ($client->getAuth()->isAccessTokenExpired()) {
+				  echo "Refreshing client token: ".array_search($client, $clients)."<br>\n";	
+				  $client->getAuth()->refreshTokenWithAssertion($creds[array_search($client, $clients)]);
+				}
 			}
-		}
-		// Select events that needs update
-		$sql = "SELECT * FROM $eventsTable WHERE updated='0';";
-		if (!$result = mysql_query($sql)) {
-			echo 'Select event table Failed! ' . mysql_error(); 
-			continue;
-		}
-		if ((mysql_num_rows($result) > 0) && ($event = mysql_fetch_array($result, MYSQL_ASSOC))) {
-			$orderID = $event["orderID"];
-    		$eventID = $event["eventID"];
-    		$calendarNum = $event["calendarID"];
-    		$date = $event["eventDate"];
-
-         echo "found event for order ". $orderID." Date: ".$date."<br>\n";
-         
-			$sql = "SELECT * FROM $calendarsTable WHERE number = '$calendarNum';";
+			// Select events that needs update
+			$sql = "SELECT * FROM $eventsTable WHERE updated='0';";
 			if (!$result = mysql_query($sql)) {
-				echo 'Select calendar table Failed! ' . mysql_error(); 
+				echo 'Select event table Failed! ' . mysql_error(); 
 				continue;
 			}
-			if ((mysql_num_rows($result) > 0) && ($calendar = mysql_fetch_array($result, MYSQL_ASSOC))) {
-				// Found the calendar details and the google calendar ID
-				$fieldIndex = $calendar["fieldIndex"];
-				$calendarID = $calendar["calID"];
-				$titleField = $calendar["titleField"];
-				$locationField = $calendar["locationField"];
-				$calendarCount = $calendar["count"];				
-				//$colorField = $calendar["colorField"];
-				$colorField = 0;	// not used						
-			}
-			$sql = "SELECT * FROM $mainTable WHERE id='$orderID';";
-			if (!$result = mysql_query($sql)) {
-				echo 'Select main table Failed! ' . mysql_error(); 
-				continue;
-			}
-			if ((mysql_num_rows($result) > 0) && ($order = mysql_fetch_array($result, MYSQL_ASSOC))) {
-				// Found the order 
-				$eventName = $order[$titleField];
-				$location = $order[$locationField];	
+			if ((mysql_num_rows($result) > 0) && ($event = mysql_fetch_array($result, MYSQL_ASSOC))) {
+				// found event to update
+				$orderID = $event["orderID"];
+	    		$eventID = $event["eventID"];
+	    		$calendarNum = $event["calendarID"];
+	    		$date = $event["eventDate"];
 
-				if ($colorField)
-					$color = $order[$colorField];	
-				else 
-					$color = 0;										
-			}
+	         	echo "found event for order ". $orderID." Date: ".$date."<br>\n";
+	         
+				$sql = "SELECT * FROM $calendarsTable WHERE number = '$calendarNum';";
+				if (!$result = mysql_query($sql)) {
+					echo 'Select calendar table Failed! ' . mysql_error(); 
+					continue;
+				}
+				if ((mysql_num_rows($result) > 0) && ($calendar = mysql_fetch_array($result, MYSQL_ASSOC))) {
+					// Found the calendar details and the google calendar ID
+					$fieldIndex = $calendar["fieldIndex"];
+					$calendarID = $calendar["calID"];
+					$titleField = $calendar["titleField"];
+					$locationField = $calendar["locationField"];
+					if (array_key_exists("participants", $calendar))
+						$participantsField = $calendar["participants"];
+					else
+						$participantsField = "";
+					if (array_key_exists("count", $calendar))
+						$calendarCount = $calendar["count"];
+					else
+						$calendarCount = 1;
+
+					//$colorField = $calendar["colorField"];
+					$colorField = 0;	// not used						
+				}
+				$sql = "SELECT * FROM $mainTable WHERE id='$orderID';";
+				if (!$result = mysql_query($sql)) {
+					echo 'Select main table Failed! ' . mysql_error(); 
+					continue;
+				}
+				if ((mysql_num_rows($result) > 0) && ($order = mysql_fetch_array($result, MYSQL_ASSOC))) {
+					// Found the order 
+					$eventName = $order[$titleField];
+					$location = $order[$locationField];
+					$participantList = explode(",", $order[$participantsField]);	
+
+					if ($colorField)
+						$color = $order[$colorField];	
+					else 
+						$color = 0;										
+				}
+				
+
+				$date1 = "";
+				$date2 = "";
+				// query the fields table to find if it is a start time
+				$sql = "SELECT * FROM $fieldTable WHERE `index`='$fieldIndex';";
+				if (!$result = mysql_query($sql)) {
+					echo 'Select field table Failed! ' . mysql_error(); 
+					continue;
+				}
+				if ((mysql_num_rows($result) > 0) && ($field = mysql_fetch_array($result, MYSQL_ASSOC))) {
+					$type1 = $field["type"];
+					if (strpos($type1, "STARTTIME") === 0) {
+						$twinNum = substr($type1, strlen("STARTTIME")); // this is the index of the start-end twin
+						$type2 = "ENDTIME".$twinNum;
+						echo "found end time: ".$type2."<br>\n";							
+						// query the field table for the end date
+						$sql = "SELECT * FROM $fieldTable WHERE type='$type2';";
+						if (!$result = mysql_query($sql)) {
+							echo 'Select field table Failed! ' . mysql_error(); 
+							continue;
+						}
+						if ((mysql_num_rows($result) > 0) && ($field = mysql_fetch_array($result, MYSQL_ASSOC))) {
+							$fieldIndex2 = $field["index"];							
+							$date2 = $order[$fieldIndex2];	// found the endtime
+							$date1 = $date;						// this is the start time
+						}			
+					}
+
+				}
+
+				// query the fields table to find if it is an end time
+				$sql = "SELECT * FROM $fieldTable WHERE `index`='$fieldIndex';";
+				if (!$result = mysql_query($sql)) {
+					echo 'Select field table Failed! ' . mysql_error(); 
+					continue;
+				}
+				if ((mysql_num_rows($result) > 0) && ($field = mysql_fetch_array($result, MYSQL_ASSOC))) {
+					$type1 = $field["type"];
+					if (strpos($type1, "ENDTIME") === 0) {
+						$twinNum = substr($type1, strlen("ENDTIME")); // this is the index of the start-end twin
+						$type2 = "STARTTIME".$twinNum;
+						// echo "looking for: ".$type2."<br>\n";
+						// query the field table for the end date
+						$sql = "SELECT * FROM $fieldTable WHERE type='$type2';";
+						if (!$result = mysql_query($sql)) {
+							echo 'Select field table Failed! ' . mysql_error(); 
+							continue;
+						}
+						if ((mysql_num_rows($result) > 0) && ($field = mysql_fetch_array($result, MYSQL_ASSOC))) {
+							$fieldIndex2 = $field["index"];							
+							$date1 = $order[$fieldIndex2];	// found the start time
+							$date2 = $date;	// this is the end time
+							// echo "Found starttime: ".$date1."<br>\n";
+						}			
+					}
+
+				}				
 			
+	  		}
+			else { 
+			 	//echo "No event to update<br>";
+				flush();
+			  	sleep(1);
+			  	continue;
+			}	
+			
+			$calEvent = null;
+			//echo "eventID= ".$eventID."<br>\n";
 
-			$date1 = "";
-			$date2 = "";
-			// query the fields table to find if it is a start time
-			$sql = "SELECT * FROM $fieldTable WHERE `index`='$fieldIndex';";
-			if (!$result = mysql_query($sql)) {
-				echo 'Select field table Failed! ' . mysql_error(); 
-				continue;
-			}
-			if ((mysql_num_rows($result) > 0) && ($field = mysql_fetch_array($result, MYSQL_ASSOC))) {
-				$type1 = $field["type"];
-				if (strpos($type1, "STARTTIME") === 0) {
-					$twinNum = substr($type1, strlen("STARTTIME")); // this is the index of the start-end twin
-					$type2 = "ENDTIME".$twinNum;
-					echo "found end time: ".$type2."<br>\n";							
-					// query the field table for the end date
-					$sql = "SELECT * FROM $fieldTable WHERE type='$type2';";
-					if (!$result = mysql_query($sql)) {
-						echo 'Select field table Failed! ' . mysql_error(); 
-						continue;
-					}
-					if ((mysql_num_rows($result) > 0) && ($field = mysql_fetch_array($result, MYSQL_ASSOC))) {
-						$fieldIndex2 = $field["index"];							
-						$date2 = $order[$fieldIndex2];	// found the endtime
-						$date1 = $date;						// this is the start time
-					}			
-				}
-
-			}
-
-			// query the fields table to find if it is an end time
-			$sql = "SELECT * FROM $fieldTable WHERE `index`='$fieldIndex';";
-			if (!$result = mysql_query($sql)) {
-				echo 'Select field table Failed! ' . mysql_error(); 
-				continue;
-			}
-			if ((mysql_num_rows($result) > 0) && ($field = mysql_fetch_array($result, MYSQL_ASSOC))) {
-				$type1 = $field["type"];
-				if (strpos($type1, "ENDTIME") === 0) {
-					$twinNum = substr($type1, strlen("ENDTIME")); // this is the index of the start-end twin
-					$type2 = "STARTTIME".$twinNum;
-					// echo "looking for: ".$type2."<br>\n";
-					// query the field table for the end date
-					$sql = "SELECT * FROM $fieldTable WHERE type='$type2';";
-					if (!$result = mysql_query($sql)) {
-						echo 'Select field table Failed! ' . mysql_error(); 
-						continue;
-					}
-					if ((mysql_num_rows($result) > 0) && ($field = mysql_fetch_array($result, MYSQL_ASSOC))) {
-						$fieldIndex2 = $field["index"];							
-						$date1 = $order[$fieldIndex2];	// found the start time
-						$date2 = $date;	// this is the end time
-						// echo "Found starttime: ".$date1."<br>\n";
-					}			
-				}
-
-			}				
-		
-
-  		}
-		else { 
-		 	//echo "No event to update<br>";
-			flush();
-		  	sleep(1);
-		  	continue;
-		}	
-		
-		$calEvent = null;
-		//echo "eventID= ".$eventID."<br>\n";
-		try {
 			if ($eventID && $eventID != ""){
 				// look for the event in the calendar
 				$params = [];
@@ -232,100 +241,96 @@ require_once "mydb.php";
 				}
 				continue; // Don't continue to process this event
 			}
-		}		
-		//catch exception
-		catch(Exception $e) {
-			  echo 'Exception: ' .$e->getMessage(). "<br>";
-			  sleep(1);
-			  continue;
-		}					
-		$eventChanged = false;
-		if ($calEvent->getSummary() != $eventName) {
-			$calEvent->setSummary($eventName);
-			echo "New title: ".$eventName."<br>\n";
-			$eventChanged = true;
-		}
-		if ($calEvent->getLocation() != $location) {
-			$calEvent->setLocation($location);
-			$eventChanged = true;
-		}
-		if ($color) {
-			echo "Color: " . $color."<br\n";
-			$calEvent->setColorId(getColor($color));				
-		}
-		$allDay = false;
-		// if there are no 2 valid dates it is an all day event
-		if ($date1 == "" || $date2 == "" || $date1 == $date2 || !strtotime($date1) || !strtotime($date2) || strtotime($date1) >= strtotime($date2) ) {
-			$allDay = true;
-			$date1 = $date2 = $date;	// It is an all day event
-		}
-		$start = new Google_Service_Calendar_EventDateTime();
-		$timestamp1 = strtotime($date1);
-		if ($allDay) {
-			// format it without the time
-			$date = date("Y-m-d", $timestamp1);
-			$start->setDate($date);				
-		}	// format with time
-		else {
-			$start->setTimeZone("Asia/Jerusalem");
-			$date = date('Y-m-d\TH:i:s', $timestamp1);
-			$start->setDateTime($date);
-			echo "Start: ".$date."<br>\n";
-		}
-		$wasStart = $calEvent->getStart();
-		//echo "Was start: ";
-		//var_dump($wasStart);
-		if ($wasStart != $start) {
-			$calEvent->setStart($start);
-			//echo " New start: ";
-			//var_dump($start);
-			$eventChanged = true;
-		}					
+			
+			$eventChanged = false;
+			if ($calEvent->getSummary() != $eventName) {
+				$calEvent->setSummary($eventName);
+				echo "New title: ".$eventName."<br>\n";
+				$eventChanged = true;
+			}
+			if ($calEvent->getLocation() != $location) {
+				$calEvent->setLocation($location);
+				$eventChanged = true;
+			}
+			if ($color) {
+				echo "Color: " . $color."<br\n";
+				$calEvent->setColorId(getColor($color));				
+			}
+			$allDay = false;
+			// if there are no 2 valid dates it is an all day event
+			if ($date1 == "" || $date2 == "" || $date1 == $date2 || !strtotime($date1) || !strtotime($date2) || strtotime($date1) >= strtotime($date2) ) {
+				$allDay = true;
+				$date1 = $date2 = $date;	// It is an all day event
+			}
+			$start = new Google_Service_Calendar_EventDateTime();
+			$timestamp1 = strtotime($date1);
+			if ($allDay) {
+				// format it without the time
+				$date = date("Y-m-d", $timestamp1);
+				$start->setDate($date);				
+			}	// format with time
+			else {
+				$start->setTimeZone("Asia/Jerusalem");
+				$date = date('Y-m-d\TH:i:s', $timestamp1);
+				$start->setDateTime($date);
+				echo "Start: ".$date."<br>\n";
+			}
+			$wasStart = $calEvent->getStart();
+			//echo "Was start: ";
+			//var_dump($wasStart);
+			if ($wasStart != $start) {
+				$calEvent->setStart($start);
+				//echo " New start: ";
+				//var_dump($start);
+				$eventChanged = true;
+			}					
 
-		$end = new Google_Service_Calendar_EventDateTime();
-		if ($allDay) {
-			$timestamp2 = strtotime($date."+1 days"); // end date is one day later
-			$date2 = date("Y-m-d", $timestamp2);					
-			//echo "End: ".$date2."\n";
-			$end->setDate($date2);	// no time set - all day event
-		}		
-		else { 
-			$timestamp2 = strtotime($date2);	
-			// set the end time
-			$end->setTimeZone("Asia/Jerusalem");
-			$endDate = date('Y-m-d\TH:i:s', $timestamp2); // Back to string
-			$end->setDateTime($endDate);
-			echo "End: ".$endDate."<br>\n";
-		}
-		if ($calEvent->getEnd() != $end) {
-			$calEvent->setEnd($end);
-			//var_dump($end);
-			$eventChanged = true;
-		}					
+			$end = new Google_Service_Calendar_EventDateTime();
+			if ($allDay) {
+				$timestamp2 = strtotime($date."+1 days"); // end date is one day later
+				$date2 = date("Y-m-d", $timestamp2);					
+				//echo "End: ".$date2."\n";
+				$end->setDate($date2);	// no time set - all day event
+			}		
+			else { 
+				$timestamp2 = strtotime($date2);	
+				// set the end time
+				$end->setTimeZone("Asia/Jerusalem");
+				$endDate = date('Y-m-d\TH:i:s', $timestamp2); // Back to string
+				$end->setDateTime($endDate);
+				echo "End: ".$endDate."<br>\n";
+			}
+			if ($calEvent->getEnd() != $end) {
+				$calEvent->setEnd($end);
+				//var_dump($end);
+				$eventChanged = true;
+			}					
 
-		/*
-		$gadget = new Google_Service_Calendar_EventGadget();
-		$gadget->setDisplay("icon");
-		$gadget->setIconLink("https://www.thefreedictionary.com/favicon.ico");
-		$gadget->setLink("https://googlemesh.com/Gilamos/hello.xml");
-		$gadget->setType("application/x-google-gadgets+xml");
-	  	$gadget->setHeight(236);
-	   	$gadget->setWidth(600);
-		//$gadget->setType("html");
-		$gadget->setTitle("Gil's Gadget");
-		
-		$calEvent->gadget = $gadget;
-		
-		$attendee1 = new Google_Service_Calendar_EventAttendee();
-		$attendee1->setEmail('gildavidov7@gmail.com');
-		// ...
-		$attendees = array($attendee1,
-		                   // ...
-		                  );
-		$calEvent->attendees = $attendees;
-		*/
-
-		try {
+			/*
+			$gadget = new Google_Service_Calendar_EventGadget();
+			$gadget->setDisplay("icon");
+			$gadget->setIconLink("https://www.thefreedictionary.com/favicon.ico");
+			$gadget->setLink("https://googlemesh.com/Gilamos/hello.xml");
+			$gadget->setType("application/x-google-gadgets+xml");
+		  	$gadget->setHeight(236);
+		   	$gadget->setWidth(600);
+			//$gadget->setType("html");
+			$gadget->setTitle("Gil's Gadget");
+			
+			$calEvent->gadget = $gadget;
+			*/
+			$attendees = [];
+			foreach($participantList as $participant) {
+				$attendee = new Google_Service_Calendar_EventAttendee();
+				$attendee->setEmail($participant);
+				array_push($attendees, $attendee);
+			}
+			if (count($attendees) > 0)
+				if (count(array_diff($atendees, $calEvent->getAttendees()))>0) {
+					// update the event attendees
+					$calEvent->attendees = $attendees;
+					$eventChanged = true;
+				}
 			if($new) {
 				echo "Calendar: ".$calendarCount." Client: ".getClientForCalendar($calendarCount)."\n";
 				$updatedEvent = $services[getClientForCalendar($calendarCount)]->events->insert($calendarID, $calEvent);
@@ -354,10 +359,11 @@ require_once "mydb.php";
 			}
 	
 
-		}
+		}	// try
 		//catch exception
 		catch(Exception $e) {
 			  echo 'Exception: ' .$e->getMessage(). "<br>";
+			  syslog(LOG_ERR, "Exception in Calendar service: ".$e->getMessage());
 			  sleep(1);
 			  continue;
 		}	
@@ -386,7 +392,6 @@ function getSearchFields($order) {
 	return $str;
 
 }
-
 
 
 $Colors  =  array( 
