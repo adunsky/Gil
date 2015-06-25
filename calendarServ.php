@@ -130,7 +130,7 @@ require_once "mydb.php";
 					// Found the order 
 					$eventName = $order[$titleField];
 					$location = $order[$locationField];
-					if ($participantsField != "")
+					if ($participantsField > 0)
 						$participantList = explode(",", $order[$participantsField]);	
 					else
 						$participantList = "";
@@ -327,6 +327,7 @@ require_once "mydb.php";
 				$attendee = new Google_Service_Calendar_EventAttendee();
 				$attendee->setEmail($participant);
 				array_push($attendees, $attendee);
+				echo "Participant added: ".$participant."\n";
 			}
 			if (count($attendees) > 0)
 				if (count(array_diff($attendees, $calEvent->getAttendees()))>0) {
