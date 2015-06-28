@@ -5,6 +5,7 @@
 .form-group.required .control-label:after { 
    content: "*";
    color: red;
+   font-size: 20px;
 }
 
 .error {
