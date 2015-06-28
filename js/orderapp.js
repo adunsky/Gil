@@ -247,7 +247,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 			$scope.validate = function(field) {
 				var i = 0
 				// First check if mandatory field is empty
-				if (field.fieldType == "Mandatory" && field.value == "") {
+				if (field.fieldType == "Mandatory" && (field.value == null || field.value == "")) {
 					// Mark field error
 					field.error = true;
 					field.message = "This field is required";
@@ -256,7 +256,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 				else
 					field.error = false;
 
-				if (field.value == "")
+				if (!field.value || field.value == "")
 					return "";
 
 				// do not allow '=' or '+' at the begining of an input text due to the spreadsheet limitation
@@ -270,7 +270,8 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
   			$scope.errorInForm = function() {
   				// return true if manadtory field is empty
   				for(var i=0; $scope.form && $scope.form.fields[i]; i++) {
-  					if ($scope.form.fields[i].fieldType == 'Mandatory' && $scope.form.fields[i].value == "") {
+  					if ($scope.form.fields[i].fieldType == 'Mandatory' && 
+  						($scope.form.fields[i].value == null || $scope.form.fields[i].value == "")) {
   						$scope.form.error = true;
   						$scope.form.message = "Missing required fields";
   						return true;

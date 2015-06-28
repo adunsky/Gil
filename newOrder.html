@@ -82,8 +82,8 @@
 		             <span class="input-group-btn">
 		                 <button type="button" class="btn btn-default" ng-click="openDateTimeCalendar($event, field)" ng-disabled="{{field.fieldType=='Read Only'}}"><i class="fa fa-calendar"></i></button>
 		             </span>
-		         	 <span class="error" ng-show="field.error">{{field.message}}</span>
 		         </p>
+		         <span class="error" ng-show="field.error">{{field.message}}</span>  
 		       </div>
 		       	<label ng-if="form.dir=='rtl'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
 		       </div> 
@@ -96,10 +96,10 @@
 		             <span class="input-group-btn">
 		                 <button type="button" class="btn btn-default" ng-click="openDateTimeCalendar($event, field)" ng-disabled="{{field.fieldType=='Read Only'}}"><i class="fa fa-calendar"></i></button>
 		             </span>
-		          	 <span class="error" ng-show="field.error">{{field.message}}</span>
 		         </p>
+		         <span class="error" ng-show="field.error">{{field.message}}</span>
 		       </div>
-		       	<label ng-if="form.dir=='rtl'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
+		  	   	<label ng-if="form.dir=='rtl'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
 		       </div>        
 		       
 		              
