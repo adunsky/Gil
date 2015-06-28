@@ -250,7 +250,10 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 				if (field.fieldType == "Mandatory" && (field.value == null || field.value == "")) {
 					// Mark field error
 					field.error = true;
-					field.message = "This field is required";
+					if ($scope.form.dir == 'rtl')
+						field.message = "חובה למלא שדה זה";
+					else
+						field.message = "This field is required";
 					return field.value;
 				}
 				else
@@ -273,7 +276,11 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
   					if ($scope.form.fields[i].fieldType == 'Mandatory' && 
   						($scope.form.fields[i].value == null || $scope.form.fields[i].value == "")) {
   						$scope.form.error = true;
-  						$scope.form.message = "Missing required fields";
+
+						if ($scope.form.dir == 'rtl')
+							$scope.form.message = "שדות חובה חסרים";
+						else
+  							$scope.form.message = "Missing required fields";
   						return true;
   					}
   				}
