@@ -395,7 +395,7 @@ function createCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 			if ($field = mysql_fetch_array($result))
 				$locationFieldIndex = $field["index"];
 			else				
-				die('Failed to find field: '.$locationFieldName);
+				$locationFieldIndex = 0;
 
 			// find the participants field index	
 			$sql = "SELECT * FROM $fieldTable WHERE name='$participantsField';";			
@@ -403,7 +403,7 @@ function createCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 			if ($field = mysql_fetch_array($result))
 				$participantsFieldIndex = $field["index"];
 			else				
-				die('Failed to find field: '.$participantsField);
+				$participantsFieldIndex = 0;
 
 			if (!$calID) {
 				// new calendar - create it and add to the table

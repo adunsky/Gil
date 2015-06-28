@@ -236,24 +236,60 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 	            });
 	      }   
          
-	      $scope.updateValues = function () {
-	      	for(var i=0; $scope.form.fields[i] != null; i++) {
-	      		var fieldIndex = $scope.form.fields[i].fieldIndex-2;
-	      		$scope.order[fieldIndex].value = $scope.form.fields[i].value;
-	      	}         
+	      	$scope.updateValues = function () {
+	      		for(var i=0; $scope.form.fields[i] != null; i++) {
+	      			var fieldIndex = $scope.form.fields[i].fieldIndex-2;
+	      			$scope.order[fieldIndex].value = $scope.form.fields[i].value;
+	      		}         
 			}
 
-			$scope.validate = function(value) {
+
+			$scope.validate = function(field) {
 				var i = 0
+				// First check if mandatory field is empty
+				if (field.fieldType == "Mandatory" && field.value == "") {
+					// Mark field error
+					field.error = true;
+					field.message = "This field is required";
+					return field.value;
+				}
+				else
+					field.error = false;
+
+				if (field.value == "")
+					return "";
+
 				// do not allow '=' or '+' at the begining of an input text due to the spreadsheet limitation
-				while (value[i] && value[i] != "" && (value[i] == '=' || value[i] == '+'))
+				while (field.value[i] && field.value[i] != "" && (field.value[i] == '=' || field.value[i] == '+'))
 					i++; // proceed until no '=' or '+' at the beginning 
 
-				return value.substring(i, value.length);	
+				return field.value.substring(i, field.value.length);	
 
 			}
   
-	      $scope.calcOrder = function () {
+  			$scope.errorInForm = function() {
+  				// return true if manadtory field is empty
+  				for(var i=0; $scope.form && $scope.form.fields[i]; i++) {
+  					if ($scope.form.fields[i].fieldType == 'Mandatory' && $scope.form.fields[i].value == "") {
+  						$scope.form.error = true;
+  						$scope.form.message = "Missing required fields";
+  						return true;
+  					}
+  				}
+  				$scope.form.error = false;
+  				return false;
+  			}
+
+  			$scope.filterEditMandatory = function(field) {
+  				return (field.fieldType == 'Edit' || field.fieldType == 'Mandatory');
+  			}
+
+  			$scope.isRequired = function(field) {
+  				if (field.fieldType=='Mandatory')
+  					return 'required';
+  			}
+
+	    	$scope.calcOrder = function () {
 	      		document.body.style.cursor = 'wait';
 	      		$scope.progress = 0;
 					$scope.inProgress = true;

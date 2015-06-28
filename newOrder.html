@@ -1,6 +1,6 @@
 <div data-ng-controller="orderCtrl" data-ng-init="getOrder()">
-<link ng-if="form.dir == 'rtl'" rel="stylesheet" href="css/style.css">
-<link ng-if="form.dir == 'ltr'" rel="stylesheet" href="css/styleEng.css">
+<link ng-if="form.dir == 'rtl'" rel="stylesheet" href="css/style.css?v=1">
+<link ng-if="form.dir == 'ltr'" rel="stylesheet" href="css/styleEng.css?v=1">
 
 <h1 dir="{{form.dir}}">{{form.title}}</h1>
 <script type="text/javascript" src="https://apis.google.com/js/client.js"></script>
@@ -50,48 +50,53 @@
 	</div>
 	
 	<div class="edit col-sm-6">	
-	  <form role="form">
+	  <form role="form" name="editForm">
 	    <fieldset>
 				  
-			<div ng-repeat="field in form.fields | filter:{ fieldType: 'Edit' }">
-		      <div class="form-group col-sm-12" ng-if="field.type=='TEXT'" >
+			<div ng-repeat="field in form.fields | filter: filterEditMandatory">
+		      <div class="form-group col-sm-12" ng-class="isRequired(field)" ng-if="field.type=='TEXT'" >
 		      	<label ng-if="form.dir=='ltr'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
 		        <div class="col-sm-7">
-		          <input type="text" dir="{{form.dir}}" class="form-control" name="{{field.name}}" id="{{field.name}}" ng-model="field.value" ng-change="field.value=validate(field.value)">
+		          <input type="text" dir="{{form.dir}}" class="form-control" name="{{field.name}}" id="{{field.name}}" ng-model="field.value" ng-blur="validate(field)" ng-change="field.value=validate(field)">
+		          <span class="error" ng-show="field.error">{{field.message}}</span>
 		        </div>
 		        <label ng-if="form.dir=='rtl'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
 		      </div>
 	
-		      <div class="form-group col-sm-12" ng-if="field.type=='LIST'" >
+		      <div class="form-group col-sm-12" ng-class="isRequired(field)" ng-if="field.type=='LIST'" >
 		    	<label ng-if="form.dir=='ltr'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
 		        <div class="col-sm-7">
-		        	<select dir="{{form.dir}}" class="form-control" name="{{field.name}}" id="{{field.name}}" ng-model="field.value" ng-disabled="{{field.fieldType=='Read Only'}}">
+		        	<select dir="{{form.dir}}" class="form-control" name="{{field.name}}" id="{{field.name}}" ng-model="field.value" ng-blur="validate(field)" ng-change="field.value=validate(field)">
 		        		<option class="form-control" ng-repeat="value in field.listValues track by $index" ng-selected="value==field.value">{{value}}</option>
 		        	</select>
+		        	<span class="error" ng-show="field.error">{{field.message}}</span>
 		        </div>
 		        <label ng-if="form.dir=='rtl'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
 		      </div>
 		   
-		      <div class="form-group col-sm-12" ng-if="field.type=='DATE'">
+		      <div class="form-group col-sm-12" ng-class="isRequired(field)" ng-if="field.type=='DATE'">
 		       <label ng-if="form.dir=='ltr'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>		      	
 		       <div class="col-sm-7">
 		         <p class="input-group">
-		             <input type="text" class="form-control" name="{{field.name}}" id="{{field.name}}" ng-readonly="true" style="background-color:white; cursor: default;" datetime-picker="dd-MM-yyyy" ng-model="field.value" value="{{field.value}}" enable-time="false" close-on-date-selection="true" is-open="field.dateTimeCalendarisOpen" datepicker-options="dateOptions"/>
+		             <input type="text" class="form-control" name="{{field.name}}" id="{{field.name}}" ng-readonly="true" style="background-color:white; cursor: default;" datetime-picker="dd-MM-yyyy" ng-model="field.value" value="{{field.value}}" enable-time="false" close-on-date-selection="true" is-open="field.dateTimeCalendarisOpen" datepicker-options="dateOptions" ng-blur="validate(field)" ng-change="field.value=validate(field)">
 		             <span class="input-group-btn">
 		                 <button type="button" class="btn btn-default" ng-click="openDateTimeCalendar($event, field)" ng-disabled="{{field.fieldType=='Read Only'}}"><i class="fa fa-calendar"></i></button>
 		             </span>
+		         	 <span class="error" ng-show="field.error">{{field.message}}</span>
 		         </p>
 		       </div>
 		       	<label ng-if="form.dir=='rtl'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
 		       </div> 
-		      <div class="form-group col-sm-12" ng-if="field.type=='DATETIME'">
+
+		      <div class="form-group col-sm-12" ng-class="isRequired(field)" ng-if="field.type=='DATETIME'">
 		       <label ng-if="form.dir=='ltr'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
 		       <div class="col-sm-7">
 		         <p class="input-group">
-		             <input type="text" class="form-control" name="{{field.name}}" id="{{field.name}}" ng-readonly="true" style="background-color:white; cursor: default;" datetime-picker="dd-MM-yyyy HH:mm" ng-model="field.value" value="{{field.value}}" enable-time="true" close-on-date-selection="true" is-open="field.dateTimeCalendarisOpen" timepicker-options="timeOptions" datepicker-options="dateOptions"/>
+		             <input type="text" class="form-control" name="{{field.name}}" id="{{field.name}}" ng-readonly="true" style="background-color:white; cursor: default;" datetime-picker="dd-MM-yyyy HH:mm" ng-model="field.value" value="{{field.value}}" enable-time="true" close-on-date-selection="true" is-open="field.dateTimeCalendarisOpen" timepicker-options="timeOptions" datepicker-options="dateOptions" ng-blur="validate(field)" ng-change="field.value=validate(field)">
 		             <span class="input-group-btn">
 		                 <button type="button" class="btn btn-default" ng-click="openDateTimeCalendar($event, field)" ng-disabled="{{field.fieldType=='Read Only'}}"><i class="fa fa-calendar"></i></button>
 		             </span>
+		          	 <span class="error" ng-show="field.error">{{field.message}}</span>
 		         </p>
 		       </div>
 		       	<label ng-if="form.dir=='rtl'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
@@ -103,20 +108,19 @@
 	     <div class="form-group col-sm-12" ng-if="!inProgress">
 	     	<div ng-if="form.dir=='ltr'" class="col-sm-6"></div>
 	        <div class="col-sm-4">
-	          <button ng-if="form.dir=='rtl'" type="button" class="btn btn-success" ng-click="updateOrder()">חשב ושמור</button>
-	    	  <button ng-if="form.dir=='ltr'" type="button" class="btn btn-success" ng-click="updateOrder()">Calc & Save</button>      
+	          <button ng-if="form.dir=='rtl'" type="button" ng-disabled="errorInForm()" class="btn btn-success" ng-click="updateOrder()">חשב ושמור</button>
+	    	  <button ng-if="form.dir=='ltr'" type="button" ng-disabled="errorInForm()" class="btn btn-success" ng-click="updateOrder()">Calc & Save</button>
 	        </div>
 	        <div class="col-sm-2">
 	          <button ng-if="form.dir=='rtl'"type="button" class="btn btn-info" ng-click="calcOrder()">חשב</button>
 	          <button ng-if="form.dir=='ltr'"type="button" class="btn btn-info" ng-click="calcOrder()">Calc</button>
 	        </div>
 	      </div>
-	 	     	
 	 	  <div ng-if="form.dir=='ltr'" class="col-sm-5"></div>
 		  <div class="progress col-sm-7" ng-if="inProgress">
 		    <div class="progress-bar" role="progressbar" progress-bar-watch="progress" progress-bar aria-valuenow="" aria-valuemin="0" aria-valuemax="100" style="width:{{progress}}%"></div>
 		  </div>
-		         
+		  <span class="col-sm-5 error" ng-show="form.error">{{form.message}}</span>		         
 	    </fieldset>
 	  </form>
 	</div>

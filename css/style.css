@@ -2,6 +2,14 @@
 	text-align: right
 }
 
+.form-group.required .control-label:before { 
+   content: "*";
+   color: red;
+}
+
+.error {
+	color: red;
+}
 
 .datetime-picker div > table .btn-default {
   	border: 0;
