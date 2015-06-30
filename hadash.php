@@ -412,7 +412,10 @@ function createCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 			if ($calID) {
 				// add it to the table
 				$sql = "INSERT INTO $calendarsTable VALUES ('$calNumber', '$count', '$calendarName', '$fieldIndex', '$formID', '$titleFieldIndex', '$locationFieldIndex', '$participantsFieldIndex', '$calID');";
-				$result = mysql_query($sql) or die('Insert calendar Failed! ' . mysql_error());
+				if (!$result = mysql_query($sql)) {
+					deleteCalendar($calID, $count);
+					die('Insert calendar Failed! ' . mysql_error());
+				} 
 			}
 
 			$cellEntry = $cellFeed->getCell(++$row, 1);		

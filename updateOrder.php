@@ -27,6 +27,21 @@
 		return;
 	}
 
+	if ($orderID > 0) {
+		// check if order exists
+		$sql = "SELECT * FROM $mainTable WHERE id = $orderID;";
+		$result = mysql_query($sql) or die('get order Failed! ' . mysql_error()); 
+		if (mysql_num_rows($result) == 0) {	
+			syslog (LOG_ERR, "Order ".$orderID." not found - update failed !");
+			echo "Failed to find orderID: ".$orderID;
+			return;
+		}
+	}
+	else {
+		// new order - verify that unique fields are unique !
+
+	}
+
 	syslog(LOG_INFO, "updateOrder called on ".$ssName." orderID: ".$orderID);	
 	for ($i=0; initGoogleAPI($ssName) == null && $i<5; $i++)
 		syslog(LOG_ERR, "InitGoogleApi Failed"); // retry 5 times to initialize
@@ -44,15 +59,6 @@
 	}
 
 	//var_dump($order);
-	if ($orderID > 0) {
-		// check if order exists
-		$sql = "SELECT * FROM $mainTable WHERE id = $orderID;";
-		$result = mysql_query($sql) or die('get order Failed! ' . mysql_error()); 
-		if (mysql_num_rows($result) == 0) {	
-			syslog (LOG_INFO, "Order ".$orderID." not found - insert as new");
-			$orderID = null;
-		}
-	}
 
 	if ($orderID > 0) // existing order
 		$values = ""; 

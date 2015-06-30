@@ -205,11 +205,11 @@ function createFieldTypeTable($worksheetFeed, $fieldTable, $listValueTable) {
 			$result = mysql_query($sql) or die('Insert to fields table Failed! ' . mysql_error());
 
 			if ($type == 'TEXT' || $type == 'LIST')		// translate TEXT in the worksheet to VARCHAR(64)
-				$DBtype = 'VARCHAR(64)';
+				$DBtype = 'varchar(64)';
 			elseif ($type == 'Hyperlink' || $type == 'EmbedHyperlink')
-					$DBtype = 'VARCHAR(256)';	// For long links
+					$DBtype = 'varchar(256)';	// For long links
 			else	
-				$DBtype = 'VARCHAR(32)'; // DATE field		
+				$DBtype = 'varchar(32)'; // DATE field		
 
 			if ($fieldsCount && $row-1 > $fieldsCount) { // new fields added
 				echo "Adding column: ".$name." to Main table <br>\n";
@@ -219,16 +219,20 @@ function createFieldTypeTable($worksheetFeed, $fieldTable, $listValueTable) {
 			}
 
 			// update the field type if needed
-			$result = mysql_query("SELECT `$row` FROM $mainTable");
+			$result = mysql_query("SELECT DATA_TYPE, CHARACTER_MAXIMUM_LENGTH FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = '$mainTable' AND COLUMN_NAME = $row");
 			if (!$result) {
 				die('Select column from main table Failed! ' . mysql_error());
 			}
-			$currType = mysql_field_type($result, 0);
-			if ($currType != $DBtype){
-				echo "Updating column type: ".$name." to ".$DBtype."<br>\n";
-				$result = mysql_query("ALTER TABLE $mainTable MODIFY COLUMN `$row` $DBtype");
-				if (!$result)
-					die('Change column type in main table Failed! ' . mysql_error());					
+			else {
+				$resArray = mysql_fetch_array($result);
+				$currType = $resArray["DATA_TYPE"]."(".$resArray["CHARACTER_MAXIMUM_LENGTH"].")";
+				//echo "CurrType: ".$currType."<br>\n";
+				if ($currType != $DBtype){
+					echo "Updating column type: ".$name." to ".$DBtype."<br>\n";
+					$result = mysql_query("ALTER TABLE $mainTable MODIFY COLUMN `$row` $DBtype");
+					if (!$result)
+						die('Change column type in main table Failed! ' . mysql_error());					
+				}
 			}
 
 			if ($type == "LIST") {
@@ -398,11 +402,14 @@ function updateCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 				// it is a new calendar with a new number
 				if (!$calID) {
 					// calendar doesn't exist - create it and add to the table
-					$calID = createCalendar($worksheetFeed, $calendarName, $calNumber);
+					$calID = createCalendar($worksheetFeed, $calendarName, $count);
 				}
 				if ($calID) {
-					$sql = "INSERT INTO $calendarsTable VALUES ('$calNumber', '$count', $calendarName', '$fieldIndex', '$formID', '$titleFieldIndex', '$locationFieldIndex', '$participantsFieldIndex', '$calID');";
-					$result = mysql_query($sql) or die('Insert calendar Failed! ' . mysql_error());
+					$sql = "INSERT INTO $calendarsTable VALUES ('$calNumber', '$count', '$calendarName', '$fieldIndex', '$formID', '$titleFieldIndex', '$locationFieldIndex', '$participantsFieldIndex', '$calID');";
+					if (!$result = mysql_query($sql)) {
+						deleteCalendar($calID, $count);
+						die('Insert calendar Failed! ' . mysql_error());
+					} 
 				}
 			}				
 			else {

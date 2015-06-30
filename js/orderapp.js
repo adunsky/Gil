@@ -152,22 +152,31 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 		      			var fieldIndex = $scope.form.fields[i].fieldIndex-2;
 		      			if ($scope.form.fields[i].type == 'EmbedHyperlink')
 		      				$scope.form.fields[i].value = $sce.trustAsResourceUrl($scope.order[fieldIndex].value);
-		      			else
+		      			else {
+		      				if ($scope.form.fields[i].type == 'Email') {
+								$scope.form.fields[i].prefix = "https://mail.google.com/mail?view=cm&to=";		      					
+		      				}
+		      				else {
+		      					if ($scope.form.fields[i].type == 'Hyperlink') {
+		      						$scope.form.fields[i].prefix = "http://";		      					
+		      					}
+		      				}		      					
 		      				$scope.form.fields[i].value = $scope.order[fieldIndex].value;
-		    				if ($scope.form.fields[i].type == 'LIST') {
-								// add the current value to the list if it is not there
-								if ($scope.form.fields[i].listValues.indexOf($scope.form.fields[i].value) == -1)
-									$scope.form.fields[i].listValues.push($scope.form.fields[i].value);	    				
-		    					// add an empty string to the list if not already there
-								if ($scope.form.fields[i].value != "")		    					
-		    						$scope.form.fields[i].listValues.push("");
-		    				}
-		    				if ($scope.form.fields[i].type == 'DATETIME' && $scope.form.fields[i].fieldType == "Edit") {
-		    					// the control expects format yyyy-mm-ddThh:mm+timezoneOffset
-		    					var date = new Date($scope.form.fields[i].value);
-		    					if ($scope.form.fields[i].value != "")
-		    						$scope.form.fields[i].value = $scope.form.fields[i].value.replace(" ", "T") + getTimezoneOffset();
-		    				}	    				  				
+						}
+	    				if ($scope.form.fields[i].type == 'LIST') {
+							// add the current value to the list if it is not there
+							if ($scope.form.fields[i].listValues.indexOf($scope.form.fields[i].value) == -1)
+								$scope.form.fields[i].listValues.push($scope.form.fields[i].value);	    				
+	    					// add an empty string to the list if not already there
+							if ($scope.form.fields[i].value != "")		    					
+	    						$scope.form.fields[i].listValues.push("");
+	    				}
+	    				if ($scope.form.fields[i].type == 'DATETIME' && $scope.form.fields[i].fieldType == "Edit") {
+	    					// the control expects format yyyy-mm-ddThh:mm+timezoneOffset
+	    					var date = new Date($scope.form.fields[i].value);
+	    					if ($scope.form.fields[i].value != "")
+	    						$scope.form.fields[i].value = $scope.form.fields[i].value.replace(" ", "T") + getTimezoneOffset();
+	    				}	    				  				
 		      				
 		      		}    		
 			}

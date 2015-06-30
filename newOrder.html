@@ -22,7 +22,7 @@
 	    <fieldset>
 				  
 			<div ng-repeat="field in form.fields | filter:{ fieldType: 'Read Only'}">
-		      <div class="form-group col-sm-12" ng-if="field.type!='EmbedHyperlink' && field.type!='Hyperlink'">
+		      <div class="form-group col-sm-12" ng-if="field.type!='EmbedHyperlink' && field.type!='Hyperlink' && field.type!='Email'">
 		        <label ng-if="form.dir == 'ltr'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>		      	
 		        <div class="col-sm-7">
 		          <input type="text" class="form-control" name="{{field.name}}" id="{{field.name}}" ng-model="field.value" ng-disabled="{{field.fieldType=='Read Only'}}">
@@ -36,10 +36,10 @@
 		         	<iframe ng-src="{{field.value}}" class="form-control" name="{{field.name}}" id="iframe"></iframe>
 		        	</div>
 		      </div>
-		      <div class="form-group col-sm-12" ng-if="field.type=='Hyperlink'">
+		      <div class="form-group col-sm-12" ng-if="field.type=='Hyperlink' || field.type=='Email'">
 		      	<label ng-if="form.dir=='ltr'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
 		      	<div class="col-sm-7">
-		         	<a href="{{field.value}}" class="form-control" name="{{field.name}}" id="{{field.name}}" >Link </a>
+		         	<a href="{{field.prefix}}{{field.value}}" class="form-control" name="{{field.name}}" id="{{field.name}}" >{{field.value}} </a>
 		        </div>
 		        <label ng-if="form.dir=='rtl'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
 		      </div>
