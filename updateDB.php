@@ -151,9 +151,9 @@ function createFieldTypeTable($worksheetFeed, $fieldTable, $listValueTable) {
 		global $mainTable;
 	
 		// get the current number of fields in case we need to add to Main
-		$sql = "SELECT * FROM $fieldTable;";
-		$result = mysql_query($sql) or die('Select Fields table Failed! ' . mysql_error());
-		$fieldsCount = mysql_num_rows($result);
+		$sql = "SELECT * FROM $mainTable;";
+		$result = mysql_query($sql) or die('Select Main table Failed! ' . mysql_error());
+		$fieldsCount = mysql_num_fields($result)-1; // subtruct the id field
 		
 		// create fieldType table
 		$sql = "DROP TABLE IF EXISTS $fieldTable;";
@@ -204,18 +204,31 @@ function createFieldTypeTable($worksheetFeed, $fieldTable, $listValueTable) {
 					// echo $sql;
 			$result = mysql_query($sql) or die('Insert to fields table Failed! ' . mysql_error());
 
+			if ($type == 'TEXT' || $type == 'LIST')		// translate TEXT in the worksheet to VARCHAR(64)
+				$DBtype = 'VARCHAR(64)';
+			elseif ($type == 'Hyperlink' || $type == 'EmbedHyperlink')
+					$DBtype = 'VARCHAR(256)';	// For long links
+			else	
+				$DBtype = 'VARCHAR(32)'; // DATE field		
+
 			if ($fieldsCount && $row-1 > $fieldsCount) { // new fields added
 				echo "Adding column: ".$name." to Main table <br>\n";
 				// add the extra columns to the Main table	
-				if ($type == 'TEXT' || $type == 'LIST')		// translate TEXT in the worksheet to VARCHAR(64)
-					$DBtype = 'VARCHAR(64)';
-				elseif ($type == 'Hyperlink' || $type == 'EmbedHyperlink')
-						$DBtype = 'VARCHAR(256)';	// For long links
-				else	
-					$DBtype = 'VARCHAR(32)'; // DATE field		
-						
 				$sql = "ALTER TABLE $mainTable ADD `$row` $DBtype;";
 				$result = mysql_query($sql) or die('Add column to main table Failed! ' . mysql_error());
+			}
+
+			// update the field type if needed
+			$result = mysql_query("SELECT `$row` FROM $mainTable");
+			if (!$result) {
+				die('Select column from main table Failed! ' . mysql_error());
+			}
+			$currType = mysql_field_type($result, 0);
+			if ($currType != $DBtype){
+				echo "Updating column type: ".$name." to ".$DBtype."<br>\n";
+				$result = mysql_query("ALTER TABLE $mainTable MODIFY COLUMN `$row` $DBtype");
+				if (!$result)
+					die('Change column type in main table Failed! ' . mysql_error());					
 			}
 
 			if ($type == "LIST") {
