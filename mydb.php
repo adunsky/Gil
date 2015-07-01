@@ -81,13 +81,14 @@ function getClient($DBName, $number) {
 } 
 
 function getClientInfo($DBname) {
-		global $lang;
+		global $lang, $logo;
 
 	    $sql =  "SELECT * FROM customers.customers WHERE customers.customers.dbName='$DBname';";
 	    $result = mysql_query($sql);
       	$customer = mysql_fetch_array($result);
       	$ssName = $customer["ssName"];
       	$lang = $customer["lang"];
+      	$logo = $customer["logo"];
 
       	return $ssName;
 } 

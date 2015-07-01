@@ -18,6 +18,7 @@
 		$forms = [];
 		while ($form = mysql_fetch_array($result, MYSQL_ASSOC)) {
 			$formID = $form["number"];
+			$form["logo"] = $logo;
 			if ($lang == 'eng') // Left to right form
 				$form["dir"] = "ltr";
 			else  // right to left form
