@@ -324,10 +324,17 @@ require_once "mydb.php";
 			*/
 			$attendees = [];
 			foreach($participantList as $participant) {
-				$attendee = new Google_Service_Calendar_EventAttendee();
-				$attendee->setEmail(trim($participant));
-				array_push($attendees, $attendee);
-				echo "Participant added: ".$participant."\n";
+				// Remove all illegal characters from email
+				$email = filter_var($participant, FILTER_SANITIZE_EMAIL);
+				if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+				  	// it is a valid email address");
+					$attendee = new Google_Service_Calendar_EventAttendee();
+					$attendee->setEmail($email);
+					array_push($attendees, $attendee);
+					echo "Participant added: ".$email."\n";
+				}
+				else
+					echo "Invalid participant email ignored: ".$participant."\n";
 			}
 			if (count($attendees) > 0) {
 				//if (count(array_diff($attendees, $calEvent->getAttendees()))>0) {
