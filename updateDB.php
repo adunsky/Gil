@@ -318,6 +318,13 @@ function updateCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 		$worksheet = $worksheetFeed->getByTitle('Calendars');
 		$cellFeed = $worksheet->getCellFeed();
 		
+		// get the current number of calendars
+		$result = mysql_query("SELECT MAX(number) AS num FROM $calendarsTable");
+		if ($rec = mysql_fetch_array($result))
+			$maxCal = $rec["num"];
+		else
+			$maxCal = 0;
+
 		$count = 0;
 		$row = 2;
 		$calNumber = 0;
@@ -396,16 +403,18 @@ function updateCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 				$participantsFieldIndex = 0;
 
 			// Check if calendar exist
-			$sql = "SELECT * FROM $calendarsTable WHERE number ='$calNumber';";
+			$sql = "SELECT * FROM $calendarsTable WHERE name='$calendarName' AND fieldIndex='$fieldIndex';";
 			$result = mysql_query($sql) or die('Select calendar Failed! ' . mysql_error());
 			if (mysql_num_rows($result) == 0) {
 				// it is a new calendar with a new number
+				$maxCal++;
+				echo "Adding calendar: ".$maxCal." ".$calendarName."<br>\n";
 				if (!$calID) {
 					// calendar doesn't exist - create it and add to the table
 					$calID = createCalendar($worksheetFeed, $calendarName, $count);
 				}
 				if ($calID) {
-					$sql = "INSERT INTO $calendarsTable VALUES ('$calNumber', '$count', '$calendarName', '$fieldIndex', '$formID', '$titleFieldIndex', '$locationFieldIndex', '$participantsFieldIndex', '$calID');";
+					$sql = "INSERT INTO $calendarsTable VALUES ('$maxCal', '$count', '$calendarName', '$fieldIndex', '$formID', '$titleFieldIndex', '$locationFieldIndex', '$participantsFieldIndex', '$calID');";
 					if (!$result = mysql_query($sql)) {
 						deleteCalendar($calID, $count);
 						die('Insert calendar Failed! ' . mysql_error());
@@ -414,6 +423,7 @@ function updateCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 			}				
 			else {
 				// calendar exist - update it
+				echo "Updating calendar: ".$calNumber." ".$calendarName."<br>\n";
 				$sql = "UPDATE $calendarsTable SET formNumber='$formID', titleField='$titleFieldIndex', locationField='$locationFieldIndex', participants='$participantsFieldIndex' WHERE number='$calNumber' AND name='$calendarName' AND fieldIndex='$fieldIndex';";
 				$result = mysql_query($sql) or die('Update calendar Failed! ' . mysql_error());
 			}
