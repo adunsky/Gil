@@ -72,11 +72,9 @@
 				for($i=0; $i < $numFields ; $i++) {
 					$index = $row[$i]["index"];
 					$row[$i]["value"] = $order[$index];
-
-					if ($row[$i]["value"] == null)
-						$row[$i]["value"] = "";
 		
-					if ($row[$i]["value"] == "" && ($row[$i]["type"] == "Hyperlink" || $row[$i]["type"] == "EmbedHyperlink")) {
+					if (($row[$i]["value"] == null) ||	// set to default because null is initial db value
+						($row[$i]["value"] == "" && ($row[$i]["type"] == "Hyperlink" || $row[$i]["type"] == "EmbedHyperlink"))) {
 						// For Hyperlinks set the default value in case no value is set
 						$row[$i]["value"] = $row[$i]["default"];			
 					}
