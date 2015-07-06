@@ -424,7 +424,7 @@ function updateCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 			else {
 				// calendar exist - update it
 				echo "Updating calendar: ".$calNumber." ".$calendarName."<br>\n";
-				$sql = "UPDATE $calendarsTable SET formNumber='$formID', titleField='$titleFieldIndex', locationField='$locationFieldIndex', participants='$participantsFieldIndex' WHERE number='$calNumber' AND name='$calendarName' AND fieldIndex='$fieldIndex';";
+				$sql = "UPDATE $calendarsTable SET formNumber='$formID', titleField='$titleFieldIndex', locationField='$locationFieldIndex', participants='$participantsFieldIndex' WHERE name='$calendarName' AND fieldIndex='$fieldIndex';";
 				$result = mysql_query($sql) or die('Update calendar Failed! ' . mysql_error());
 			}
 			$cellEntry = $cellFeed->getCell(++$row, 1);		
