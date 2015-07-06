@@ -55,43 +55,44 @@ orderApp.config(function($routeProvider){
 
 
 orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $location, myService){
-			$scope.order = myService.getOrder();
-			$scope.inProgress = false;
-			
+		$scope.order = myService.getOrder();
+		$scope.inProgress = false;
+
       	$scope.getOrder = function () {
      		
-			   var eventID;
-				
-				var argv = $location.search();      		
-    			if (argv.id)
-    				eventID = argv.id;
-    			if (argv.db)
-    				$scope.dbName = argv.db;
-    			if (argv.user)
-     				$scope.user = argv.user;
-     			else 
-     				$scope.user = ""; 	// The user is verified only for new orders			
-
-	     		$http.get("getOrder.php", { params: { eventID: eventID, db: $scope.dbName, user: $scope.user } })
-	     		.success(function(data) {
-	             $scope.message = "From PHP file : "+data;
-	             console.log($scope.message);
-	      	    try {
-	   	        		$updatedOrder = angular.fromJson(data);
-	   	        		if ($updatedOrder) {
-	   	        			$scope.orderID = $updatedOrder.orderID;
-	   	        			$scope.order = $updatedOrder.order;
-	             			myService.setOrder($scope.order);
-	             			$scope.getFormFields($updatedOrder.formID)
-							}
-		      	 }
-	        		 catch (e) {
-	            		alert("Error: "+$scope.message);
-	            		myService.setOrder(null);
-	        		 } 
-				}); 
-			};
+		   	var eventID;
 			
+			var argv = $location.search();      		
+			if (argv.id)
+				eventID = argv.id;
+			if (argv.db)
+				$scope.dbName = argv.db;
+			if (argv.user)
+ 				$scope.user = argv.user;
+ 			else {
+ 				$scope.user = ""; // $scope.getUser();
+ 			}		
+
+     		$http.get("getOrder.php", { params: { eventID: eventID, db: $scope.dbName, user: $scope.user } })
+     		.success(function(data) {
+             $scope.message = "From PHP file : "+data;
+             console.log($scope.message);
+      	    try {
+   	        		$updatedOrder = angular.fromJson(data);
+   	        		if ($updatedOrder) {
+   	        			$scope.orderID = $updatedOrder.orderID;
+   	        			$scope.order = $updatedOrder.order;
+             			myService.setOrder($scope.order);
+             			$scope.getFormFields($updatedOrder.formID);
+					}
+	      	 }
+        		 catch (e) {
+            		alert("Error: "+$scope.message);
+            		myService.setOrder(null);
+        		 } 
+			}); 
+		};
+		
 			
       	$scope.getFormFields = function (form) {
 				if (!$scope.forms) {
@@ -158,7 +159,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 		      				}
 		      				else {
 		      					if ($scope.form.fields[i].type == 'Hyperlink') {
-		      						$scope.form.fields[i].prefix = "http://";		      					
+		      						$scope.form.fields[i].prefix = "";		      					
 		      					}
 		      				}		      					
 		      				$scope.form.fields[i].value = $scope.order[fieldIndex].value;
@@ -210,6 +211,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 				$updatedOrder.dbName = $scope.dbName;						
 				$updatedOrder.order = $scope.order;	      		
 				$updatedOrder.orderID = $scope.orderID;	      		
+				$updatedOrder.user = $scope.user;	      		
 	      		
 	            var content = angular.toJson($updatedOrder);
 	            var request = $http({
@@ -252,6 +254,12 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 	      		}         
 			}
 
+			$scope.openLink = function(e, field) {
+
+				window.open(field.prefix+field.value, '_blank');
+				e.preventDefault();
+				return false;
+			}
 
 			$scope.validate = function(field) {
 				var i = 0
@@ -347,18 +355,80 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 
 			};
 
+			$scope.getUserInfo = function() {
+				gapi.client.load('oauth2', 'v2', function() {
+				  gapi.client.oauth2.userinfo.get().execute(function(resp) {
+				    // Get the user email
+				    $scope.user = resp.email;
+				  })
+				});
+			}
+
+			$scope.getUser = function() {
+				if ($scope.user && $scope.user != "")
+					// user already set (from gadget)
+					return;
+
+				if (!gapi || !gapi.auth) {
+					// wait until Google API library has loaded
+					window.setTimeout($scope.getUser, 1000);
+					return;
+				}	
+				try {
+				    gapi.auth.authorize(
+				        {'client_id': CLIENT_ID, 
+				        'scope': 'https://www.googleapis.com/auth/userinfo.email', 
+				        'cookie_policy': 'single_host_origin',
+				        //'authuser': -1,
+				        'immediate': true},
+				        function(authResult) {
+				        	if (authResult && !authResult.error) {
+					       		// authorization granted
+					       		$scope.getUserInfo();
+							}
+							else {
+								// try manual authorization
+								gapi.auth.authorize(
+								    {'client_id': CLIENT_ID, 
+								     'scope': 'https://www.googleapis.com/auth/userinfo.email', 
+								     'cookie_policy': 'single_host_origin',
+					   			     'immediate': false},
+					   			    function(authResult) {
+					   			       	if (authResult && !authResult.error) {
+					   			       		// authorization granted
+					   			       		$scope.getUserInfo();
+					   					}
+					   					else {
+							    			alert("Authorization failed !")
+							    			return NULL;
+							    		}	
+		     					});
+			     			}	
+		        		});
+					}
+					catch (e) { 
+					    alert(e.message); 
+					}
+
+			}
+
+
 			// Code for file attachments
 
 			var CLIENT_ID = '785966582104-p03j542fcviuklf0kka21ushko2i7k0a.apps.googleusercontent.com';
 			var SCOPES = 'https://www.googleapis.com/auth/drive';
 			var FOLDER_PREFIX = '_order';
-
-
+			
    			$scope.initUpload = function(event){
-
    			var files = null;
    			if (event)	
    				files = event.target.files;
+
+   			if ($scope.folderID) {
+   				// Already authorized
+   				$scope.uploadFiles(files, $scope.orderID);
+   				return;
+   			}
    			/**
    			 * Check if the current user has authorized to upload to the drive
    			 */
@@ -367,6 +437,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
    			        {'client_id': CLIENT_ID, 
    			        'scope': SCOPES, 
    			        'cookie_policy': 'single_host_origin',
+   			        'authuser': -1,
    			        'immediate': true},
    			        function(authResult) {
    			        	if (authResult && !authResult.error) {
@@ -616,6 +687,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
    			        {'client_id': CLIENT_ID, 
    			        'scope': SCOPES, 
    			        'cookie_policy': 'single_host_origin',
+   			        'authuser': -1,
    			        'immediate': true},
    			        function(authResult) {
    			        	if (authResult && !authResult.error) {
@@ -702,6 +774,5 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
     }
   };
 })
-
 
 

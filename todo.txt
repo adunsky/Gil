@@ -1,14 +1,15 @@
 //Search capabilities (fields in description)
 //Optimize event updates
 //test reduced calendars
-Add atendees per calendar
+// Add atendees per calendar
+
 Add celltype unique - verify uniqueness on save
-Add folder name cell
 record creation time - for billing
 Add mandatory field per form
 Add email from form
+Add folder name cell ?
 
-Use client list for scalability of calendars
+//Use client list for scalability of calendars
 
 audit trail - store all changes per record, with user
 

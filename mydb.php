@@ -27,6 +27,7 @@
 		echo "MySql connection failed ! <br>";
 	}
 	
+	$logTable = '_log';
 	$mainTable = '_main';
 	$formsTable = '_forms';
 	$formFieldsTable = '_formFields';

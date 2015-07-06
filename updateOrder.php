@@ -7,13 +7,14 @@
 	
 	//include_once "calendar.php";
 	
-   $postdata = file_get_contents("php://input");
-   //echo "postdata: " . $postdata;
+   	$postdata = file_get_contents("php://input");
+   	//echo "postdata: " . $postdata;
 
-   $data = json_decode($postdata, true);
+   	$data = json_decode($postdata, true);
   	$dbName = $data["dbName"]; 
 	$origOrder = $data["order"];
 	$orderID = $data["orderID"];
+	$user = $data["user"];
 
 	if (!selectDB($dbName)) {
 		syslog(LOG_ERR, "Failed to select client DB: "+$dbName);
@@ -104,11 +105,15 @@
 	   $sql = "INSERT INTO $mainTable VALUES ($values)";
 	   if (!mysql_query($sql)) die('Insert Order Failed !' . mysql_error());
 		$orderID = mysql_insert_id();
+		if (!mysql_query("INSERT INTO $logTable VALUES (0, CURRENT_TIMESTAMP, '$orderID', '$user', 'created')"))
+			syslog (LOG_ERR, "Failed to insert to log table, ". mysql_error());	
 	}
 	else { 
 		syslog (LOG_INFO, "updating existing order ".$orderID);
 		$sql = "UPDATE $mainTable set $values WHERE id = $orderID;";
-	   if (!mysql_query($sql)) die('Update Order Failed !' . mysql_error());		
+	   	if (!mysql_query($sql)) die('Update Order Failed !' . mysql_error());
+	   	if (!mysql_query("INSERT INTO $logTable VALUES (0, CURRENT_TIMESTAMP, '$orderID', '$user', 'updated')"))
+	   		syslog (LOG_ERR, "Failed to insert to log table, ". mysql_error());	
 	}
 
 	// Update the events table with the updated dates

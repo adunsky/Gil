@@ -77,6 +77,9 @@ use Google\Spreadsheet\ServiceRequestFactory;
 			
 			// Create Users table		
 			createUsersTable($worksheetFeed, $usersTable, $calendarsTable);
+
+			// Create log table		
+			createLogTable($logTable);
 		}
 		if ($command == "calendars") { // recreate calendars and events 
 			// remove the google calendars
@@ -87,6 +90,11 @@ use Google\Spreadsheet\ServiceRequestFactory;
 			createEventsTable($worksheetFeed, $eventsTable); 
 			// Create Users table		
 			createUsersTable($worksheetFeed, $usersTable, $calendarsTable);					
+		}
+
+		if ($command == "log") {
+			// Create log table		
+			createLogTable($logTable);			
 		}
 
 		syslog(LOG_INFO, "Hadash completed. DB: ".$dbName);
@@ -522,6 +530,18 @@ function updateListValueTable($worksheetFeed, $listValueTable) {
 			}
 			$cellEntry = $cellFeed->getCell(++$row, 1);
 		}
+}
+
+function createLogTable($logTable) {
+	// create log table
+	$sql = "DROP TABLE IF EXISTS $logTable;";
+	$result = mysql_query($sql) or die('Drop table Failed! ' . mysql_error());
+	$sql = "CREATE TABLE $logTable (`counter` INT(32) AUTO_INCREMENT PRIMARY KEY, `date` TIMESTAMP, `orderID` INT(32), `user` VARCHAR(32), `action` VARCHAR(32))";
+
+	$result = mysql_query($sql) or die('Create log table Failed! ' . mysql_error());
+	echo "Table ".$logTable." created<br>\n"; 
+
+
 }
 
 

@@ -1,4 +1,6 @@
 <div data-ng-controller="orderCtrl" data-ng-init="getOrder()">
+<script ng-src="https://apis.google.com/js/client.js" ng-init="getUser()"></script>
+
 <link ng-if="form.dir == 'rtl'" rel="stylesheet" href="css/style.css?v=1">
 <link ng-if="form.dir == 'ltr'" rel="stylesheet" href="css/styleEng.css?v=1">
 
@@ -42,7 +44,7 @@
 		      <div class="form-group col-sm-12" ng-if="field.type=='Hyperlink' || field.type=='Email'">
 		      	<label ng-if="form.dir=='ltr'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
 		      	<div class="col-sm-7">
-		         	<a href="{{field.prefix}}{{field.value}}" class="form-control" name="{{field.name}}" id="{{field.name}}" >{{field.value}} </a>
+		         	<a href="" ng-click="openLink($event, field)" class="form-control" name="{{field.name}}" id="{{field.name}}" >{{field.value}} </a>
 		        </div>
 		        <label ng-if="form.dir=='rtl'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
 		      </div>
@@ -150,7 +152,7 @@
 		      <div class="form-group col-sm-12" ng-if="field.type=='Hyperlink' || field.type=='Email'">
 		      	<label ng-if="form.dir=='ltr'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
 		      	<div class="col-sm-7">
-		         	<a href="{{field.value}}" class="form-control" name="{{field.name}}" id="{{field.name}}" >Link </a>
+		         	<a href="" ng-click="openLink($event, field)" class="form-control" name="{{field.name}}" id="{{field.name}}" >{{field.value}} </a>
 		        </div>
 		        <label ng-if="form.dir=='rtl'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
 		      </div>
