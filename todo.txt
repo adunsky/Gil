@@ -3,10 +3,12 @@
 //test reduced calendars
 // Add atendees per calendar
 
+Add script for logs
+Add orderID in forms
 Add celltype unique - verify uniqueness on save
-record creation time - for billing
-Add mandatory field per form
-Add email from form
+// record creation time - for billing
+// Add mandatory field per form
+// Add email from form
 Add folder name cell ?
 
 //Use client list for scalability of calendars

@@ -8,7 +8,6 @@
 	<img ng-if="form.logo" ng-src="https://googledrive.com/host/0BxKK2ik5inqBfndtazV1ZElzT1ptamJjWGJyZ3R6MUxaTlBTVVI4eUtNdVBoZEo3OGZsUHc/{{form.logo}}" class="logo" style="width:210px;height:70px;margin-right:100px;" />
 	{{form.title}}
 </h1>
-<script type="text/javascript" src="https://apis.google.com/js/client.js"></script>
 
     <!--Add a file picker for attachments -->
 <div class="col-sm-6 col-sm-offset-5">
@@ -44,7 +43,7 @@
 		      <div class="form-group col-sm-12" ng-if="field.type=='Hyperlink' || field.type=='Email'">
 		      	<label ng-if="form.dir=='ltr'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
 		      	<div class="col-sm-7">
-		         	<a href="" ng-click="openLink($event, field)" class="form-control" name="{{field.name}}" id="{{field.name}}" >{{field.value}} </a>
+		         	<a href="" ng-click="openLink($event, field)" class="form-control" name="{{field.name}}" id="{{field.name}}" style="overflow: hidden; text-overflow: ellipsis;" >{{field.value}} </a>
 		        </div>
 		        <label ng-if="form.dir=='rtl'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
 		      </div>
@@ -152,7 +151,7 @@
 		      <div class="form-group col-sm-12" ng-if="field.type=='Hyperlink' || field.type=='Email'">
 		      	<label ng-if="form.dir=='ltr'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
 		      	<div class="col-sm-7">
-		         	<a href="" ng-click="openLink($event, field)" class="form-control" name="{{field.name}}" id="{{field.name}}" >{{field.value}} </a>
+		         	<a href="" ng-click="openLink($event, field)" class="form-control" name="{{field.name}}" id="{{field.name}}" style="overflow: hidden; text-overflow: ellipsis;" >{{field.value}} </a>
 		        </div>
 		        <label ng-if="form.dir=='rtl'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
 		      </div>
