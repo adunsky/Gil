@@ -9,6 +9,9 @@
 	{{form.title}}
 </h1>
 
+<div class="col-sm-6 col-sm-offset-5">
+	<label style="margin-left:60px;">Order ID: {{orderID}}</label>
+</div>
     <!--Add a file picker for attachments -->
 <div class="col-sm-6 col-sm-offset-5">
     <button ng-if="form.dir=='rtl'" class="btn btn-link" ng-click="selectFile()">צרף מסמכים</button>
@@ -54,7 +57,8 @@
 	</div>
 	
 	<div class="edit col-sm-6">	
-	  <form role="form" name="editForm">
+		<iframe name="autocomplete" id="autocomplete" style="display:none" src="about:blank"></iframe>
+		<form role="form" name="editForm" target="autocomplete" action="about:blank" autocomplete="on">
 	    <fieldset>
 				  
 			<div ng-repeat="field in form.fields | filter: filterEditMandatory">
@@ -112,12 +116,12 @@
 	     <div class="form-group col-sm-12" ng-if="!inProgress">
 	     	<div ng-if="form.dir=='ltr'" class="col-sm-6"></div>
 	        <div class="col-sm-4">
-	          <button ng-if="form.dir=='rtl'" type="button" ng-disabled="errorInForm()" class="btn btn-success" ng-click="updateOrder()">חשב ושמור</button>
-	    	  <button ng-if="form.dir=='ltr'" type="button" ng-disabled="errorInForm()" class="btn btn-success" ng-click="updateOrder()">Calc & Save</button>
+	          <button ng-if="form.dir=='rtl'" type="submit" ng-disabled="errorInForm()" class="btn btn-success" ng-click="updateOrder()">חשב ושמור</button>
+	    	  <button ng-if="form.dir=='ltr'" type="submit" ng-disabled="errorInForm()" class="btn btn-success" ng-click="updateOrder()">Calc & Save</button>
 	        </div>
 	        <div class="col-sm-2">
-	          <button ng-if="form.dir=='rtl'"type="button" class="btn btn-info" ng-click="calcOrder()">חשב</button>
-	          <button ng-if="form.dir=='ltr'"type="button" class="btn btn-info" ng-click="calcOrder()">Calc</button>
+	          <button ng-if="form.dir=='rtl'" type="submit" class="btn btn-info" ng-click="calcOrder()">חשב</button>
+	          <button ng-if="form.dir=='ltr'" type="submit" class="btn btn-info" ng-click="calcOrder()">Calc</button>
 	        </div>
 	      </div>
 	 	  <div ng-if="form.dir=='ltr'" class="col-sm-5"></div>
