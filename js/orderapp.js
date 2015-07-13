@@ -75,7 +75,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 
      		$http.get("getOrder.php", { params: { eventID: eventID, db: $scope.dbName, user: $scope.user } })
      		.success(function(data) {
-             $scope.message = "From PHP file : "+data;
+             $scope.message = data;
              console.log($scope.message);
       	    try {
    	        		$updatedOrder = angular.fromJson(data);
@@ -98,7 +98,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 				if (!$scope.forms) {
 		     		$http.get("getForms.php", { params: { db: $scope.dbName } })
 		     		.success(function(data) {
-		             $scope.message = "From PHP file : "+data;
+		             $scope.message = data;
 		             console.log($scope.message);
 		      	    try {
 		   	        		$scope.forms = angular.fromJson(data);
@@ -149,8 +149,9 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 
 			$scope.setFormValues = function()	{
 					if ($scope.order) 
-						for(var i=0; $scope.form && $scope.form.fields[i]; i++) {
+					for(var i=0; $scope.form && $scope.form.fields[i]; i++) {
 		      			var fieldIndex = $scope.form.fields[i].fieldIndex-2;
+		      			$scope.form.fields[i].input = $scope.order[fieldIndex].input;
 		      			if ($scope.form.fields[i].type == 'EmbedHyperlink')
 		      				$scope.form.fields[i].value = $sce.trustAsResourceUrl($scope.order[fieldIndex].value);
 		      			else {
@@ -222,7 +223,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 	            });
 	                /* Check whether the HTTP Request is Successfull or not. */
 	            request.success(function (data) {
-	                $scope.message = "From PHP file : "+data;
+	                $scope.message = data;
 	                console.log($scope.message);
 					if (!isNaN(data)) {	                
 	                	$scope.orderID = parseInt(data); // PHP returned a valid ID number
@@ -241,7 +242,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 	                }	
 	            });
 	            request.error(function (data, status) {
-	                $scope.message = "From PHP file : "+data;
+	                $scope.message = data;
 	                $scope.inProgress = false;
 	                alert("Error: "+$scope.message);
 	            });
@@ -259,6 +260,28 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 				window.open(field.prefix+field.value, '_blank');
 				e.preventDefault();
 				return false;
+			}
+
+			$scope.checkUnique = function(field) {
+
+				$scope.validate(field);
+				if (field.input == 'U' && field.value != "")	{	// check if unique value already exist in DB
+		     		$http.get("checkUnique.php", { params: { orderID: $scope.orderID, db: $scope.dbName, index: field.fieldIndex, value: field.value } })
+		     		.success(function(data) {
+		             $scope.message = data;
+		             console.log($scope.message);
+		             if (data.trim() == "false") {
+		             	// not unique
+		             	field.error = true;
+		             	if ($scope.form.dir == 'rtl')
+		             		field.message = field.name+" "+field.value+" כבר קיים במערכת ";
+		             	else
+		             		field.message = field.name+" "+field.value+" already exists";						
+		             }
+		             else
+		             	field.error = false;	
+					}); 
+				}
 			}
 
 			$scope.validate = function(field) {
@@ -333,7 +356,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 	            });
 	                /* Check whether the HTTP Request is Successfull or not. */
 	            request.success(function (data) {
-	               $scope.message = "From PHP file : "+data;
+	               $scope.message = data;
 	               console.log($scope.message);
 	               try {
 							$scope.order = angular.fromJson(data);
@@ -347,7 +370,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 		            $scope.inProgress = false;	
 	            });
 	            request.error(function (data, status) {
-	                $scope.message = "From PHP file : "+data;
+	                $scope.message = data;
 	                $scope.inProgress = false;
 						 document.body.style.cursor = 'default';	                
 	                alert($scope.message);

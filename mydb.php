@@ -113,6 +113,32 @@ function authUserForm($user, $formID) {
 	return false;
 }
 
+	
+// check if field is unique in main table	
+function isUnique($field, $orderID) {
+	global $mainTable;
 
+	$name = $field["index"];
+	$value = $field["value"];
+
+	if ($value == "")	// blank is allowed as non unique
+		return true;
+
+	$sql = "SELECT * FROM $mainTable WHERE `$name` = '$value';";
+	$result = mysql_query($sql) or die('get order Failed! ' . mysql_error()); 
+	if (mysql_num_rows($result) != 0) {
+		if ($orderID <= 0)
+		// unique field value already exists
+			return false;
+
+		$order = mysql_fetch_array($result);
+		if ($order["id"] != $orderID)
+			// unique field value already exists
+			return false;
+
+	}
+	return true;
+
+}
 ?>
 	

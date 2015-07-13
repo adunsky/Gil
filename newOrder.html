@@ -65,7 +65,7 @@
 		      <div class="form-group col-sm-12" ng-class="isRequired(field)" ng-if="field.type=='TEXT' || field.type=='Email' || field.type=='Hyperlink'" >
 		      	<label ng-if="form.dir=='ltr'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
 		        <div class="col-sm-7">
-		          <input type="text" dir="{{form.dir}}" class="form-control" name="{{field.name}}" id="{{field.name}}" ng-model="field.value" ng-blur="validate(field)" ng-change="field.value=validate(field)">
+		          <input type="text" dir="{{form.dir}}" class="form-control" name="{{field.name}}" id="{{field.name}}" ng-model="field.value" ng-blur="checkUnique(field)" ng-change="field.value=validate(field)" autocomplete="on">
 		          <span class="error" ng-show="field.error">{{field.message}}</span>
 		        </div>
 		        <label ng-if="form.dir=='rtl'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>

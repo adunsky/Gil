@@ -184,11 +184,11 @@ function getCalcFields($order) {
 		foreach ($order as $field) {
 			$col = $field["index"];
 			$value = $field["value"];
-			$isInput = $field["input"] == 'Y';
+			$input = $field["input"];
 			$type = $field["type"];
 			$name = $field["name"];
 	
-			if ($isInput) { // it is an input field
+			if ($input == 'Y' || $input == 'U') { // it is an input field
 					if (strpos($type, "STARTTIME") === 0 || strpos($type, "ENDTIME") === 0)
 						$type = "DATETIME";  // it behaves like DATETIME
 					if (($type == "DATE" || $type == "DATETIME") && $value!="") {
@@ -209,15 +209,15 @@ function getCalcFields($order) {
 	 					$value = "_none"; // ensure non empty cells for the batch to work
 	 				else
 						$value = str_replace('"','', $value);	
-					$input = $cellFeed->getCell(2, $col);
-					if (empty($input)) {
+					$inputCell = $cellFeed->getCell(2, $col);
+					if (empty($inputCell)) {
 	        			// CellEntry doesn't exist. Use edit cell.
 	        			syslog(LOG_INFO, "Empty field updated manually: ".$name);
 	        			$cellFeed->editCell(2, $col, $value);
 	        		}
 	        		else {	
-	 					$input->setContent($value);
-		        		$batchRequest->addEntry($input);
+	 					$inputCell->setContent($value);
+		        		$batchRequest->addEntry($inputCell);
 				 	//echo "Value: ".$value."<br>\n";
 	        		}
 			}		

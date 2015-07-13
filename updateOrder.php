@@ -4,7 +4,7 @@
    */ 
 	require_once "mydb.php";
 	require_once "spreadsheet.php";
-	
+
 	//include_once "calendar.php";
 	
    	$postdata = file_get_contents("php://input");
@@ -38,12 +38,20 @@
 			return;
 		}
 	}
-	else {
-		// new order - verify that unique fields are unique !
 
+	syslog(LOG_INFO, "updateOrder called on ".$ssName." orderID: ".$orderID);
+
+	foreach ($origOrder as $field) {
+		$input = $field["input"];
+
+		if ($input == 'U') {	// Unique value		
+			if (!isUnique($field, $orderID)) {
+				echo $field["value"]." already exists";
+				return;
+			}
+		}
 	}
 
-	syslog(LOG_INFO, "updateOrder called on ".$ssName." orderID: ".$orderID);	
 	for ($i=0; initGoogleAPI($ssName) == null && $i<5; $i++)
 		syslog(LOG_ERR, "InitGoogleApi Failed"); // retry 5 times to initialize
 
@@ -71,6 +79,7 @@
 		$name = $field["index"];
 		$value = $field["value"];
 		$type = $field["type"];
+
 		if (strpos($type, "STARTTIME") === 0 || strpos($type, "ENDTIME") === 0)
 			$type = "DATETIME";  // it behaves like DATETIME
 		if ($type == "DATE" || $type == "DATETIME") {
@@ -147,7 +156,6 @@
 	}
 	syslog (LOG_INFO, "Order update complete: ".$orderID);
 	echo $orderID;
-	
 	
  
 ?>
