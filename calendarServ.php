@@ -225,8 +225,7 @@ require_once "mydb.php";
 		    			break;
 					}
 					else {	// event ID does not exist in our DB - remove it
-						$calEvent = $eventx;
-						$services[getClientForCalendar($calendarCount)]->events->delete($calendarID, $calEvent->getId());
+						$services[getClientForCalendar($calendarCount)]->events->delete($calendarID, $eventx->getId());
 					}	
 				
 				}
