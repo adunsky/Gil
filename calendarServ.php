@@ -218,11 +218,11 @@ require_once "mydb.php";
 				$params["q"] = "Order ID :".$orderID;
 		    	$list = $services[getClientForCalendar($calendarCount)]->events->listEvents($calendarID, $params);	
 				foreach($list["items"] as $eventx) {
-					echo "eventx ID= ".$eventx["htmlLink"]."<br>\n";
+					//echo "eventx ID= ".$eventx["htmlLink"]."<br>\n";
 					if ($eventID == $eventx["id"] || strpos($eventx["htmlLink"], $eventID ) != false) {
 		    			echo " found event in calendar: ". $calendarID."<br>\n";
 		    			$calEvent = $eventx;
-		    			//break;
+		    			break;
 					}
 					else {	// event ID does not exist in our DB - remove it
 						//$services[getClientForCalendar($calendarCount)]->events->delete($calendarID, $eventx->getId());
