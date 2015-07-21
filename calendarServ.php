@@ -222,10 +222,10 @@ require_once "mydb.php";
 					if ($eventID == $eventx["id"] || strpos($eventx["htmlLink"], $eventID ) != false) {
 		    			echo " found event in calendar: ". $calendarID."<br>\n";
 		    			$calEvent = $eventx;
-		    			break;
+		    			//break;
 					}
 					else {	// event ID does not exist in our DB - remove it
-						$services[getClientForCalendar($calendarCount)]->events->delete($calendarID, $eventx->getId());
+						//$services[getClientForCalendar($calendarCount)]->events->delete($calendarID, $eventx->getId());
 					}	
 				
 				}
