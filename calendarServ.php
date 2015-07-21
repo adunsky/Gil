@@ -214,8 +214,8 @@ require_once "mydb.php";
 				// look for the event in the calendar
 
 				$params = [];
-				//$params["maxResults"] = 2500;	// max number of events per calendar
-				$params["q"] = "Order ID :".$orderID." ";	// search by orderID in the dscription
+				$params["maxResults"] = 2500;	// max number of events per calendar
+				$params["q"] = "Order ID :".$orderID;	// search by orderID in the dscription
 		    	$list = $services[getClientForCalendar($calendarCount)]->events->listEvents($calendarID, $params);	
 				foreach($list["items"] as $eventx) {
 					//echo "eventx ID= ".$eventx["htmlLink"]."<br>\n";
@@ -225,7 +225,7 @@ require_once "mydb.php";
 		    			break;
 					}
 					else {	// event ID does not exist in our DB - remove it
-						$services[getClientForCalendar($calendarCount)]->events->delete($calendarID, $eventx->getId());
+						// $services[getClientForCalendar($calendarCount)]->events->delete($calendarID, $eventx->getId());
 					}	
 				
 				}
