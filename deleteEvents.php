@@ -119,7 +119,7 @@ use Google\Spreadsheet\ServiceRequestFactory;
 				$pageToken = $list->getNextPageToken();
 				if ($pageToken) {
 				    $optParams = array('pageToken' => $pageToken);
-				    $list = $service[getClientForCalendar($calendarCount)]->events->listEvents($calendarID, $optParams);
+				    $list = $services[getClientForCalendar($calendarCount)]->events->listEvents($calendarID, $optParams);
 				} else {
 					$complete = true;
 				  	break;
