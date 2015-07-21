@@ -212,15 +212,20 @@ require_once "mydb.php";
 
 			if ($eventID && $eventID != ""){
 				// look for the event in the calendar
+
 				$params = [];
-				$params["maxResults"] = 2500;	// max number of events per calendar
+				//$params["maxResults"] = 2500;	// max number of events per calendar
+				$params["q"] = "Order ID :".$orderID;
 		    	$list = $services[getClientForCalendar($calendarCount)]->events->listEvents($calendarID, $params);	
 				foreach($list["items"] as $eventx) {
-					// echo "eventx ID= ".$eventx["htmlLink"]."<br>\n";
+					echo "eventx ID= ".$eventx["htmlLink"]."<br>\n";
 					if ($eventID == $eventx["id"] || strpos($eventx["htmlLink"], $eventID ) != false) {
 		    			echo " found event in calendar: ". $calendarID."<br>\n";
 		    			$calEvent = $eventx;
 		    			break;
+					}
+					else {	// event ID does not exist in our DB - remove it
+						$date = '0000-00-00 00:00:00';
 					}	
 				
 				}
@@ -361,6 +366,7 @@ require_once "mydb.php";
 			}
 			if ($eventChanged) {
 				$updatedEvent = $services[getClientForCalendar($calendarCount)]->events->update($calendarID, $calEvent->getId(), $calEvent);
+				//var_dump($updatedEvent);
 				echo "Event updated<br>\n";
 			}
 			$sql = "UPDATE $eventsTable set eventID='$eventID', updated='1' WHERE calendarID='$calendarNum' AND orderID='$orderID';";
