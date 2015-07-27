@@ -210,13 +210,15 @@ require_once "mydb.php";
 			$calEvent = null;
 			//echo "eventID= ".$eventID."<br>\n";
 
+			$googleClient = getClientForCalendar($calendarCount);
+
 			if ($eventID && $eventID != ""){
 				// look for the event in the calendar
 
 				$params = [];
 				$params["maxResults"] = 2500;	// max number of events per calendar
 				$params["q"] = "Order ID :".$orderID;	// search by orderID in the dscription
-		    	$list = $services[getClientForCalendar($calendarCount)]->events->listEvents($calendarID, $params);	
+		    	$list = $services[$googleClient]->events->listEvents($calendarID, $params);	
 				foreach($list["items"] as $eventx) {
 					//echo "eventx ID= ".$eventx["htmlLink"]."<br>\n";
 					if ($eventID == $eventx["id"] || strpos($eventx["htmlLink"], $eventID ) != false) {
@@ -225,7 +227,7 @@ require_once "mydb.php";
 		    			break;
 					}
 					else {	// event ID does not exist in our DB - remove it
-						// $services[getClientForCalendar($calendarCount)]->events->delete($calendarID, $eventx->getId());
+						// $services[$googleClient]->events->delete($calendarID, $eventx->getId());
 					}	
 				
 				}
@@ -241,7 +243,7 @@ require_once "mydb.php";
 				echo "Removing event with invalid date: ".$date."<br>\n";
 				// The new event date is empty or not valid - remove the event from the calendar
 				if (!$new && $calEvent)
-					$services[getClientForCalendar($calendarCount)]->events->delete($calendarID, $calEvent->getId());
+					$services[$googleClient]->events->delete($calendarID, $calEvent->getId());
 				// Remove the event from the events table
 				$sql = "DELETE FROM $eventsTable WHERE calendarID='$calendarNum' AND orderID='$orderID' AND eventID = '$eventID';";
 				if (!$result = mysql_query($sql)) {
@@ -348,8 +350,8 @@ require_once "mydb.php";
 					$eventChanged = true;
 				}
 			if($new) {
-				echo "Calendar: ".$calendarCount." Client: ".getClientForCalendar($calendarCount)."\n";
-				$updatedEvent = $services[getClientForCalendar($calendarCount)]->events->insert($calendarID, $calEvent);
+				echo "Calendar: ".$calendarNum." Client: ".$googleClient."\n";
+				$updatedEvent = $services[$googleClient]->events->insert($calendarID, $calEvent);
 				$eidpos = strpos($updatedEvent["htmlLink"], "eid=" ); // find the event ID that will show up in the map gadget
 				$eventID = substr($updatedEvent["htmlLink"], $eidpos+4);
 				$calEvent = $updatedEvent;
@@ -365,7 +367,7 @@ require_once "mydb.php";
 				$eventChanged = true;
 			}
 			if ($eventChanged) {
-				$updatedEvent = $services[getClientForCalendar($calendarCount)]->events->update($calendarID, $calEvent->getId(), $calEvent);
+				$updatedEvent = $services[$googleClient]->events->update($calendarID, $calEvent->getId(), $calEvent);
 				//var_dump($updatedEvent);
 				echo "Event updated<br>\n";
 			}

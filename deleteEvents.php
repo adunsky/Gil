@@ -46,50 +46,45 @@ use Google\Spreadsheet\ServiceRequestFactory;
 
 		$clientList = getClientList($dbName);
 
-		$clients = [];
-		$services = [];
-		$creds = [];
-		foreach ($clientList as $clientInfo) {
-			// maintain a list of clients per customer for calendars scalability
-			$clientNum = $clientInfo["clientNumber"];
-			$clientid = $clientInfo["clientID"];
-			$clientmail = $clientInfo["clientMail"];
-			$clientkeypath = $clientInfo["clientKeyPath"];
-			echo "Client: ".$clientNum." clientID: ".$clientid."\n";
+		// select the client for this calendar
+		$clientInfo = $clientList[getClientForCalendar($calendarCount)-1];
 
-			$clients[$clientNum] = new Google_Client();
-			$clients[$clientNum]->setApplicationName($appname);
-			$clients[$clientNum]->setClientId($clientid);
-			$services[$clientNum] = new Google_Service_Calendar($clients[$clientNum]);
-			if (!$services[$clientNum])
-				echo "Failed to create service: ".$clientNum."\n";
+		// maintain a list of clients per customer for calendars scalability
+		$clientNum = $clientInfo["clientNumber"];
+		$clientid = $clientInfo["clientID"];
+		$clientmail = $clientInfo["clientMail"];
+		$clientkeypath = $clientInfo["clientKeyPath"];
+		echo "Client: ".$clientNum." clientID: ".$clientid."\n";
+
+		$client = new Google_Client();
+		$client->setApplicationName($appname);
+		$client->setClientId($clientid);
+		$service = new Google_Service_Calendar($client);
+		if (!$service)
+			echo "Failed to create service: ".$clientNum."\n";
+		
+		/************************************************
+		  If we have an access token, we can carry on.
+		  Otherwise, we'll get one with the help of an
+		  assertion credential. In other examples the list
+		  of scopes was managed by the Client, but here
+		  we have to list them manually. We also supply
+		  the service account
+		 ************************************************/
+
+		$key = file_get_contents($clientkeypath);
+		$cred = new Google_Auth_AssertionCredentials(
+		    $clientmail,
+		    array('https://www.googleapis.com/auth/calendar'),
+		    $key
+		);
+		$client->setAssertionCredentials($cred);
+
 			
-			/************************************************
-			  If we have an access token, we can carry on.
-			  Otherwise, we'll get one with the help of an
-			  assertion credential. In other examples the list
-			  of scopes was managed by the Client, but here
-			  we have to list them manually. We also supply
-			  the service account
-			 ************************************************/
-
-			$key = file_get_contents($clientkeypath);
-			$creds[$clientNum] = new Google_Auth_AssertionCredentials(
-			    $clientmail,
-			    array('https://www.googleapis.com/auth/calendar'),
-			    $key
-			);
-			$clients[$clientNum]->setAssertionCredentials($creds[$clientNum]);
-
-
-		}
-			
-		foreach ($clients as $client) {
-			// refresh clients if needed
-			if ($client->getAuth()->isAccessTokenExpired()) {
-			  echo "Refreshing client token: ".array_search($client, $clients)."<br>\n";	
-			  $client->getAuth()->refreshTokenWithAssertion($creds[array_search($client, $clients)]);
-			}
+		// refresh clients if needed
+		if ($client->getAuth()->isAccessTokenExpired()) {
+		  echo "Refreshing client token: ".getClientForCalendar($calendarCount)."<br>\n";	
+		  $client->getAuth()->refreshTokenWithAssertion($cred);
 		}
 
  		set_time_limit (0); // This may take a while
@@ -107,19 +102,19 @@ use Google\Spreadsheet\ServiceRequestFactory;
 		$complete = false;
 		$params = [];
 		$params["maxResults"] = 2500;	// max number of events per calendar
-    	$list = $services[getClientForCalendar($calendarCount)]->events->listEvents($calendarID, $params);	
+    	$list = $service->events->listEvents($calendarID, $params);	
 
     	while (true) {
     		try {
 				foreach($list["items"] as $eventx) {
-					$services[getClientForCalendar($calendarCount)]->events->delete($calendarID, $eventx->getId());
+					$service->events->delete($calendarID, $eventx->getId());
 					echo "Event deleted: ".$eventx->getId()."<br>\n";			
 				}
 
 				$pageToken = $list->getNextPageToken();
 				if ($pageToken) {
 				    $optParams = array('pageToken' => $pageToken);
-				    $list = $services[getClientForCalendar($calendarCount)]->events->listEvents($calendarID, $optParams);
+				    $list = $service->events->listEvents($calendarID, $optParams);
 				} else {
 					$complete = true;
 				  	break;
@@ -127,7 +122,7 @@ use Google\Spreadsheet\ServiceRequestFactory;
 			}
 			catch(Exception $e) {
 				  echo 'Exception: ' .$e->getMessage(). "<br>";
-				  $list = $services[getClientForCalendar($calendarCount)]->events->listEvents($calendarID, $params);	
+				  $list = $service->events->listEvents($calendarID, $params);	
 				  sleep(1);
 				  continue;
 			}
