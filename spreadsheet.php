@@ -205,10 +205,11 @@ function getCalcFields($order) {
 						else	
 							$value = "";  // clear invalid date
 	 				}
-	 				else { // text value - add ' to ensure that the spreadsheet doesn't change it to date
-	 					$value = "'".$value;
+	 				else 
+	 					if ($value != "") { // text value - add ' to ensure that the spreadsheet doesn't change it to date
+	 						$value = "'".$value;
 
-	 				}
+	 					}
 	 				if ($value == "")
 	 					$value = "_none"; // ensure non empty cells for the batch to work
 	 				else
