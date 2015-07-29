@@ -440,7 +440,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 
 			var CLIENT_ID = '785966582104-p03j542fcviuklf0kka21ushko2i7k0a.apps.googleusercontent.com';
 			var SCOPES = 'https://www.googleapis.com/auth/drive';
-			var FOLDER_PREFIX = '_order';
+			var FOLDER_PREFIX = '';
 			
    			$scope.initUpload = function(event){
    			var files = null;
@@ -545,9 +545,8 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 			$scope.insertToParentFolder = function(orderID, files) {
 			  var parentFolder = 'GoogMesh';
 			  // Search if GoogMesh folder exists
-			  $qString = "title = '"+parentFolder+"' and trashed = false and mimeType = 'application/vnd.google-apps.folder'";
-			  gapi.client.drive.children.list({
-			    'folderId' : 'root', 
+			  $qString = "title = '"+parentFolder+"' and trashed=false and mimeType='application/vnd.google-apps.folder' and sharedWithMe";
+			  gapi.client.drive.files.list({
 			    'q' : $qString
 			    }).
 			    execute(function(resp) {
@@ -557,7 +556,9 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 
 			      }
 			      else {
-
+			      		// Folder is not shared with the user - alert and quit
+			      	 	alert("Folder "+parentFolder+" is not shared with this user ");
+			      	 	/*
 			          // folder doesn't exist - create it
 			          var request = gapi.client.request({
 			              'path': '/drive/v2/files/',
@@ -577,7 +578,8 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 			              $scope.insertToFolder(file.id, orderID, files);
 
 			            }
-			          });      
+			          });  
+			          */    
 			      }
 			    });
 			}
