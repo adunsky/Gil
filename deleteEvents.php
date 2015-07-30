@@ -36,13 +36,24 @@ use Google\Spreadsheet\ServiceRequestFactory;
 		//echo $command;
 		$dbName = $_GET['db'];
 		//echo $dbName;
-		$calendarCount = $_GET['count'];
-		//echo $dbName;
+		$orderID = $_GET['orderID'];
 
 		if (!selectDB($dbName))
 			return;	
 			
 		getClientInfo($dbName); 	// to set the global $lang
+
+		 		      
+ 		$sql = "SELECT * FROM $calendarsTable WHERE number = '$calNum';";
+ 		if (!$result = mysql_query($sql)) {
+ 			echo 'Select calendar table Failed! ' . mysql_error(); 
+ 			return;
+ 		}
+ 		if ((mysql_num_rows($result) > 0) && ($calendar = mysql_fetch_array($result, MYSQL_ASSOC))) {
+ 			// Found the calendar details and the google calendar ID
+ 			$calendarID = $calendar["calID"];
+ 			$calendarCount = $calendar["count"];
+		}
 
 		$clientList = getClientList($dbName);
 
@@ -88,19 +99,13 @@ use Google\Spreadsheet\ServiceRequestFactory;
 		}
 
  		set_time_limit (0); // This may take a while
- 		      
- 		$sql = "SELECT * FROM $calendarsTable WHERE number = '$calNum';";
- 		if (!$result = mysql_query($sql)) {
- 			echo 'Select calendar table Failed! ' . mysql_error(); 
- 			return;
- 		}
- 		if ((mysql_num_rows($result) > 0) && ($calendar = mysql_fetch_array($result, MYSQL_ASSOC))) {
- 			// Found the calendar details and the google calendar ID
- 			$calendarID = $calendar["calID"];
-		}
 
 		$complete = false;
 		$params = [];
+
+		if ($orderID)
+			$params["q"] = "Order ID :".$orderID;	// search by orderID in the dscription		
+
 		$params["maxResults"] = 2500;	// max number of events per calendar
     	$list = $service->events->listEvents($calendarID, $params);	
 
@@ -130,7 +135,10 @@ use Google\Spreadsheet\ServiceRequestFactory;
 
 		if ($complete) {
 			echo "Updating events table with updated=0 <br>\n";
-			$sql = "UPDATE $eventsTable SET updated=0 WHERE calendarID = '$calNum';";
+			if ($orderID)
+				$sql = "UPDATE $eventsTable SET updated=0 WHERE calendarID = '$calNum' AND orderID='$orderID';";	
+			else	
+				$sql = "UPDATE $eventsTable SET updated=0 WHERE calendarID = '$calNum';";
 			if (!$result = mysql_query($sql)) {
 				echo 'Update events table Failed! ' . mysql_error(); 
 			}
