@@ -1,10 +1,12 @@
-//Search capabilities (fields in description)
-//Optimize event updates
-//test reduced calendars
-// Add atendees per calendar
+
+- Solution for multiple shared folders per user (or form) 
+
+- Add an option to get route directions for a list of events, based on search
+
+- Web page to view order status 
 
 Add script for logs
-Add orderID in forms
+// Add orderID in forms
 Add celltype unique - verify uniqueness on save
 // record creation time - for billing
 // Add mandatory field per form

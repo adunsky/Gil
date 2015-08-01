@@ -351,6 +351,9 @@ require_once "mydb.php";
 				}
 			if($new) {
 				echo "Calendar: ".$calendarNum." Client: ".$googleClient."\n";
+				// insert a temporary description with the orderID, so we can find it				
+				$description = "<p>Order ID :".$orderID."<br></p>";
+				$calEvent->setDescription($description);
 				$updatedEvent = $services[$googleClient]->events->insert($calendarID, $calEvent);
 				$eidpos = strpos($updatedEvent["htmlLink"], "eid=" ); // find the event ID that will show up in the map gadget
 				$eventID = substr($updatedEvent["htmlLink"], $eidpos+4);
