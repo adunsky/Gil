@@ -192,7 +192,36 @@ function openForm(id) {
 }
 
 
+function getRoute(id) {
+    for (var i=0; e = storedEvents[i]; i++)
+      if (e.location)
+        getOrderID(e.id);
 
+}
+
+
+function getOrderID(eventID) {
+
+    var address = 'www.googlemesh.com:3306';
+    var user = 'google';
+    var userPwd = '7j42h37r5564';
+    var dbUrl = 'jdbc:mysql://' + address + '/' + dbName;
+
+    var conn = Jdbc.getConnection(dbUrl, user, userPwd);
+
+    if (!conn) {
+      console.log('Failed to connect to DB: '+ dbUrl);   
+      return;
+    }
+
+    var stmt = conn.prepareStatement("SELECT orderID FROM _events WHERE eventID=?");
+    stmt.setString(1, eventID); 
+    var results = stmt.executeQuery();
+    if (results.next())
+      alert(results.getString(1));
+}    
+
+/*  https version:
 function getRoute(id) {
 
   var e = storedEvents[0];
@@ -214,12 +243,13 @@ function getRoute(id) {
     }
   }
 
-  xmlhttp.open("GET","getOrder.php?db="+$dbName+"&eventID="+e.id+"&user="+user,true);
+  xmlhttp.open("GET","https://googlemesh.com/Gilamos/getOrder.php?db="+$dbName+"&eventID="+e.id+"&user="+user,true);
   xmlhttp.send();
 
   //window.open("maps.google.com");
 
 }
+*/
 
 function drawMarker(e, bounds) {
 
