@@ -196,24 +196,28 @@ function openForm(id) {
 function getRoute(id) {
 
   var e = storedEvents[0];
-  $http.get("getOrder.php", { params: { eventID: e.id, db: $dbName, user: user } })
-  .success(function(data) {
-       $message = data;
-       console.log($message);
-      try {
-          $updatedOrder = angular.fromJson(data);
-          if ($updatedOrder) {
-            $orderID = $updatedOrder.orderID;
-          }
-          alert($orderID);
-      }
-      catch (e) {
-        alert("Error: "+$message);
-      } 
-  }); 
 
+  var xmlhttp;
+  if (window.XMLHttpRequest)
+  {// code for IE7+, Firefox, Chrome, Opera, Safari
+    xmlhttp=new XMLHttpRequest();
+  }
+  else
+  {// code for IE6, IE5
+    xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+  }
+  xmlhttp.onreadystatechange=function()
+  {
+    if (xmlhttp.readyState==4 && xmlhttp.status==200)
+    {
+      alert(xmlhttp.responseText);
+    }
+  }
 
-  window.open("maps.google.com");
+  xmlhttp.open("GET","getOrder.php?db="+$dbName+"&eventID="+e.id+"&user="+user,true);
+  xmlhttp.send();
+
+  //window.open("maps.google.com");
 
 }
 
