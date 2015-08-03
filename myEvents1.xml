@@ -193,8 +193,11 @@ function openForm(id) {
 
 
 function getRoute() {
-  window.open("localhost/Gilamos/#/route?db=" + dbName + "&user=" + user + 
-              "&start=" + displayedDates.start + "&end=" + displayedDates.end);
+  var startDate = displayedDates.start.date + "/" + displayedDates.start.month + "/" + displayedDates.start.year;
+  var endDate = displayedDates.end.date + "/" + displayedDates.end.month + "/" + displayedDates.end.year;
+
+  window.open("http://googlemesh.com/Gilamos/#/route?db=" + dbName + "&user=" + user + 
+              "&start=" + startDate + "&end=" + endDate);
 
 }
 
@@ -294,7 +297,7 @@ var map = null;
 function mapInit () {
   var main = document.getElementById('main');
 
-	var html = '<a href="#" onclick="openForm(0)" class="basic">New</a><p>              </p><a href="#" onclick="getRoute()" class="basic">Route</a><br>';
+	var html = '<a href="#" onclick="openForm(0)" class="basic">New</a><p>     </p><a href="#" onclick="getRoute()" class="basic">Route</a><br>';
   html += '<div id="map-canvas"></div>';
   	
  	main.innerHTML = html;
