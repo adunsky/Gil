@@ -203,10 +203,10 @@ function getRoute() {
   for (var i=0; displayedCalendars[i] ; i++) {
     if (i > 0)
       calendars += ",";
-    calendars += displayedCalendars[i];
+    calendars += "'" + displayedCalendars[i] + "'";
   }  
 
-  window.open("localhost/Gilamos/#/route?db=" + dbName + "&user=" + user + 
+  window.open("http://localhost/Gilamos/#/route?db=" + dbName + "&user=" + user + 
               "&start=" + startDate + "&end=" + endDate + "&calendars=" + calendars);
 
 }
