@@ -92,7 +92,8 @@ function eventsCallback(calendars) {
   	// Verify there were events.
   	if (calendars && calendars.length > 0) {
     	for(var c=0; calendars[c] && calendars[c].events; c++) {
-        displayedCalendars.push(calendars[c].name);
+        if (calendars[c].name)
+          displayedCalendars.push(calendars[c].name);
  			  for (var e=0; calendars[c].events[e] ; e++) {
   			   storedEvents.push(calendars[c].events[e]);
   			}
