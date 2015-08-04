@@ -88,12 +88,15 @@ body, td {
  */
 function eventsCallback(calendars) {
 	storedEvents = [];
+  displayedCalendars = [];
   	// Verify there were events.
   	if (calendars && calendars.length > 0) {
-  		for(var c=0; calendars[c] && calendars[c].events; c++)
-  			for (var e=0; calendars[c].events[e] ; e++) {
-  			    storedEvents.push(calendars[c].events[e]);
+    	for(var c=0; calendars[c] && calendars[c].events; c++) {
+        displayedCalendars.push(calendars[c].name);
+ 			  for (var e=0; calendars[c].events[e] ; e++) {
+  			   storedEvents.push(calendars[c].events[e]);
   			}
+      }
   	}
 
 	// clear all the previous geolocations
@@ -147,6 +150,7 @@ var timeOffset = 0;
  * @type {Array<Object>}
  */
 var storedEvents = null;
+var displayedCalendars = null;
 
 
 // array of geolocations per address
@@ -194,10 +198,16 @@ function openForm(id) {
 
 function getRoute() {
   var startDate = displayedDates.start.date + "-" + displayedDates.start.month + "-" + displayedDates.start.year;
-  var endDate = displayedDates.end.date + "-" + displayedDates.end.month + "-" + displayedDates.end.year;
+  var endDate = displayedDates.end.date-1 + "-" + displayedDates.end.month + "-" + displayedDates.end.year;
+  var calendars = "";
+  for (var i=0; displayedCalendars[i] ; i++) {
+    if (i > 0)
+      calendars += ",";
+    calendars += displayedCalendars[i];
+  }  
 
   window.open("localhost/Gilamos/#/route?db=" + dbName + "&user=" + user + 
-              "&start=" + startDate + "&end=" + endDate);
+              "&start=" + startDate + "&end=" + endDate + "&calendars=" + calendars);
 
 }
 
