@@ -1,0 +1,22 @@
+
+<link rel="stylesheet" href="css/style.css">
+<div class="container col-sm-12" data-ng-controller="routeCtrl" data-ng-init="getRoute()">
+
+	<div dir="ltr" class="list col-sm-3">
+		<label>Start: </label><input type="text" ng-model="startAddress"></input>
+		<div ng-repeat="order in orderList">
+			<label>{{order.eventDate}} - {{order.title}}</label>
+		</div>	
+		<label>End: </label><input type="text" ng-model="endAddress"></input>
+
+		<button type="submit" class="btn btn-info" ng-click="calcRoute()">Calculate Route</button>
+	</div>	
+
+	<div id="map-canvas" class="map col-sm-6" style="height:600px;">
+	</div>
+	<div id="dirPanel" class="panel col-sm-3">
+		<p>Total Distance: <span id="total"></span></p>
+	</div>	
+</div>
+
+
