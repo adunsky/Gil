@@ -39,20 +39,138 @@ orderApp.factory('myService', function () {
 orderApp.config(function($routeProvider){
 
       $routeProvider
-          .when('/',{
+        .when('/',{
                 templateUrl: 'home.html'
           })
-                    .when('/newOrder',{
+        .when('/newOrder',{
                 templateUrl: 'newOrder.html'
           })
-
-          .when('/ltrForm',{
-                templateUrl: 'ltrForm.html'
+        .when('/route',{
+                templateUrl: 'route.html'
           });
 
 });
 
+orderApp.controller('routeCtrl', function($scope, $http,  $location, myService){
+  	
+  	$scope.getRoute = function () {
+ 		
+		var argv = $location.search();      		
 
+		if (argv.db)
+			$scope.dbName = argv.db;
+		if (argv.user)
+				$scope.user = argv.user;
+			else {
+				$scope.user = ""; // $scope.getUser();
+			}
+
+		if (argv.start)
+			$scope.startDate = argv.start;		
+		if (argv.end)
+			$scope.endDate = argv.end;	
+		if (argv.calendars)
+			$scope.calendars = argv.calendars;
+
+ 		$http.get("getOrders.php", { params: { db: $scope.dbName, user: $scope.user, startDate: $scope.startDate, endDate: $scope.endDate, calendars: $scope.calendars } })
+ 		.success(function(data) {
+        	$scope.message = data;
+         	console.log($scope.message);
+  	    	try {
+	        	$scope.orderList = angular.fromJson(data);
+      	 	}
+    		catch (e) {
+        		alert("Error: "+$scope.message);
+        		$scope.orderList = null;
+    		}
+    		//$scope.calcRoute();
+		});
+
+		var mapOptions = {
+		        center: { lat: 32, lng: 34.78}, // Tel Aviv
+		        zoom: 8
+		    };
+		
+		$scope.map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+		$scope.directionsService = new google.maps.DirectionsService();
+		var rendererOptions = {
+		  draggable: true
+		};
+		$scope.directionsDisplay = new google.maps.DirectionsRenderer(rendererOptions);
+	  	$scope.directionsDisplay.setMap($scope.map);
+	  	$scope.directionsDisplay.setPanel(document.getElementById('dirPanel'));
+	  	google.maps.event.addListener($scope.directionsDisplay, 'directions_changed', 
+	  		function() {
+    			$scope.computeTotalDistance($scope.directionsDisplay.getDirections());
+			});
+	}
+
+	$scope.calcRoute = function () {
+		var listLen = $scope.orderList.length;
+
+		if (!$scope.startAddress || $scope.startAddress == "") {
+			alert("Please enter start address");
+			return;
+		}
+	  	var start = $scope.startAddress;
+	  	if (!$scope.endAddress || $scope.endAddress == "")
+	  		$scope.endAddress = $scope.startAddress;
+	  	var end = $scope.endAddress;
+
+	  	var waypts = [];
+	  	for (var i = 0; i < listLen; i++) {
+	  	    waypts.push({
+	  	        location: $scope.orderList[i].location,
+	  	        stopover: true});
+	  	}
+
+	  	var request = {
+	  		origin:start,
+	    	destination:end,
+	    	waypoints: waypts,
+	    	optimizeWaypoints: true,
+	    	travelMode: google.maps.TravelMode.DRIVING
+	  	};
+
+	  	$scope.directionsService.route(request, function(result, status) {
+	    	if (status == google.maps.DirectionsStatus.OK) {
+	      		$scope.directionsDisplay.setDirections(result);
+	      		/*
+				var route = result.routes[0];
+			    var summaryPanel = document.getElementById('dirPanel');
+			    summaryPanel.innerHTML = '';
+			    // For each route, display summary information.
+			    for (var i = 0; i < route.legs.length; i++) {
+			    	var routeSegment = i + 1;
+			        summaryPanel.innerHTML += '<b>Route Segment: ' + routeSegment + '</b><br>';
+			        summaryPanel.innerHTML += route.legs[i].start_address + ' to ';
+			        summaryPanel.innerHTML += route.legs[i].end_address + '<br>';
+			        summaryPanel.innerHTML += route.legs[i].distance.text + '<br><br>';
+			    }
+				*/
+
+	    	}
+	    	else {
+
+	    		alert("Error: "+status);
+	    	}
+	  	});
+	}
+
+	$scope.computeTotalDistance = function (result) {
+	  	var total = 0;
+	  	var myroute = result.routes[0];
+	  	for (var i = 0; i < myroute.legs.length; i++) {
+	    	total += myroute.legs[i].distance.value;
+	  	}
+	  	total = Math.round(total / 1000.0);
+	  	document.getElementById('total').innerHTML = total + ' km';
+	}
+
+
+
+
+});
 
 orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $location, myService){
 		$scope.order = myService.getOrder();
@@ -160,7 +278,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 		      				}
 		      				else {
 		      					if ($scope.form.fields[i].type == 'Hyperlink') {
-		      						$scope.form.fields[i].prefix = "";		      					
+		      						$scope.form.fields[i].prefix = "http://";		      					
 		      					}
 		      				}		      					
 		      				$scope.form.fields[i].value = $scope.order[fieldIndex].value;
