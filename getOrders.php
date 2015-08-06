@@ -98,7 +98,7 @@ function getFilterString($filterList) {
 			$result = mysql_query("SELECT * FROM $fieldTable WHERE name='$name'") or die('get order from main Failed! ' . mysql_error()); 
 			if ($field = mysql_fetch_array($result, MYSQL_ASSOC)) {	
 				$index = $field["index"];
-				$filterString = $filterString." AND `$index`='$value'";
+				$filterString = $filterString." AND `$index` LIKE '%$value%'";
 			}
 		}
 	}
