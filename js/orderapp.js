@@ -52,6 +52,8 @@ orderApp.config(function($routeProvider){
 });
 
 orderApp.controller('routeCtrl', function($scope, $http,  $location, myService){
+
+	$scope.filterList = [];
   	
   	$scope.getRoute = function () {
  		
@@ -72,7 +74,7 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, myService){
 		if (argv.calendars)
 			$scope.calendars = argv.calendars;
 
- 		$http.get("getOrders.php", { params: { db: $scope.dbName, user: $scope.user, startDate: $scope.startDate, endDate: $scope.endDate, calendars: $scope.calendars } })
+ 		$http.get("getOrders.php", { params: { db: $scope.dbName, user: $scope.user, startDate: $scope.startDate, endDate: $scope.endDate, calendars: $scope.calendars, filters: "" } })
  		.success(function(data) {
         	$scope.message = data;
          	console.log($scope.message);
@@ -103,6 +105,8 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, myService){
 	  		function() {
     			$scope.computeTotalDistance($scope.directionsDisplay.getDirections());
 			});
+
+	  	$scope.getSearchFields();
 	}
 
 	$scope.calcRoute = function () {
@@ -119,9 +123,10 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, myService){
 
 	  	var waypts = [];
 	  	for (var i = 0; i < listLen; i++) {
-	  	    waypts.push({
-	  	        location: $scope.orderList[i].location,
-	  	        stopover: true});
+	  		if ($scope.orderList[i].location != "")
+	  	    	waypts.push({
+	  	        	location: $scope.orderList[i].location,
+	  	        	stopover: true});
 	  	}
 
 	  	var request = {
@@ -167,11 +172,65 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, myService){
 	  	document.getElementById('total').innerHTML = total + ' km';
 	}
 
+	$scope.getSearchFields = function () {
+ 		$http.get("getSearchFields.php", { params: { db: $scope.dbName } })
+ 		.success(function(data) {
+        	$scope.message = data;
+         	console.log($scope.message);
+  	    	try {
+	        	$scope.fieldList = angular.fromJson(data);
+	        	// add empty string
+	        	var field = {};
+	        	field.name = "";
+	        	field.value = "";
+	        	$scope.fieldList.push(field);
+      	 	}
+    		catch (e) {
+        		alert("Error: "+$scope.message);
+        		$scope.fieldList = null;
+    		}
+    		$scope.addFilter();
+		});		
+
+	}
+
+	$scope.addFilter = function (filter) {
+
+		var filterLen = $scope.filterList.length;
+		var filterIndex = $scope.filterList.indexOf(filter);
+
+		if (filterIndex == filterLen-1)
+			$scope.filterList[filterLen] = {};		// add another filter field
+
+		if (filter && filter.name == "")	// no value selected - remove it
+			$scope.filterList.splice(filterIndex, 1);
+
+	}
+
+	$scope.getFilter = function () {
+
+		var filters = angular.toJson($scope.filterList);		
+ 		$http.get("getOrders.php", { params: { db: $scope.dbName, user: $scope.user, startDate: $scope.startDate, endDate: $scope.endDate, calendars: $scope.calendars, filters: filters } })
+ 		.success(function(data) {
+        	$scope.message = data;
+         	console.log($scope.message);
+  	    	try {
+	        	$scope.orderList = angular.fromJson(data);
+      	 	}
+    		catch (e) {
+        		alert("Error: "+$scope.message);
+        		$scope.orderList = null;
+    		}
+    		//$scope.calcRoute();
+		});
 
 
+	}
 
 });
 
+
+// Forms controller
 orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $location, myService){
 		$scope.order = myService.getOrder();
 		$scope.inProgress = false;

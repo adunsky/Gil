@@ -9,7 +9,8 @@
 	$start = $_GET['startDate'];
 	$end = $_GET['endDate'];
 	$calendars = $_GET['calendars'];
-	//echo $calendars;
+	$filters = $_GET['filters'];
+	$filterList = json_decode($filters);
 
 	if (!selectDB($dbName))
 		return;	
@@ -22,16 +23,19 @@
 	}
 */	
 
-	$startDate = date('Y-m-d', strtotime($start));
-	$endDate = date('Y-m-d', strtotime($end));
+	$startDate = date('Y-m-d H:i:s', strtotime($start));
+	$end = strtotime($end);
+	$endDate = date('Y-m-d H:i:s', strtotime("-1 minute", $end));	// until 23:59 of the last day
 
-	syslog(LOG_INFO, "getOrders called, startDate: ".$startDate." endDate: ".$endDate);
+	$filterString = getFilterString($filterList);
+
+	syslog(LOG_INFO, "getOrders called, startDate: ".$startDate." endDate: ".$endDate." filter: ".$filterString);
 
 	//echo ("start: ".$startDate." end: ".$endDate);
 
 	$eventList = [];
 	// Get the relevant events
-	$sql = "SELECT * FROM $eventsTable WHERE eventDate BETWEEN '$startDate' AND '$endDate';";
+	$sql = "SELECT * FROM $eventsTable WHERE eventDate BETWEEN '$startDate' AND '$endDate' ";
 	$result = mysql_query($sql) or die('get events Failed! ' . mysql_error()); 
 	if (mysql_num_rows($result) > 0)	{
 		//  found events
@@ -45,16 +49,16 @@
 					// get the title and location from the first calendar for this event
 					$titleFieldIndex = $calendar["titleField"];
 					$locationFieldIndex = $calendar["locationField"];
-					$main = mysql_query("SELECT * FROM $mainTable WHERE id='$orderID'") or die('get order from main Failed! ' . mysql_error()); 
+					$main = mysql_query("SELECT * FROM $mainTable WHERE id='$orderID'".$filterString) or die('get order from main Failed! ' . mysql_error()); 
 					if ($order = mysql_fetch_array($main, MYSQL_ASSOC)) {	
 						$event["title"] = $order[$titleFieldIndex];
 						$event["location"] = $order[$locationFieldIndex];
+						syslog(LOG_INFO, "Event added to list: ".$event["title"]);
+						array_push($eventList, $event);
 					}
-					syslog(LOG_INFO, "Event added to list: ".$event["title"]);
-					array_push($eventList, $event);
 				}
-				else
-					syslog(LOG_INFO, "Event for order: ".$orderID." not found in calendar: ".$calendarID);
+				//else
+				//	syslog(LOG_INFO, "Event for order: ".$orderID." not found in calendar: ".$calendarID);
 			//}
 		}
 	}
@@ -72,7 +76,36 @@ function orderExists($orderID, $eventList) {
 
 	}
 	return false;
+}
+
+function getFilterString($filterList) {
+	global $fieldTable;
+
+	if (!$filterList)
+		return "";
+
+	$filterString = "";
+
+	foreach ($filterList as $filter) {
+		//var_dump($filter);
+
+		if (isset($filter->name) && $filter->name != "") {
+			$name = $filter->name;
+			if ($filter->value)
+				$value = $filter->value;
+			else
+				$value = "";
+			$result = mysql_query("SELECT * FROM $fieldTable WHERE name='$name'") or die('get order from main Failed! ' . mysql_error()); 
+			if ($field = mysql_fetch_array($result, MYSQL_ASSOC)) {	
+				$index = $field["index"];
+				$filterString = $filterString." AND `$index`='$value'";
+			}
+		}
+	}
+
+	return $filterString;
 
 }
+
 
 ?>

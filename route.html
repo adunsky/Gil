@@ -1,17 +1,32 @@
 
 <link rel="stylesheet" href="css/style.css">
-<div class="container col-sm-12" data-ng-controller="routeCtrl" data-ng-init="getRoute()">
+<div class="mapContainer col-sm-12" data-ng-controller="routeCtrl" data-ng-init="getRoute()">
 
 	<div dir="ltr" class="list col-sm-3">
-		<label>Start: </label><input type="text" ng-model="startAddress"></input>
-		<div ng-repeat="order in orderList">
-			<label>{{order.eventDate}} - {{order.title}}</label>
-		</div>	
-		<label>End: </label><input type="text" ng-model="endAddress"></input>
-
-		<button type="submit" class="btn btn-info" ng-click="calcRoute()">Calculate Route</button>
+		<form role="form" class="form-horizontal">
+			<p>Filter:</p>
+	    		<div class="filter form-group col-sm-12" ng-repeat="filter in filterList">
+	           		<div class="col-sm-5">
+						<input type="text" class="form-control" name="{{filter.name}}" ng-model="filter.value"></input>
+					</div>
+					<div class="col-sm-7">
+						<select class="form-control" name="{{filter.name}}" ng-model="filter.name" ng-change="addFilter(filter)">
+					        <option ng-repeat="field in fieldList">{{field.name}}</option>
+						</select>
+					</div>
+				</div>
+				<button type="submit" class="btn btn-success" ng-click="getFilter()">Filter</button>
+			<br>
+			<br>
+			<label>Start: </label><input type="text" ng-model="startAddress"></input>
+			<div ng-repeat="order in orderList">
+				<label>{{order.eventDate}} - {{order.title}}</label>
+			</div>	
+			<label>End: </label><input type="text" ng-model="endAddress"></input>
+			<br>
+			<button type="submit" class="btn btn-info" ng-disabled="startAddress==null || startAddress==''" ng-click="calcRoute()">Calculate Route</button>
+		</form>	
 	</div>	
-
 	<div id="map-canvas" class="map col-sm-6" style="height:600px;">
 	</div>
 	<div id="dirPanel" class="panel col-sm-3">
