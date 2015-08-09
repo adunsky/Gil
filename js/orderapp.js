@@ -80,6 +80,7 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, myService){
          	console.log($scope.message);
   	    	try {
 	        	$scope.orderList = angular.fromJson(data);
+	        	$scope.dirList = $scope.orderList;
       	 	}
     		catch (e) {
         		alert("Error: "+$scope.message);
@@ -140,25 +141,24 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, myService){
 	  	$scope.directionsService.route(request, function(result, status) {
 	    	if (status == google.maps.DirectionsStatus.OK) {
 	      		$scope.directionsDisplay.setDirections(result);
-	      		/*
+	      		
+	      		$scope.dirList = [];
 				var route = result.routes[0];
-			    var summaryPanel = document.getElementById('dirPanel');
-			    summaryPanel.innerHTML = '';
 			    // For each route, display summary information.
 			    for (var i = 0; i < route.legs.length; i++) {
-			    	var routeSegment = i + 1;
-			        summaryPanel.innerHTML += '<b>Route Segment: ' + routeSegment + '</b><br>';
-			        summaryPanel.innerHTML += route.legs[i].start_address + ' to ';
-			        summaryPanel.innerHTML += route.legs[i].end_address + '<br>';
-			        summaryPanel.innerHTML += route.legs[i].distance.text + '<br><br>';
+			    	if (i < $scope.orderList.length)
+			    		$scope.dirList[i] = $scope.orderList[route.waypoint_order[i]];
+			    	else
+			    		$scope.dirList[i] = {};		// the last leg
+			    	$scope.dirList[i].distance = route.legs[i].distance.text;
+			    	$scope.dirList[i].duration = " - about "+route.legs[i].duration.text;
 			    }
-				*/
-
 	    	}
 	    	else {
 
 	    		alert("Error: "+status);
 	    	}
+   		  	$scope.$apply();
 	  	});
 	}
 
@@ -216,6 +216,7 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, myService){
          	console.log($scope.message);
   	    	try {
 	        	$scope.orderList = angular.fromJson(data);
+	        	$scope.dirList = $scope.orderList;
       	 	}
     		catch (e) {
         		alert("Error: "+$scope.message);

@@ -41,9 +41,14 @@
 		//  found events
 		while ($event = mysql_fetch_array($result, MYSQL_ASSOC)) {
 			$orderID = $event["orderID"];
-			//if (!orderExists($orderID,$eventList)) {
+			if (!orderExists($orderID,$eventList)) {
 				$calendarID = $event["calendarID"];
-				$event["eventDate"] = date('d/m/Y h:i A', strtotime($event["eventDate"]));
+				$eventTime = date('H:i', strtotime($event["eventDate"]));
+				if ($eventTime == "00:00")
+					$format = 'd/m/Y';
+				else
+					$format = 'd/m/Y h:i A';					
+				$event["eventDate"] = date($format, strtotime($event["eventDate"]));
 				$cal = mysql_query("SELECT * FROM $calendarsTable WHERE name IN ($calendars) AND number='$calendarID'") or die('get calendar Failed! ' . mysql_error()); 
 				if ($calendar = mysql_fetch_array($cal, MYSQL_ASSOC)) {
 					// get the title and location from the first calendar for this event
@@ -59,7 +64,7 @@
 				}
 				//else
 				//	syslog(LOG_INFO, "Event for order: ".$orderID." not found in calendar: ".$calendarID);
-			//}
+			}
 		}
 	}
 	else

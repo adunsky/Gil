@@ -2,7 +2,7 @@
 <link rel="stylesheet" href="css/style.css">
 <div class="mapContainer col-sm-12" data-ng-controller="routeCtrl" data-ng-init="getRoute()">
 
-	<div dir="ltr" class="list col-sm-3">
+	<div dir="ltr" class="list col-sm-6">
 		<form role="form" class="form-horizontal">
 			<p>Filter:</p>
 	    		<div class="filter form-group col-sm-12" ng-repeat="filter in filterList">
@@ -18,20 +18,41 @@
 				<button type="submit" class="btn btn-success" ng-click="getFilter()">Filter</button>
 			<br>
 			<br>
-			<label>Start: </label><input type="text" ng-model="startAddress"></input>
-			<div ng-repeat="order in orderList">
-				<label>{{order.eventDate}} - {{order.title}}</label>
+			<div class="col-sm-5">
+				<label>Start: </label>
+			</div>
+			<div class="col-sm-7">	
+				<input type="text" class="form-control" ng-model="startAddress"></input>
+			</div>
+			<br>
+			<br>
+			<br>
+			<div class="list-group">
+				<div ng-repeat="order in dirList">
+					<a href="" class="list-group-item">{{order.distance}} {{order.duration}}<br>{{order.eventDate}} - {{order.title}}<br>{{order.location}}</a>
+				</div>
+			</div>
+			<div class="col-sm-5">
+				<label>End: </label>
+			</div>
+			<div class="col-sm-7">	
+				<input type="text" class="form-control" ng-model="endAddress"></input>
 			</div>	
-			<label>End: </label><input type="text" ng-model="endAddress"></input>
+			<br>
+			<br>
 			<br>
 			<button type="submit" class="btn btn-info" ng-disabled="startAddress==null || startAddress==''" ng-click="calcRoute()">Calculate Route</button>
 		</form>	
 	</div>	
-	<div id="map-canvas" class="map col-sm-6" style="height:600px;">
+	<div id="map-canvas" class="map col-sm-6" style="height:640px;">
 	</div>
-	<div id="dirPanel" class="panel col-sm-3">
-		<p>Total Distance: <span id="total"></span></p>
-	</div>	
 </div>
+<div id="buffer" class="col-sm-6">
+</div>
+<div id="dirPanel" class="panel col-sm-6">
+	<br>
+	<br>
+	<p>Total Distance: <span id="total"></span></p>
+</div>	
 
 
