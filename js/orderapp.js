@@ -141,18 +141,21 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, myService){
 	  	$scope.directionsService.route(request, function(result, status) {
 	    	if (status == google.maps.DirectionsStatus.OK) {
 	      		$scope.directionsDisplay.setDirections(result);
-	      		
+	      		$scope.startIcon = mapIconsPath + mapIcons[0];
 	      		$scope.dirList = [];
 				var route = result.routes[0];
 			    // For each route, display summary information.
 			    for (var i = 0; i < route.legs.length; i++) {
-			    	if (i < $scope.orderList.length)
+			    	if (i < $scope.orderList.length) {
 			    		$scope.dirList[i] = $scope.orderList[route.waypoint_order[i]];
+			    		$scope.dirList[i].img = mapIconsPath + mapIcons[i+1];
+			    	}
 			    	else
 			    		$scope.dirList[i] = {};		// the last leg
 			    	$scope.dirList[i].distance = route.legs[i].distance.text;
 			    	$scope.dirList[i].duration = " - about "+route.legs[i].duration.text;
 			    }
+			   	$scope.endIcon = mapIconsPath + mapIcons[i];
 	    	}
 	    	else {
 
@@ -238,11 +241,21 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 
       	$scope.getOrder = function () {
      		
-		   	var eventID;
+		   	var eventID, calendarNum;
 			
 			var argv = $location.search();      		
 			if (argv.id)
 				eventID = argv.id;
+			else
+				eventID = 0;
+			if (argv.calendarNum)
+				calendarNum = argv.calendarNum;
+			else
+				calendarNum = 0;
+			if (argv.orderID)
+				$scope.orderID = argv.orderID;
+			else
+				$scope.orderID = 0;
 			if (argv.db)
 				$scope.dbName = argv.db;
 			if (argv.user)
@@ -251,7 +264,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
  				$scope.user = ""; // $scope.getUser();
  			}		
 
-     		$http.get("getOrder.php", { params: { eventID: eventID, db: $scope.dbName, user: $scope.user } })
+     		$http.get("getOrder.php", { params: { eventID: eventID, db: $scope.dbName, calendarNum: calendarNum, orderID: $scope.orderID, user: $scope.user } })
      		.success(function(data) {
              $scope.message = data;
              console.log($scope.message);
@@ -979,3 +992,33 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 })
 
 
+var mapIconsPath = "http://maps.google.com/mapfiles/";
+
+var mapIcons = [
+	'marker_greenA.png',
+	'marker_greenB.png',
+	'marker_greenC.png',
+	'marker_greenD.png',
+	'marker_greenE.png',
+	'marker_greenF.png',
+	'marker_greenG.png',
+	'marker_greenH.png',
+	'marker_greenI.png',
+	'marker_greenJ.png',
+	'marker_greenK.png',
+	'marker_greenL.png',
+	'marker_greenM.png',
+	'marker_greenN.png',
+	'marker_greenO.png',
+	'marker_greenP.png',
+	'marker_greenQ.png',
+	'marker_greenR.png',
+	'marker_greenS.png',
+	'marker_greenT.png',
+	'marker_greenU.png',
+	'marker_greenV.png',
+	'marker_greenW.png',
+	'marker_greenX.png',
+	'marker_greenY.png',
+	'marker_greenZ.png'
+];

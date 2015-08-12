@@ -18,10 +18,13 @@
 				<button type="submit" class="btn btn-success" ng-click="getFilter()">Filter</button>
 			<br>
 			<br>
-			<div class="col-sm-5">
+			<div class="col-sm-1">	
+				<img src="{{startIcon}}">
+			</div>
+			<div class="col-sm-3">
 				<label>Start: </label>
 			</div>
-			<div class="col-sm-7">	
+			<div class="col-sm-8">	
 				<input type="text" class="form-control" ng-model="startAddress"></input>
 			</div>
 			<br>
@@ -29,13 +32,16 @@
 			<br>
 			<div class="list-group">
 				<div ng-repeat="order in dirList">
-					<a href="" class="list-group-item">{{order.distance}} {{order.duration}}<br>{{order.eventDate}} - {{order.title}}<br>{{order.location}}</a>
+					<a href="" class="list-group-item"><p style="color: blue;">{{order.distance}} {{order.duration}}</p>{{order.eventDate}} {{order.title}}<p><img src="{{order.img}}"> <b>{{order.location}}</b></p></a>
 				</div>
 			</div>
-			<div class="col-sm-5">
+			<div class="col-sm-1">	
+				<img src="{{endIcon}}">
+			</div>
+			<div class="col-sm-3">
 				<label>End: </label>
 			</div>
-			<div class="col-sm-7">	
+			<div class="col-sm-8">	
 				<input type="text" class="form-control" ng-model="endAddress"></input>
 			</div>	
 			<br>

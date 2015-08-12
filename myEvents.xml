@@ -214,8 +214,10 @@ function getRoute() {
 
 function drawMarker(e, bounds) {
 
-   	//map.setCenter(Locations[e.location]);
-     	var marker = new google.maps.Marker({
+    if (Locations[e.location] == "")
+        return;   // don't try to draw - invalid address
+
+    var marker = new google.maps.Marker({
          map: map,
     		icon: {
       		path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
@@ -256,7 +258,7 @@ function drawMarker(e, bounds) {
 
 function setMarker(e, bounds) {
 	
-	  if (Locations[e.location]) {
+	  if (Locations[e.location] || Locations[e.location] == "") {
 	  		drawMarker(e, bounds);
 	  		return;
 	  	}
@@ -274,6 +276,10 @@ function setMarker(e, bounds) {
 	        		setTimeout(setMarker(e, bounds), 1000); // wait to retry after 1 sec
 
 	        }
+          else
+              if (status == 'ZERO_RESULTS') {
+                  Locations[e.location] = "";   // empty string marks invalid address
+              }
 	 		}				
 		});
 }
@@ -308,8 +314,8 @@ var map = null;
 function mapInit () {
   var main = document.getElementById('main');
   var html = '<a href="#" onclick="openForm(0)" class="basic">New Order</a><br>';
-
-  // <br><a href="#" onclick="getRoute()" class="basic">Large Map</a><br>';
+  // <a href="#" onclick="getRoute()" class="basic">Routes</a><br>';
+  
   html += '<div id="map-canvas"></div>';
   	
  	main.innerHTML = html;

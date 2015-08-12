@@ -6,25 +6,35 @@
 	   //var_dump($_GET);
 	$dbName = $_GET['db'];
 	//echo $dbName;
-	
+	if (array_key_exists("orderID", $_GET))
+		$orderID = $_GET["orderID"];
+	else
+		$orderID = 0;
+	if (array_key_exists("calendarNum", $_GET))	
+		$calendarID = $_GET["calendarNum"];
+	else
+		$calendarID = 0;
+
 	$row = [];
-	$orderID = 0;
 	$formID = 1; // This is the default form
 
 	if (!selectDB($dbName))
 		return;	
 	
 	$eventID = $_GET["eventID"];
-	syslog(LOG_INFO, "getOrder called, eventID: ".$eventID);
+	syslog(LOG_INFO, "getOrder called, eventID: ".$eventID." orderID: ".$orderID);
 
-	if ($eventID == "0") { // it is a new order - verify the user email
+	if ($eventID == '0' && $orderID == 0) { // it is a new order - verify the user email
 		//echo $eventID;
+		$newOrder = true;
 		$user = $_GET["user"];	
-		if ($eventID == 0 && !authUserForm($user, $formID)) {
+		if ($eventID == '0' && !authUserForm($user, $formID)) {
 			echo "The user is not authorized to perform this action.";
 			return;	
 		}
 	}
+	else
+		$newOrder = false;
 
 	
 	// First get all the fields
@@ -45,7 +55,8 @@
 		return;
 	}
 
-	if ($eventID != '0') {
+
+	if ($eventID != '0') {	// find the orderID and calendarID based on the eventID
 		$sql = "SELECT * FROM $eventsTable WHERE eventID = '$eventID';";
 		$result = mysql_query($sql) or die('get eventID Failed! ' . mysql_error()); 
 		if (mysql_num_rows($result) > 0)	{
@@ -55,61 +66,61 @@
 			$calendarID = $event["calendarID"];
 			//echo $orderID;
 			syslog(LOG_INFO, "Found order ID: ".$orderID);
-	
-			$sql = "SELECT * FROM $calendarsTable WHERE number = '$calendarID';";
-			$result = mysql_query($sql) or die('get form from calendar Failed! ' . mysql_error()); 
-			if (mysql_num_rows($result) > 0)	{
-				//  found calendar
-				$calendar=mysql_fetch_array($result, MYSQL_ASSOC);
-				$formID = $calendar["formNumber"];
-			}
-		
-			$sql = "SELECT * FROM $mainTable WHERE id = '$orderID';";
-			$result = mysql_query($sql) or die('get order Failed! ' . mysql_error()); 
-			if (mysql_num_rows($result) > 0)	{
-				//  found order - set the values from the main table
-				$order = mysql_fetch_array($result, MYSQL_ASSOC);
-				for($i=0; $i < $numFields ; $i++) {
-					$index = $row[$i]["index"];
-					$row[$i]["value"] = $order[$index];
-		
-					if (($row[$i]["value"] == null) ||	// set to default because null is initial db value
-						($row[$i]["value"] == "" && ($row[$i]["type"] == "Hyperlink" || $row[$i]["type"] == "EmbedHyperlink"))) {
-						// For Hyperlinks set the default value in case no value is set
-						$row[$i]["value"] = $row[$i]["default"];			
-					}
-					$type = $row[$i]["type"];
-						
-	
-					if (strpos($type, "STARTTIME") === 0 || strpos($type, "ENDTIME") === 0) {
-						$type = "DATETIME";  // it behaves like DATETIME
-						$row[$i]["type"] = $type;
-					}
-					if ($type == "DATE" || $type == "DATETIME")	 {
-						// format the datetime for the UI
-						if ($date = strtotime($row[$i]["value"])) {
-							if ($type == "DATE")
-								$row[$i]["value"] = date('d-m-Y', $date);
-							else // DATETIME	
-								$row[$i]["value"] = date('Y-m-d H:i', $date);
-						}	
-					}			
-				}
-				
-			}
-			else
-				$orderID = -1;
 		}
-		else 
-			$orderID = -1;
 	}
-	if ($orderID == -1) {
+
+	if ($orderID != 0 && $calendarID != 0) {
+		// orderID and calendarID are known	
+		$sql = "SELECT * FROM $calendarsTable WHERE number = '$calendarID';";
+		$result = mysql_query($sql) or die('get form from calendar Failed! ' . mysql_error()); 
+		if (mysql_num_rows($result) > 0)	{
+			//  found calendar
+			$calendar=mysql_fetch_array($result, MYSQL_ASSOC);
+			$formID = $calendar["formNumber"];
+		}
+	
+		$sql = "SELECT * FROM $mainTable WHERE id = '$orderID';";
+		$result = mysql_query($sql) or die('get order Failed! ' . mysql_error()); 
+		if (mysql_num_rows($result) > 0)	{
+			//  found order - set the values from the main table
+			$order = mysql_fetch_array($result, MYSQL_ASSOC);
+			for($i=0; $i < $numFields ; $i++) {
+				$index = $row[$i]["index"];
+				$row[$i]["value"] = $order[$index];
+	
+				if (($row[$i]["value"] == null) ||	// set to default because null is initial db value
+					($row[$i]["value"] == "" && ($row[$i]["type"] == "Hyperlink" || $row[$i]["type"] == "EmbedHyperlink"))) {
+					// For Hyperlinks set the default value in case no value is set
+					$row[$i]["value"] = $row[$i]["default"];			
+				}
+				$type = $row[$i]["type"];
+					
+
+				if (strpos($type, "STARTTIME") === 0 || strpos($type, "ENDTIME") === 0) {
+					$type = "DATETIME";  // it behaves like DATETIME
+					$row[$i]["type"] = $type;
+				}
+				if ($type == "DATE" || $type == "DATETIME")	 {
+					// format the datetime for the UI
+					if ($date = strtotime($row[$i]["value"])) {
+						if ($type == "DATE")
+							$row[$i]["value"] = date('d-m-Y', $date);
+						else // DATETIME	
+							$row[$i]["value"] = date('Y-m-d H:i', $date);
+					}	
+				}			
+			}
+		}
+	}
+
+	if (!$newOrder && $orderID <= 0) {
+		// failed to find an existing order in the DB
 		echo "Invalid record ID";
 		syslog(LOG_ERR, "Order not found");
 		return;
 	}	
 		
-	if ($orderID == 0) {// It is a new order
+	if ($newOrder) {// It is a new order - initialize the first form
 		for($i=0; $i < $numFields ; $i++) {
 			$type = $row[$i]["type"];
 			if (strpos($type, "STARTTIME") === 0 || strpos($type, "ENDTIME") === 0) {
