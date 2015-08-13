@@ -207,7 +207,7 @@ function getRoute() {
     calendars += "'" + displayedCalendars[i] + "'";
   }  
 
-  window.open("http://localhost/Gilamos/#/route?db=" + dbName + "&user=" + user + 
+  window.open("http://googlemesh.com/Gilamos/#/route?db=" + dbName + "&user=" + user + 
               "&start=" + startDate + "&end=" + endDate + "&calendars=" + calendars);
 
 }
