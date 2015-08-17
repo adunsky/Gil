@@ -76,14 +76,13 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, myService){
 
  		$http.get("getOrders.php", { params: { db: $scope.dbName, user: $scope.user, startDate: $scope.startDate, endDate: $scope.endDate, calendars: $scope.calendars, filters: "" } })
  		.success(function(data) {
-        	$scope.message = data;
-         	console.log($scope.message);
+         	console.log(data);
   	    	try {
 	        	$scope.orderList = angular.fromJson(data);
 	        	$scope.dirList = $scope.orderList;
       	 	}
     		catch (e) {
-        		alert("Error: "+$scope.message);
+        		alert("Error: "+data);
         		$scope.orderList = null;
     		}
     		//$scope.calcRoute();
@@ -111,8 +110,8 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, myService){
 	}
 
 	$scope.calcRoute = function () {
-		var listLen = $scope.orderList.length;
 
+		$scope.message = "";
 		if (!$scope.startAddress || $scope.startAddress == "") {
 			alert("Please enter start address");
 			return;
@@ -123,11 +122,15 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, myService){
 	  	var end = $scope.endAddress;
 
 	  	var waypts = [];
-	  	for (var i = 0; i < listLen; i++) {
-	  		if ($scope.orderList[i].location != "")
-	  	    	waypts.push({
-	  	        	location: $scope.orderList[i].location,
-	  	        	stopover: true});
+	  	for (var i = 0; i < $scope.orderList.length; i++) {
+	  		while ($scope.orderList[i].location == "") {
+	  			$scope.orderList.splice(i, 1);	// remove empty addresses from the list
+	  			$scope.message += "\nOrder "+$scope.orderList[i].orderID+" has no address - removed from the list";
+	  		}
+
+		  	waypts.push({
+		  	   	location: $scope.orderList[i].location,
+		  	   	stopover: true});
 	  	}
 
 	  	var request = {
@@ -158,7 +161,8 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, myService){
 			   	$scope.endIcon = mapIconsPath + mapIcons[i];
 	    	}
 	    	else {
-
+	    		if (status == "ZERO_RESULTS")
+	    			status = "Invalid address. Please verify that all addreses are valid";
 	    		alert("Error: "+status);
 	    	}
    		  	$scope.$apply();
@@ -178,8 +182,7 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, myService){
 	$scope.getSearchFields = function () {
  		$http.get("getSearchFields.php", { params: { db: $scope.dbName } })
  		.success(function(data) {
-        	$scope.message = data;
-         	console.log($scope.message);
+         	console.log(data);
   	    	try {
 	        	$scope.fieldList = angular.fromJson(data);
 	        	// add empty string
@@ -189,7 +192,7 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, myService){
 	        	$scope.fieldList.push(field);
       	 	}
     		catch (e) {
-        		alert("Error: "+$scope.message);
+        		alert("Error: "+data);
         		$scope.fieldList = null;
     		}
     		$scope.addFilter();
@@ -215,14 +218,13 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, myService){
 		var filters = angular.toJson($scope.filterList);		
  		$http.get("getOrders.php", { params: { db: $scope.dbName, user: $scope.user, startDate: $scope.startDate, endDate: $scope.endDate, calendars: $scope.calendars, filters: filters } })
  		.success(function(data) {
-        	$scope.message = data;
-         	console.log($scope.message);
+         	console.log(data);
   	    	try {
 	        	$scope.orderList = angular.fromJson(data);
 	        	$scope.dirList = $scope.orderList;
       	 	}
     		catch (e) {
-        		alert("Error: "+$scope.message);
+        		alert("Error: "+data);
         		$scope.orderList = null;
     		}
     		//$scope.calcRoute();
