@@ -1,4 +1,3 @@
-
 <link rel="stylesheet" href="css/style.css">
 <div class="mapContainer col-sm-12" data-ng-controller="routeCtrl" data-ng-init="getRoute()">
 
@@ -18,6 +17,9 @@
 				<button type="submit" class="btn btn-success" ng-click="getFilter()">Filter</button>
 			<br>
 			<br>
+			<label><input type="checkbox" ng-model="optimize"> Optimize route </label>
+			<br>
+			<br>
 			<div class="col-sm-1">	
 				<img src="{{startIcon}}">
 			</div>
@@ -31,11 +33,11 @@
 			<br>
 			<br>
 			<div class="list-group">
-				<div ng-repeat="order in dirList">
+				<div ng-repeat="order in dirList" draggable="true" ng-drag="true" ng-drag-data="{{order}}" ng-drag-success="onDragComplete(order,$event)" ng-drop="true" ng-drop-success="onDropComplete(order,$data,$event)">
 					<a href="" class="list-group-item"><p style="color: blue;">{{order.distance}} {{order.duration}}</p>{{order.eventDate}} {{order.title}}<p><img src="{{order.img}}"> <b>{{order.location}}</b></p></a>
 				</div>
 			</div>
-			<div class="col-sm-1">	
+			<div class="col-sm-1">	 
 				<img src="{{endIcon}}">
 			</div>
 			<div class="col-sm-3">
@@ -48,9 +50,10 @@
 			<br>
 			<br>
 			<button type="submit" class="btn btn-info" ng-disabled="startAddress==null || startAddress==''" ng-click="calcRoute()">Calculate Route</button>
+			<p style="color: red;">{{message}}</p>
 		</form>	
 	</div>	
-	<div id="map-canvas" class="map col-sm-6" style="height:640px;">
+	<div id="map-canvas" class="map col-sm-6" style="height:840px;">
 	</div>
 </div>
 <div id="buffer" class="col-sm-6">

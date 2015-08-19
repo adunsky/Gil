@@ -1,4 +1,4 @@
-var orderApp = angular.module('orderApp',['ngRoute', 'ui.bootstrap', 'ui.bootstrap.datetimepicker']);
+var orderApp = angular.module('orderApp', ['ngRoute', 'ngDraggable', 'ui.bootstrap', 'ui.bootstrap.datetimepicker']);
 
 orderApp.factory('myService', function () {
 	var Order = [];
@@ -51,10 +51,28 @@ orderApp.config(function($routeProvider){
 
 });
 
+
 orderApp.controller('routeCtrl', function($scope, $http,  $location, myService){
 
 	$scope.filterList = [];
+	$scope.optimize = true;
+	$scope.calculated = false;
   	
+	$scope.onDragComplete = function(order,$event) {
+		var sourceIndex = $scope.dirList.indexOf(order);
+		$scope.dirList.splice(sourceIndex, 1);	// remove the dragged item
+
+	}
+
+	$scope.onDropComplete = function(targetOrder, order, $event) {
+
+		var targetIndex = $scope.dirList.indexOf(targetOrder);
+		$scope.dirList.splice(targetIndex, 0, order);	// add the dragged item
+		$scope.optimize = false;
+		if ($scope.calculated)	// recalculate if it was already calculated
+			$scope.calcRoute();
+	}
+
   	$scope.getRoute = function () {
  		
 		var argv = $location.search();      		
@@ -106,12 +124,19 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, myService){
     			$scope.computeTotalDistance($scope.directionsDisplay.getDirections());
 			});
 
+	  	// listen for the window resize event & trigger Google Maps to update too
+	  	$(window).resize(function() {
+	  	  	google.maps.event.trigger($scope.map, "resize");
+	  	});
+
 	  	$scope.getSearchFields();
 	}
 
 	$scope.calcRoute = function () {
 
 		$scope.message = "";
+		$scope.calculated = true;
+
 		if (!$scope.startAddress || $scope.startAddress == "") {
 			alert("Please enter start address");
 			return;
@@ -122,22 +147,23 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, myService){
 	  	var end = $scope.endAddress;
 
 	  	var waypts = [];
-	  	for (var i = 0; i < $scope.orderList.length; i++) {
-	  		while ($scope.orderList[i].location == "") {
-	  			$scope.orderList.splice(i, 1);	// remove empty addresses from the list
-	  			$scope.message += "\nOrder "+$scope.orderList[i].orderID+" has no address - removed from the list";
+	  	for (var i = 0; i < $scope.dirList.length ; i++) {
+	  		while ($scope.dirList[i] && (!$scope.dirList[i].location || $scope.dirList[i].location == "")) {
+	  			var orderID = $scope.dirList[i].orderID ? $scope.dirList[i].orderID : "";
+	  			$scope.dirList.splice(i, 1);	// remove empty addresses from the list
+	  			$scope.message += "\nOrder "+orderID+" has no address - removed from the list";
 	  		}
-
-		  	waypts.push({
-		  	   	location: $scope.orderList[i].location,
-		  	   	stopover: true});
+	  		if ($scope.dirList[i] && $scope.dirList[i].location)
+		  		waypts.push({
+		  	   		location: $scope.dirList[i].location,
+		  	   		stopover: true});
 	  	}
 
 	  	var request = {
 	  		origin:start,
 	    	destination:end,
 	    	waypoints: waypts,
-	    	optimizeWaypoints: true,
+	    	optimizeWaypoints: $scope.optimize,
 	    	travelMode: google.maps.TravelMode.DRIVING
 	  	};
 
@@ -145,25 +171,28 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, myService){
 	    	if (status == google.maps.DirectionsStatus.OK) {
 	      		$scope.directionsDisplay.setDirections(result);
 	      		$scope.startIcon = mapIconsPath + mapIcons[0];
-	      		$scope.dirList = [];
+	      		var tmpList = [];
 				var route = result.routes[0];
 			    // For each route, display summary information.
 			    for (var i = 0; i < route.legs.length; i++) {
-			    	if (i < $scope.orderList.length) {
-			    		$scope.dirList[i] = $scope.orderList[route.waypoint_order[i]];
-			    		$scope.dirList[i].img = mapIconsPath + mapIcons[i+1];
+			    	if (i < $scope.dirList.length) {
+			    		tmpList[i] = $scope.dirList[route.waypoint_order[i]];
+			    		tmpList[i].img = mapIconsPath + mapIcons[i+1];
 			    	}
 			    	else
-			    		$scope.dirList[i] = {};		// the last leg
-			    	$scope.dirList[i].distance = route.legs[i].distance.text;
-			    	$scope.dirList[i].duration = " - about "+route.legs[i].duration.text;
+			    		tmpList[i] = {};		// the last leg
+			    	
+			    	tmpList[i].distance = route.legs[i].distance.text;
+			    	tmpList[i].duration = " - about "+route.legs[i].duration.text;
 			    }
 			   	$scope.endIcon = mapIconsPath + mapIcons[i];
+			   	$scope.dirList = tmpList;	// update the direction list
 	    	}
 	    	else {
 	    		if (status == "ZERO_RESULTS")
 	    			status = "Invalid address. Please verify that all addreses are valid";
 	    		alert("Error: "+status);
+	    		$scope.directionsDisplay.set('directions', null);
 	    	}
    		  	$scope.$apply();
 	  	});
@@ -227,7 +256,10 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, myService){
         		alert("Error: "+data);
         		$scope.orderList = null;
     		}
-    		//$scope.calcRoute();
+    		$scope.calculated = false;
+    		$scope.startIcon = null;
+    		$scope.endIcon = null;
+    		$scope.directionsDisplay.set('directions', null);
 		});
 
 

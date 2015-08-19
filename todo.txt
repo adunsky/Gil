@@ -4,10 +4,13 @@
 	- filter on dates, free text or specific fields
 	- Manually define start and end location
 	- Optimized route vs. manual order
+	- sort by date/time
+	- drag and drop to update route
 	- duration info
 	- events by time
 
 - Web page to view order status 
+- New form fields sheet
 
 Add script for logs
 // Add orderID in forms
@@ -48,3 +51,5 @@ Allow removing users and calendars in updateDB (remove events)
 map size according to window height + return from street view 
 optimize calendar and spreadsheet auth
 
+SQL to update a field (add .0 to `40` where it is missing):
+UPDATE _main SET  `40` = CONCAT(  `40` ,  '.0' ) WHERE  `40` NOT LIKE  '%.%' AND  `40` LIKE  '%15'
