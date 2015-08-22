@@ -28,21 +28,16 @@
 		return;
 	}
 
-	if ($orderID > 0) {
-		// check if order exists
-		$sql = "SELECT * FROM $mainTable WHERE id = $orderID;";
-		$result = mysql_query($sql) or die('get order Failed! ' . mysql_error()); 
-		if (mysql_num_rows($result) == 0) {	
-			syslog (LOG_ERR, "Order ".$orderID." not found - update failed !");
-			echo "Failed to find orderID: ".$orderID;
-			return;
-		}
-	}
-
-	syslog(LOG_INFO, "updateOrder called on ".$ssName." orderID: ".$orderID);
-
+	$newCharge = false;
+	$chargeFieldValue = "";
 	foreach ($origOrder as $field) {
 		$input = $field["input"];
+		$type = $field["type"];
+
+		if ($type == "CHARGE") {
+			$chargeFieldIndex = $field["index"];
+			$existingChargeValue = "";
+		}
 
 		if ($input == 'U') {	// Unique value		
 			if (!isUnique($field, $orderID)) {
@@ -51,6 +46,26 @@
 			}
 		}
 	}
+
+	if ($orderID > 0) {
+		// check if order exists
+		$sql = "SELECT * FROM $mainTable WHERE id = $orderID;";
+		$result = mysql_query($sql) or die('get order Failed! ' . mysql_error()); 
+		if (mysql_num_rows($result) > 0) {
+			if ($chargeFieldIndex) {
+				$order = mysql_fetch_assoc($result);
+				$existingChargeValue = $order[$chargeFieldIndex];
+			}
+
+		}
+		else {	
+			syslog (LOG_ERR, "Order ".$orderID." not found - update failed !");
+			echo "Failed to find orderID: ".$orderID;
+			return;
+		}
+	}
+
+	syslog(LOG_INFO, "updateOrder called on ".$ssName." orderID: ".$orderID);
 
 	for ($i=0; initGoogleAPI($ssName) == null && $i<5; $i++)
 		syslog(LOG_ERR, "InitGoogleApi Failed"); // retry 5 times to initialize
@@ -80,6 +95,10 @@
 		$value = $field["value"];
 		$type = $field["type"];
 
+		if ($type == 'CHARGE' && $existingChargeValue == "" && $value != "") {
+			$newCharge = true;
+			$chargeFieldValue = $value;
+		}
 		if (strpos($type, "STARTTIME") === 0 || strpos($type, "ENDTIME") === 0)
 			$type = "DATETIME";  // it behaves like DATETIME
 		if ($type == "DATE" || $type == "DATETIME") {
@@ -114,15 +133,20 @@
 	   $sql = "INSERT INTO $mainTable VALUES ($values)";
 	   if (!mysql_query($sql)) die('Insert Order Failed !' . mysql_error());
 		$orderID = mysql_insert_id();
-		if (!mysql_query("INSERT INTO $logTable VALUES (0, CURRENT_TIMESTAMP, '$orderID', '$user', 'created')"))
+		if (!mysql_query("INSERT INTO $logTable VALUES (0, CURRENT_TIMESTAMP, '$orderID', '$user', 'created', '$chargeFieldValue')"))
 			syslog (LOG_ERR, "Failed to insert to log table, ". mysql_error());	
 	}
 	else { 
 		syslog (LOG_INFO, "updating existing order ".$orderID);
 		$sql = "UPDATE $mainTable set $values WHERE id = $orderID;";
 	   	if (!mysql_query($sql)) die('Update Order Failed !' . mysql_error());
-	   	if (!mysql_query("INSERT INTO $logTable VALUES (0, CURRENT_TIMESTAMP, '$orderID', '$user', 'updated')"))
+	   	if (!mysql_query("INSERT INTO $logTable VALUES (0, CURRENT_TIMESTAMP, '$orderID', '$user', 'updated', '$chargeFieldValue')"))
 	   		syslog (LOG_ERR, "Failed to insert to log table, ". mysql_error());	
+	}
+	if ($newCharge) {
+		if (!mysql_query("INSERT INTO $logTable VALUES (0, CURRENT_TIMESTAMP, '$orderID', '$user', 'charged', '$chargeFieldValue')"))
+			syslog (LOG_ERR, "Failed to insert to log table, ". mysql_error());	
+
 	}
 
 	// Update the events table with the updated dates

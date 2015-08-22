@@ -116,7 +116,7 @@ function createMainTable($worksheetFeed, $fieldTable, $mainTable)	{
 			
 			$ID = $column["index"];
 			$type = $column["type"];
-			if ($type == 'TEXT' || $type == 'LIST')		// translate TEXT in the worksheet to VARCHAR(64)
+			if ($type == 'TEXT' || $type == 'LIST' || $type == 'CHARGE')		// translate TEXT in the worksheet to VARCHAR(64)
 				$type = 'VARCHAR(64)';
 			elseif ($type == 'Hyperlink' || $type == 'EmbedHyperlink')
 					$type = 'VARCHAR(256)';	// For long links
@@ -536,7 +536,7 @@ function createLogTable($logTable) {
 	// create log table
 	$sql = "DROP TABLE IF EXISTS $logTable;";
 	$result = mysql_query($sql) or die('Drop table Failed! ' . mysql_error());
-	$sql = "CREATE TABLE $logTable (`counter` INT(32) AUTO_INCREMENT PRIMARY KEY, `date` TIMESTAMP, `orderID` INT(32), `user` VARCHAR(32), `action` VARCHAR(32))";
+	$sql = "CREATE TABLE $logTable (`counter` INT(32) AUTO_INCREMENT PRIMARY KEY, `date` TIMESTAMP, `orderID` INT(32), `user` VARCHAR(32), `action` VARCHAR(32), `charge field` VARCHAR(32))";
 
 	$result = mysql_query($sql) or die('Create log table Failed! ' . mysql_error());
 	echo "Table ".$logTable." created<br>\n"; 

@@ -204,7 +204,7 @@ function createFieldTypeTable($worksheetFeed, $fieldTable, $listValueTable) {
 					// echo $sql;
 			$result = mysql_query($sql) or die('Insert to fields table Failed! ' . mysql_error());
 
-			if ($type == 'TEXT' || $type == 'LIST')		// translate TEXT in the worksheet to VARCHAR(64)
+			if ($type == 'TEXT' || $type == 'LIST' || $type == 'CHARGE')		// translate TEXT in the worksheet to VARCHAR(64)
 				$DBtype = 'varchar(64)';
 			elseif ($type == 'Hyperlink' || $type == 'EmbedHyperlink')
 					$DBtype = 'varchar(256)';	// For long links

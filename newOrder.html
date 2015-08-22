@@ -62,7 +62,7 @@
 	    <fieldset>
 				  
 			<div ng-repeat="field in form.fields | filter: filterEditMandatory">
-		      <div class="form-group col-sm-12" ng-class="isRequired(field)" ng-if="field.type=='TEXT' || field.type=='Email' || field.type=='Hyperlink'" >
+		      <div class="form-group col-sm-12" ng-class="isRequired(field)" ng-if="field.type=='TEXT' || field.type=='Email' || field.type=='Hyperlink' || field.type=='CHARGE'" >
 		      	<label ng-if="form.dir=='ltr'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
 		        <div class="col-sm-7">
 		          <input type="text" dir="{{form.dir}}" class="form-control" name="{{field.name}}" id="{{field.name}}" ng-model="field.value" ng-blur="checkUnique(field)" ng-change="field.value=validate(field)" autocomplete="on">
