@@ -17,7 +17,7 @@
 				<button type="submit" class="btn btn-success" ng-click="getFilter()">Filter</button>
 			<br>
 			<br>
-			<label><input type="checkbox" ng-model="optimize"> Optimize route </label>
+			<label><input type="checkbox" ng-model="optimize" ng-click="optimizeRoute()"> Optimize route </label>
 			<br>
 			<br>
 			<div class="col-sm-1">	
@@ -33,8 +33,8 @@
 			<br>
 			<br>
 			<div class="list-group">
-				<div ng-repeat="order in dirList" draggable="true" ng-drag="true" ng-drag-data="{{order}}" ng-drag-success="onDragComplete(order,$event)" ng-drop="true" ng-drop-success="onDropComplete(order,$data,$event)">
-					<a href="" class="list-group-item"><p style="color: blue;">{{order.distance}} {{order.duration}}</p>{{order.eventDate}} {{order.title}}<p><img src="{{order.img}}"> <b>{{order.location}}</b></p></a>
+				<div ng-repeat="order in dirList" draggable="true" ng-drag="true" ng-drag-data="{{order}}" ng-drag-success="onDragComplete(order,$event)" ng-drop="true" ng-drop-success="onDropComplete(order,$data,$event)" ng-click="openOrder(order)">
+					<a href="" class="list-group-item" ><p style="color: blue;">{{order.distance}} {{order.duration}}</p>{{order.eventDate}} {{order.title}}<p><img src="{{order.img}}"> <b>{{order.location}}</b></p></a>
 				</div>
 			</div>
 			<div class="col-sm-1">	 

@@ -64,6 +64,19 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, myService){
 
 	}
 
+	$scope.openOrder = function(order) {
+		if (order.orderID && order.calendarID)
+			window.open("http://localhost/Gilamos/#/newOrder?db="+$scope.dbName+"&orderID="+order.orderID+"&calendarNum="+order.calendarID);
+
+	}
+
+	$scope.optimizeRoute = function() {
+		if ($scope.optimize)
+			$scope.calcRoute();
+
+	}
+
+
 	$scope.onDropComplete = function(targetOrder, order, $event) {
 
 		var targetIndex = $scope.dirList.indexOf(targetOrder);
@@ -151,7 +164,8 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, myService){
 	  		while ($scope.dirList[i] && (!$scope.dirList[i].location || $scope.dirList[i].location == "")) {
 	  			var orderID = $scope.dirList[i].orderID ? $scope.dirList[i].orderID : "";
 	  			$scope.dirList.splice(i, 1);	// remove empty addresses from the list
-	  			$scope.message += "\nOrder "+orderID+" has no address - removed from the list";
+	  			if (orderID != "")
+	  				$scope.message += "\nOrder "+orderID+" has no address - removed from the list";
 	  		}
 	  		if ($scope.dirList[i] && $scope.dirList[i].location)
 		  		waypts.push({
@@ -200,12 +214,16 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, myService){
 
 	$scope.computeTotalDistance = function (result) {
 	  	var total = 0;
-	  	var myroute = result.routes[0];
-	  	for (var i = 0; i < myroute.legs.length; i++) {
-	    	total += myroute.legs[i].distance.value;
+	  	if (!result)
+	  		document.getElementById('total').innerHTML = "";
+	  	else {
+		  	var myroute = result.routes[0];
+		  	for (var i = 0; i < myroute.legs.length; i++) {
+		    	total += myroute.legs[i].distance.value;
+		  	}
+		  	total = Math.round(total / 1000.0);
+		  	document.getElementById('total').innerHTML = total + ' km';
 	  	}
-	  	total = Math.round(total / 1000.0);
-	  	document.getElementById('total').innerHTML = total + ' km';
 	}
 
 	$scope.getSearchFields = function () {
@@ -259,6 +277,7 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, myService){
     		$scope.calculated = false;
     		$scope.startIcon = null;
     		$scope.endIcon = null;
+    		$scope.message = "";
     		$scope.directionsDisplay.set('directions', null);
 		});
 
