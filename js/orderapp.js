@@ -66,7 +66,7 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, myService){
 
 	$scope.openOrder = function(order) {
 		if (order.orderID && order.calendarID)
-			window.open("http://localhost/Gilamos/#/newOrder?db="+$scope.dbName+"&orderID="+order.orderID+"&calendarNum="+order.calendarID);
+			window.open("http://googlemesh.com/Gilamos/#/newOrder?db="+$scope.dbName+"&orderID="+order.orderID+"&calendarNum="+order.calendarID);
 
 	}
 

@@ -111,6 +111,8 @@
 				}			
 			}
 		}
+		else
+			$orderID = -1;	// order not found in DB
 	}
 
 	if (!$newOrder && $orderID <= 0) {
