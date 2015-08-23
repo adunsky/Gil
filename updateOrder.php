@@ -95,7 +95,7 @@
 		$value = $field["value"];
 		$type = $field["type"];
 
-		if ($type == 'CHARGE' && $existingChargeValue == "" && $value != "") {
+		if ($type == 'CHARGE' && $existingChargeValue != $value) {
 			$newCharge = true;
 			$chargeFieldValue = $value;
 		}
