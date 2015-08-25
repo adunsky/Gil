@@ -35,7 +35,7 @@
 
 	$eventList = [];
 	// Get the relevant events
-	$sql = "SELECT * FROM $eventsTable WHERE eventDate BETWEEN '$startDate' AND '$endDate' ";
+	$sql = "SELECT * FROM $eventsTable WHERE eventDate BETWEEN '$startDate' AND '$endDate' ORDER BY eventDate ASC";
 	$result = mysql_query($sql) or die('get events Failed! ' . mysql_error()); 
 	if (mysql_num_rows($result) > 0)	{
 		//  found events
