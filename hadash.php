@@ -217,7 +217,7 @@ function createFormTables($worksheetFeed, $formsTable, $formFieldsTable) {
 
 		$sql = "DROP TABLE IF EXISTS $formFieldsTable;";
 		$result = mysql_query($sql) or die('Drop table Failed! ' . mysql_error());
-		$sql = "CREATE TABLE $formFieldsTable ( formNumber INT(32), fieldIndex INT(32), fieldType VARCHAR(32));";
+		$sql = "CREATE TABLE $formFieldsTable ( formNumber INT(32), fieldIndex INT(32), fieldType VARCHAR(32), col INT(16));";
 				// echo $sql;
 		$result = mysql_query($sql) or die('Create fields table Failed! ' . mysql_error());
 		
@@ -251,8 +251,12 @@ function createFormTables($worksheetFeed, $formsTable, $formFieldsTable) {
 					$type = "";
 					
 				if ($type != "") {
+					if ($type == "Read Only")	// set column by the type
+						$column = 2;
+					else
+						$column = 1;
 					// add field to form
-					$sql = "INSERT INTO $formFieldsTable VALUES ('$formNumber', '$row', '$type');";
+					$sql = "INSERT INTO $formFieldsTable VALUES ('$formNumber', '$row', '$type', '$column');";
 					$result = mysql_query($sql) or die('Insert field Failed! ' . mysql_error());
 					
 				} 
@@ -435,7 +439,7 @@ function createUsersTable($worksheetFeed, $usersTable, $calendarsTable) {
 
 		$sql = "DROP TABLE IF EXISTS $usersTable;";
 		$result = mysql_query($sql) or die('Drop table Failed! ' . mysql_error());
-		$sql = "CREATE TABLE $usersTable ( userName VARCHAR(64), email VARCHAR(64), calendarNum INT(32));";
+		$sql = "CREATE TABLE $usersTable ( userName VARCHAR(64), email VARCHAR(64), role VARCHAR(32), calendarNum INT(32));";
 				// echo $sql;
 		$result = mysql_query($sql) or die('Create Users table Failed! ' . mysql_error());
 		
@@ -453,6 +457,8 @@ function createUsersTable($worksheetFeed, $usersTable, $calendarsTable) {
 			$cellEntry = $cellFeed->getCell($row, $col);
 			$email = $cellEntry->getContent();
 			$cellEntry = $cellFeed->getCell($row, ++$col);
+			$role = $cellEntry->getContent();
+			$cellEntry = $cellFeed->getCell($row, ++$col);
 			while ($cellEntry && ($calendarName = $cellEntry->getContent()) != "") {
 				// get the calendar number
 				$sql = "SELECT * FROM $calendarsTable WHERE name='$calendarName';";			
@@ -464,7 +470,7 @@ function createUsersTable($worksheetFeed, $usersTable, $calendarsTable) {
 					
 					if (shareCalendar($calID, $email, $count)) {
 						// insert to users table
-						$sql = "INSERT INTO $usersTable VALUES ('$userName', '$email', '$calendarNum');";
+						$sql = "INSERT INTO $usersTable VALUES ('$userName', '$email', '$role', '$calendarNum');";
 						$result = mysql_query($sql) or die('Insert field Failed! ' . mysql_error());
 					}
 				}

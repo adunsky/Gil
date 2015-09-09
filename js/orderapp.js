@@ -16,23 +16,11 @@ orderApp.factory('myService', function () {
 		}	
 						
 	}
-	function getForms() {
-		return Forms;
-	}
 
-	function setForms(forms) {
-		Forms = [];
-		for (i=0; forms[i] != null; i++) {
-			Forms.push(forms[i]);
-		}	
-						
-	}
 	
 	return {
 	    getOrder: getOrder,
-	    setOrder: setOrder,
-	    getForms: getForms,
-	    setForms: setForms	    
+	    setOrder: setOrder    
 	}
 });
 
@@ -45,12 +33,242 @@ orderApp.config(function($routeProvider){
         .when('/newOrder',{
                 templateUrl: 'newOrder.html'
           })
+        .when('/order',{
+                templateUrl: 'order.html'
+          })
+        .when('/forms',{
+                templateUrl: 'forms.html'
+          })
         .when('/route',{
                 templateUrl: 'route.html'
           });
 
 });
 
+
+orderApp.controller('formCtrl', function($scope, $http,  $location, myService){
+
+  	$scope.fieldTypes = ['Edit', 'Mandatory', 'Read Only'];
+  	$scope.columns = ["2", "1"];
+  	$scope.changed = false;
+
+  	$scope.onMouseLeaveDrag = function() {
+		document.body.style.cursor = 'default';
+  	}
+
+  	$scope.onMouseoverDrag = function() {
+		document.body.style.cursor = 'pointer';
+  	}
+
+	$scope.onDragComplete = function(field,$event) {
+		var sourceIndex = $scope.form.fields.indexOf(field);
+		$scope.form.fields[sourceIndex].col = 0;	// remove the dragged item
+
+	}
+
+	$scope.onDropComplete = function(targetField, field, $event) {
+
+		if (!targetField)
+			return;
+
+		var sourceIndex = $scope.findFieldIndex(field);
+		$scope.form.fields.splice(sourceIndex, 1);	// remove the dragged item
+
+		if (targetField == 1 || targetField == 2)	{ // it's the last row
+			var targetIndex = $scope.getLastRow(targetField);
+			var targetCol = targetField;
+		}
+		else {	// it's not the last row
+			var targetIndex = $scope.form.fields.indexOf(targetField);
+			var targetCol = targetField.col
+		}
+		field.col = targetCol;	
+		$scope.form.fields.splice(targetIndex, 0, field); // add the dragged item
+		$scope.changed = true;
+
+	}
+
+	$scope.getLastRow = function(col) {
+		var index = 0;
+		for (var i=0; i<$scope.form.fields.length; i++) {
+
+			if ($scope.form.fields[i].col == col)
+				index = i;
+		}
+		return index+1;
+
+	}
+
+	$scope.onSelectClick = function(ev) {
+		ev.stopPropagation();
+	}
+
+
+  	$scope.getForm = function () {
+ 		
+		var argv = $location.search();      		
+
+		if (argv.db)
+			$scope.dbName = argv.db;
+		if (argv.user)
+				$scope.user = argv.user;
+			else {
+				$scope.user = ""; // $scope.getUser();
+			}
+
+		if (argv.form)
+			$scope.formID = argv.form;
+
+
+ 		$http.get("getFields.php", { params: { db: $scope.dbName, user: $scope.user } })
+ 		.success(function(data) {
+         	$scope.message = data;
+         	console.log($scope.message);
+  	    	try {
+	        		$scope.fieldList = angular.fromJson(data);
+	        		if ($scope.fieldList) {
+	        			$scope.fieldList.push("");
+    					$http.get("getForms.php", { params: { db: $scope.dbName, form: $scope.formID, user: $scope.user } })
+    					.success(function(data) {
+    			        	$scope.message = data;
+    			        	console.log($scope.message);
+    			        	$scope.form = data;
+
+    			        });
+					}
+					else
+						alert("Error: "+$scope.message);
+      	 	}
+    		catch (e) {
+        		alert("Error: "+$scope.message);
+    		} 
+		}); 
+
+ 	}
+
+ 	$scope.findFieldIndex = function(field) {
+
+ 		for (var i=0; i<$scope.form.fields.length; i++ ) {
+
+ 			if ($scope.form.fields[i].fieldIndex == field.fieldIndex)
+ 				return i;
+ 		}
+ 		return -1;	// not found
+
+ 	}
+
+ 	$scope.findFieldName = function(field) {
+
+ 		for (var i=0; i<$scope.fieldList.length; i++ ) {
+
+ 			if ($scope.fieldList[i].name == field.name)
+ 				return $scope.fieldList[i];
+ 		}
+ 		return 0;	// not found
+
+ 	}
+
+
+ 	$scope.removeField = function(field) {
+
+ 		if (!field)
+ 			return;
+
+ 		var fieldFormIndex = $scope.form.fields.indexOf(field);
+ 		$scope.form.fields.splice(fieldFormIndex, 1);
+ 		$scope.changed = true;
+
+ 	}
+
+
+ 	$scope.addField = function(field) {
+
+ 		$newField = {};
+ 		if (field == 1 || field == 2)	{ // it's the last row
+ 			var targetIndex = $scope.getLastRow(field);
+ 			var targetCol = field;
+ 			$newField.fieldType = "";
+ 		}
+ 		else {
+ 			var targetIndex = $scope.form.fields.indexOf(field);
+ 			var targetCol = field.col;
+ 			$newField.fieldType = field.fieldType;
+ 		}
+
+ 		$newField.col = targetCol;
+ 		$newField.name = "";
+ 		$scope.form.fields.splice(targetIndex, 0, $newField);	// add a new field
+ 		$scope.changed = true;
+
+
+ 	}
+
+ 	$scope.updateField = function(formField) {
+
+ 		var field = $scope.findFieldName(formField);
+ 		var fieldFormIndex = $scope.form.fields.indexOf(formField);
+
+ 		if (formField.name != "") {
+	 		$scope.form.fields[fieldFormIndex].fieldIndex = field.index;
+	 		$scope.form.fields[fieldFormIndex].name = field.name;
+	 		$scope.form.fields[fieldFormIndex].type = field.type;
+	 		$scope.form.fields[fieldFormIndex].input = field.input;
+	 		if (field.input == 'N')
+	 			$scope.form.fields[fieldFormIndex].fieldType = 'Read Only'; // not an input field
+	 		else
+	 			$scope.form.fields[fieldFormIndex].fieldType = 'Edit';	// default for input field
+
+	 	}
+	 	else { // no value selected - remove it
+ 			$scope.form.fields.splice(fieldFormIndex, 1);
+ 		}
+ 		$scope.changed = true;
+ 	}
+
+ 	$scope.setFormFields = function () {
+
+ 		var input = {};
+
+ 		input.dbName = $scope.dbName;
+ 		input.user = $scope.user;
+		input.form = $scope.form;
+
+		var content = angular.toJson(input);
+        var request = $http({
+                method: "post",
+                url: "setForm.php",
+                data: content,
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        });
+            /* Check whether the HTTP Request is Successfull or not. */
+        request.success(function (data) {
+            $scope.message = data;
+            console.log($scope.message);
+            alert("Form "+$scope.form.title+" updated successfuly");
+            $scope.changed = false;
+			         	
+        });
+        request.error(function (data, status) {
+            $scope.message = data;
+            alert("Error: "+$scope.message);
+        });
+
+
+ 	}
+
+ 	$scope.closeForm = function () {
+ 		var ok = true;
+ 		if ($scope.changed) {
+ 			ok = confirm("Close without saving ?");
+
+ 		}
+ 		if (ok) {
+			var win = window.open(location, '_self');
+			win.close();
+		}
+ 	}
+
+});
 
 orderApp.controller('routeCtrl', function($scope, $http,  $location, myService){
 
@@ -289,6 +507,9 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, myService){
 
 // Forms controller
 orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $location, myService){
+
+		$scope.columns = ['2','1'];		// For the UI
+
 		$scope.order = myService.getOrder();
 		$scope.inProgress = false;
 
@@ -327,7 +548,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
    	        			$scope.orderID = $updatedOrder.orderID;
    	        			$scope.order = $updatedOrder.order;
              			myService.setOrder($scope.order);
-             			$scope.getFormFields($updatedOrder.formID);
+             			$scope.getFormFields($updatedOrder.formID, $scope.user);
 					}
 	      	 }
         		 catch (e) {
@@ -338,30 +559,27 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 		};
 		
 			
-      	$scope.getFormFields = function (form) {
-				if (!$scope.forms) {
-		     		$http.get("getForms.php", { params: { db: $scope.dbName } })
+      	$scope.getFormFields = function (form, user) {
+				if (!$scope.form) {
+		     		$http.get("getForms.php", { params: { db: $scope.dbName, form: form, user: user } })
 		     		.success(function(data) {
 		             $scope.message = data;
 		             console.log($scope.message);
 		      	    try {
-		   	        		$scope.forms = angular.fromJson(data);
-		   	        		if ($scope.forms) {
-		             			myService.setForms($scope.forms);
-		             			$scope.form = $scope.forms[form];
+		   	        		$scope.form = angular.fromJson(data);
+		   	        		if ($scope.form) {
 		             			$scope.setFormValues();
 
-								}
+							}
 			      	 }
 		        		 catch (e) {
 		            		alert("Error: "+$scope.message);
-		            		myService.setForms(null);
+
 		        		 } 
 	
 					}); 
 				}
 				else { // form exist - set it to current form and set it's values
-					$scope.form = $scope.forms[form];				
 					$scope.setFormValues();
 				}
 
@@ -392,7 +610,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 			}	
 
 			$scope.setFormValues = function()	{
-					if ($scope.order) 
+				if ($scope.order) 
 					for(var i=0; $scope.form && $scope.form.fields[i]; i++) {
 		      			var fieldIndex = $scope.form.fields[i].fieldIndex-2;
 		      			$scope.form.fields[i].input = $scope.order[fieldIndex].input;
@@ -404,7 +622,11 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 		      				}
 		      				else {
 		      					if ($scope.form.fields[i].type == 'Hyperlink') {
-		      						$scope.form.fields[i].prefix = "http://";		      					
+		      						if ($scope.order[fieldIndex].value.substring(0, 4) == 'http' ||
+		      							$scope.order[fieldIndex].value.substring(0, 4) == 'HTTP')
+		      							$scope.form.fields[i].prefix = "";
+		      						else
+		      							$scope.form.fields[i].prefix = "http://";		      					
 		      					}
 		      				}		      					
 		      				$scope.form.fields[i].value = $scope.order[fieldIndex].value;
@@ -622,20 +844,30 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 
 			};
 
+			$scope.getUserRole = function(user) {
+				$http.get("getUserRole.php", { params: { db: $scope.dbName, user: user } })
+				.success(function(data) {
+		        	$scope.role = data.trim();
+				});
+
+			}
+
 			$scope.getUserInfo = function() {
 				gapi.client.load('oauth2', 'v2', function() {
 				  gapi.client.oauth2.userinfo.get().execute(function(resp) {
 				    // Get the user email
 				    $scope.user = resp.email;
+				    $scope.getUserRole($scope.user);
 				  })
 				});
 			}
 
 			$scope.getUser = function() {
-				if ($scope.user && $scope.user != "")
+				if ($scope.user && $scope.user != "") {
 					// user already set (from gadget)
+					$scope.getUserRole($scope.user);
 					return;
-
+				}
 				if (!gapi || !gapi.auth) {
 					// wait until Google API library has loaded
 					window.setTimeout($scope.getUser, 1000);
@@ -676,6 +908,13 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 					catch (e) { 
 					    alert(e.message); 
 					}
+
+			}
+
+			$scope.editForm = function () {
+				var formID = $scope.form.number-1;
+				var host = window.location.hostname;
+				window.open("http://"+host+"/Gilamos/#/forms?db="+$scope.dbName+"&user="+$scope.user+"&form="+formID);
 
 			}
 

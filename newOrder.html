@@ -6,7 +6,9 @@
 <link ng-if="form.dir == 'ltr'" rel="stylesheet" href="css/styleEng.css?v=1">
 
 <h1>
-	<img ng-if="form.logo" ng-src="https://googledrive.com/host/0BxKK2ik5inqBfndtazV1ZElzT1ptamJjWGJyZ3R6MUxaTlBTVVI4eUtNdVBoZEo3OGZsUHc/{{form.logo}}" class="logo" style="width:210px;height:70px;margin-right:100px;" />
+	<img ng-if="form.logo" ng-src="https://googledrive.com/host/0BxKK2ik5inqBfndtazV1ZElzT1ptamJjWGJyZ3R6MUxaTlBTVVI4eUtNdVBoZEo3OGZsUHc/{{form.logo}}" class="logo" style="width:210px;height:70px;margin-right:0px;" />
+	<button ng-if="role=='admin'" class="btn btn-link" ng-click="editForm()">Edit Form</button> 
+	<span ng-if="role!='admin'">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</span> 
 	{{form.title}}
 </h1>
 
@@ -25,12 +27,14 @@
 
 <br>
 <div class="container col-sm-12">
-	<div ng-if="form.dir=='rtl'" class="readOnly col-sm-6">	
-	  <form role="form">
+		
+	<div class="col1 col-sm-6" ng-repeat="col in columns">	
+		<form role="form" name="editForm" target="autocomplete" action="about:blank" autocomplete="on">
 	    <fieldset>
 				  
-			<div ng-repeat="field in form.fields | filter:{ fieldType: 'Read Only'}">
-		      <div class="form-group col-sm-12" ng-if="field.type!='EmbedHyperlink' && field.type!='Hyperlink' && field.type!='Email'">
+			<div ng-repeat="field in form.fields | filter: { col: col} ">
+		      <!----   Read only fields  ---->
+		      <div class="form-group col-sm-12" ng-if="field.fieldType=='Read Only' && field.type!='EmbedHyperlink' && field.type!='Hyperlink' && field.type!='Email'">
 		        <label ng-if="form.dir == 'ltr'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>		      	
 		        <div class="col-sm-7">
 		          <input type="text" class="form-control" name="{{field.name}}" id="{{field.name}}" ng-model="field.value" ng-disabled="{{field.fieldType=='Read Only'}}">
@@ -38,12 +42,16 @@
 		        <label ng-if="form.dir=='rtl'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
 		      </div>
 		      
+		      <!----- iFrame for embedded hyperlink   ------>
+
 		      <div class="form-group col-sm-12" ng-if="field.type=='EmbedHyperlink'">
 		        	<label class="col-sm-12 control-label" for="{{field.name}}">{{field.name}}</label>
 		        	<div class="col-sm-12">
 		         	<iframe ng-src="{{field.value}}" class="form-control" name="{{field.name}}" id="iframe"></iframe>
 		        	</div>
 		      </div>
+
+		      <!------ Hyperlink or Email field   -------->
 		      <div class="form-group col-sm-12" ng-if="field.type=='Hyperlink' || field.type=='Email'">
 		      	<label ng-if="form.dir=='ltr'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
 		      	<div class="col-sm-7">
@@ -51,31 +59,22 @@
 		        </div>
 		        <label ng-if="form.dir=='rtl'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
 		      </div>
-		      
-		 	</div>
-	    </fieldset>
-	  </form>
-	</div>
-	
-	<div class="edit col-sm-6">	
-		<iframe name="autocomplete" id="autocomplete" style="display:none" src="about:blank"></iframe>
-		<form role="form" name="editForm" target="autocomplete" action="about:blank" autocomplete="on">
-	    <fieldset>
-				  
-			<div ng-repeat="field in form.fields | filter: filterEditMandatory">
-		      <div class="form-group col-sm-12" ng-class="isRequired(field)" ng-if="field.type=='TEXT' || field.type=='Email' || field.type=='Hyperlink' || field.type=='CHARGE'" >
+
+		      <! ------    Edit TEXT fields   ------>
+		      <div class="form-group col-sm-12" ng-class="isRequired(field)" ng-if="field.fieldType!='Read Only' && (field.type=='TEXT' || field.type=='Email' || field.type=='Hyperlink' || field.type=='CHARGE')" >
 		      	<label ng-if="form.dir=='ltr'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
 		        <div class="col-sm-7">
-		          <input type="text" dir="{{form.dir}}" class="form-control" name="{{field.name}}" id="{{field.name}}" ng-model="field.value" ng-blur="checkUnique(field)" ng-change="field.value=validate(field)" autocomplete="on">
+		          <input type="text" dir="{{form.dir}}" class="form-control" name="{{field.name}}" id="{{field.name}}" ng-model="field.value" ng-blur="checkUnique(field)" ng-change="field.value=validate(field)" autocomplete="on" ng-disabled="{{field.fieldType=='Read Only'}}">
 		          <span class="error" ng-show="field.error">{{field.message}}</span>
 		        </div>
 		        <label ng-if="form.dir=='rtl'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
 		      </div>
-	
-		      <div class="form-group col-sm-12" ng-class="isRequired(field)" ng-if="field.type=='LIST'" >
+
+			  <!-------   Edit Select for Lists    ------>
+		      <div class="form-group col-sm-12" ng-class="isRequired(field)" ng-if="field.fieldType!='Read Only' && field.type=='LIST'" >
 		    	<label ng-if="form.dir=='ltr'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
 		        <div class="col-sm-7">
-		        	<select dir="{{form.dir}}" class="form-control" name="{{field.name}}" id="{{field.name}}" ng-model="field.value" ng-blur="validate(field)" ng-change="field.value=validate(field)">
+		        	<select dir="{{form.dir}}" class="form-control" name="{{field.name}}" id="{{field.name}}" ng-model="field.value" ng-blur="validate(field)" ng-change="field.value=validate(field)" ng-disabled="{{field.fieldType=='Read Only'}}">
 		        		<option class="form-control" ng-repeat="value in field.listValues track by $index" ng-selected="value==field.value">{{value}}</option>
 		        	</select>
 		        	<span class="error" ng-show="field.error">{{field.message}}</span>
@@ -83,11 +82,12 @@
 		        <label ng-if="form.dir=='rtl'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
 		      </div>
 		   
-		      <div class="form-group col-sm-12" ng-class="isRequired(field)" ng-if="field.type=='DATE'">
+		      <!-----  Date control  ---->
+		      <div class="form-group col-sm-12" ng-class="isRequired(field)" ng-if="field.fieldType!='Read Only' && field.type=='DATE'">
 		       <label ng-if="form.dir=='ltr'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>		      	
 		       <div class="col-sm-7">
 		         <p class="input-group">
-		             <input type="text" class="form-control" name="{{field.name}}" id="{{field.name}}" ng-readonly="true" style="background-color:white; cursor: default;" datetime-picker="dd-MM-yyyy" ng-model="field.value" value="{{field.value}}" enable-time="false" close-on-date-selection="true" is-open="field.dateTimeCalendarisOpen" datepicker-options="dateOptions" ng-blur="validate(field)" ng-change="field.value=validate(field)">
+		             <input type="text" class="form-control" name="{{field.name}}" id="{{field.name}}" ng-readonly="true" style="background-color:white; cursor: default;" datetime-picker="dd-MM-yyyy" ng-model="field.value" value="{{field.value}}" enable-time="false" close-on-date-selection="true" is-open="field.dateTimeCalendarisOpen" datepicker-options="dateOptions" ng-blur="validate(field)" ng-change="field.value=validate(field)" ng-disabled="{{field.fieldType=='Read Only'}}">
 		             <span class="input-group-btn">
 		                 <button type="button" class="btn btn-default" ng-click="openDateTimeCalendar($event, field)" ng-disabled="{{field.fieldType=='Read Only'}}"><i class="fa fa-calendar"></i></button>
 		             </span>
@@ -97,11 +97,12 @@
 		       	<label ng-if="form.dir=='rtl'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
 		       </div> 
 
-		      <div class="form-group col-sm-12" ng-class="isRequired(field)" ng-if="field.type=='DATETIME'">
+		      <!-----  DateTime control  ---->
+		      <div class="form-group col-sm-12" ng-class="isRequired(field)" ng-if="field.fieldType!='Read Only' && field.type=='DATETIME'">
 		       <label ng-if="form.dir=='ltr'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
 		       <div class="col-sm-7">
 		         <p class="input-group">
-		             <input type="text" class="form-control" name="{{field.name}}" id="{{field.name}}" ng-readonly="true" style="background-color:white; cursor: default;" datetime-picker="dd-MM-yyyy HH:mm" ng-model="field.value" value="{{field.value}}" enable-time="true" close-on-date-selection="true" is-open="field.dateTimeCalendarisOpen" timepicker-options="timeOptions" datepicker-options="dateOptions" ng-blur="validate(field)" ng-change="field.value=validate(field)">
+		             <input type="text" class="form-control" name="{{field.name}}" id="{{field.name}}" ng-readonly="true" style="background-color:white; cursor: default;" datetime-picker="dd-MM-yyyy HH:mm" ng-model="field.value" value="{{field.value}}" enable-time="true" close-on-date-selection="true" is-open="field.dateTimeCalendarisOpen" timepicker-options="timeOptions" datepicker-options="dateOptions" ng-blur="validate(field)" ng-change="field.value=validate(field)" ng-disabled="{{field.fieldType=='Read Only'}}">
 		             <span class="input-group-btn">
 		                 <button type="button" class="btn btn-default" ng-click="openDateTimeCalendar($event, field)" ng-disabled="{{field.fieldType=='Read Only'}}"><i class="fa fa-calendar"></i></button>
 		             </span>
@@ -110,58 +111,26 @@
 		       </div>
 		  	   	<label ng-if="form.dir=='rtl'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
 		       </div>        
-		       
-		              
 		   </div>
-		   
-	     <div class="form-group col-sm-12" ng-if="!inProgress">
-	     	<div ng-if="form.dir=='ltr'" class="col-sm-6"></div>
-	        <div class="col-sm-4">
-	          <button ng-if="form.dir=='rtl'" type="submit" ng-disabled="errorInForm()" class="btn btn-success" ng-click="updateOrder()">חשב ושמור</button>
-	    	  <button ng-if="form.dir=='ltr'" type="submit" ng-disabled="errorInForm()" class="btn btn-success" ng-click="updateOrder()">Calc & Save</button>
-	        </div>
-	        <div class="col-sm-2">
-	          <button ng-if="form.dir=='rtl'" type="submit" class="btn btn-info" ng-click="calcOrder()">חשב</button>
-	          <button ng-if="form.dir=='ltr'" type="submit" class="btn btn-info" ng-click="calcOrder()">Calc</button>
-	        </div>
-	      </div>
-	 	  <div ng-if="form.dir=='ltr'" class="col-sm-5"></div>
-		  <div class="progress col-sm-7" ng-if="inProgress">
-		    <div class="progress-bar" role="progressbar" progress-bar-watch="progress" progress-bar aria-valuenow="" aria-valuemin="0" aria-valuemax="100" style="width:{{progress}}%"></div>
-		  </div>
-		  <span class="col-sm-5 error" ng-show="form.error">{{form.message}}</span>		         
-	    </fieldset>
-	  </form>
-	</div>
 
-	<div ng-if="form.dir=='ltr'" class="readOnly col-sm-6">	
-	  <form role="form">
-	    <fieldset>
-
-			<div ng-repeat="field in form.fields | filter:{ fieldType: 'Read Only'}">
-		      <div class="form-group col-sm-12" ng-if="field.type!='EmbedHyperlink' && field.type!='Hyperlink' && field.type!='Email'">
-		        <label ng-if="form.dir == 'ltr'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>		      	
-		        <div class="col-sm-7">
-		          <input type="text" class="form-control" name="{{field.name}}" id="{{field.name}}" ng-model="field.value" ng-disabled="{{field.fieldType=='Read Only'}}">
+		   	<div ng-if="col==1 && form.dir=='rtl' || col==2 && form.dir=='ltr'">
+		     <div class="form-group col-sm-12" ng-if="!inProgress">
+		     	<div ng-if="form.dir=='ltr'" class="col-sm-5"></div>
+		        <div class="col-sm-3">
+		          <button ng-if="form.dir=='rtl'" type="submit" ng-disabled="errorInForm()" class="btn btn-success" ng-click="updateOrder()">חשב ושמור</button>
+		          <button ng-if="form.dir=='ltr'" type="submit" class="btn btn-info" ng-click="calcOrder()">Calc</button>
 		        </div>
-		        <label ng-if="form.dir=='rtl'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
-		      </div>
-		      
-		      <div class="form-group col-sm-12" ng-if="field.type=='EmbedHyperlink'">
-		        	<label class="col-sm-12 control-label" for="{{field.name}}">{{field.name}}</label>
-		        	<div class="col-sm-12">
-		         	<iframe ng-src="{{field.value}}" class="form-control" name="{{field.name}}" id="iframe"></iframe>
-		        	</div>
-		      </div>
-		      <div class="form-group col-sm-12" ng-if="field.type=='Hyperlink' || field.type=='Email'">
-		      	<label ng-if="form.dir=='ltr'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
-		      	<div class="col-sm-7">
-		         	<a href="" ng-click="openLink($event, field)" class="form-control" name="{{field.name}}" id="{{field.name}}" style="overflow: hidden; text-overflow: ellipsis;" >{{field.value}} </a>
+		        <div class="col-sm-3">
+		          <button ng-if="form.dir=='rtl'" type="submit" class="btn btn-info" ng-click="calcOrder()">חשב</button>
+		          <button ng-if="form.dir=='ltr'" type="submit" ng-disabled="errorInForm()" class="btn btn-success" ng-click="updateOrder()">Calc & Save</button>		          
 		        </div>
-		        <label ng-if="form.dir=='rtl'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
 		      </div>
-		      
-		 	</div>
+		 	  <div ng-if="form.dir=='ltr'" class="col-sm-5"></div>
+			  <div class="progress col-sm-7" ng-if="inProgress">
+			    <div class="progress-bar" role="progressbar" progress-bar-watch="progress" progress-bar aria-valuenow="" aria-valuemin="0" aria-valuemax="100" style="width:{{progress}}%"></div>
+			  </div>
+			  <span class="col-sm-5 error" ng-show="form.error">{{form.message}}</span>	
+			</div>  	         
 	    </fieldset>
 	  </form>
 	</div>

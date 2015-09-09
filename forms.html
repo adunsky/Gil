@@ -1,0 +1,47 @@
+<title>Form Config</title>
+<link rel="stylesheet" href="css/style.css">
+<div class="formContainer col-sm-12" data-ng-controller="formCtrl" data-ng-init="getForm()">
+	<h1>
+		<img ng-if="form.logo" ng-src="https://googledrive.com/host/0BxKK2ik5inqBfndtazV1ZElzT1ptamJjWGJyZ3R6MUxaTlBTVVI4eUtNdVBoZEo3OGZsUHc/{{form.logo}}" class="logo" style="width:210px;height:70px;margin-right:100px;" />
+		{{form.title}}
+	</h1>
+	<div class="col-sm-6 col-sm-offset-5">
+		<label style="margin-left:60px;">Form Configuration</label>
+		<br>
+		<br>
+	</div>
+	<div dir="ltr" class="list col-sm-6" ng-repeat="col in columns">
+		<form role="form" class="form-horizontal">
+				<div class="form-group col-sm-12" ng-repeat="formField in form.fields  | filter:{ col: col}" draggable="true" ng-drag="true" ng-drag-data="formField" ng-drag-success="onDragComplete(formField,$event)" ng-drop="true"  ng-drop-success="onDropComplete(formField,$data,$event)" ng-mouseover="onMouseoverDrag()" ng-mouseLeave="onMouseLeaveDrag()">
+	           		<div class="col-sm-5">
+           				<select class="form-control" name="{{formField.name}}" ng-model="formField.fieldType" ng-click="onSelectClick($event)">
+           			        <option ng-if="formField.input!='N'" ng-repeat="type in fieldTypes">{{type}}</option>
+           			        <option ng-if="formField.input=='N'" ng-repeat="type in ['Read Only']">{{type}}</option>
+           				</select>
+					</div>
+					<div class="col-sm-6">
+						<select class="form-control" name="{{formField.name}}" ng-model="formField.name" ng-change="updateField(formField)" ng-click="onSelectClick($event)">
+					        <option ng-repeat="field in fieldList">{{field.name}}</option>
+						</select>
+					</div>
+					<div class="col-sm-1">
+						<span class="glyphicon glyphicon-remove" ng-click="removeField(formField)" style="color: red"></span>
+						<span class="glyphicon glyphicon-plus" ng-click="addField(formField)" style="color: green"></span>
+					</div>
+				</div>
+				<div class="form-group col-sm-11" ng-drop="true"  ng-drop-success="onDropComplete(col,$data,$event)" style="height: 40px">
+				</div>
+				<div class="col-sm-1">
+					<span class="glyphicon glyphicon-plus" ng-click="addField(col)" ng-mouseover="onMouseoverDrag()" ng-mouseLeave="onMouseLeaveDrag()" style="color: green"></span>
+				</div>
+			<div class="col-sm-1"></div>
+			<button type="submit" class="btn btn-success col-sm-2" ng-if="col=='2'" ng-click="setFormFields()">Save</button>
+			<div class="col-sm-1"></div>
+			<button class="btn btn-warning col-sm-2" ng-if="col=='2'" ng-click="closeForm()">Close</button>
+
+		</form>	
+	</div>	
+</div>
+
+
+

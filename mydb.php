@@ -94,6 +94,18 @@ function getClientInfo($DBname) {
       	return $ssName;
 } 
 
+
+function getUserRole($user) {
+	global $usersTable;
+
+	$sql = "SELECT * FROM $usersTable WHERE email='$user';";
+	$res = mysql_query($sql) or die('get user data Failed! ' . mysql_error()); 
+	if ($usr = mysql_fetch_array($res)) {
+		return $usr['role'];
+	}
+	return "";
+}
+
 function authUserForm($user, $formID) {
 	global $calendarsTable, $usersTable;
 	
