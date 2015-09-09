@@ -468,7 +468,10 @@ function createUsersTable($worksheetFeed, $usersTable, $calendarsTable) {
 			$cellEntry = $cellFeed->getCell($row, $col);
 			$email = $cellEntry->getContent();
 			$cellEntry = $cellFeed->getCell($row, ++$col);
-			$role = $cellEntry->getContent();
+			if ($cellEntry)
+				$role = $cellEntry->getContent();
+			else
+				$role = "";
 			$cellEntry = $cellFeed->getCell($row, ++$col);
 			while ($cellEntry && ($calendarName = $cellEntry->getContent()) != "") {
 				// get the calendar number
