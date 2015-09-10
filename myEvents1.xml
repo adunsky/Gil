@@ -112,7 +112,7 @@ function getEvents() {
   // Get the events for the dates displayed
 
   var optionalParams = {
-    'requestedFields': ['status', 'details']
+    'requestedFields': ['status', 'details'];
   };
 
 
@@ -252,7 +252,7 @@ function drawMarker(e, bounds) {
 		
 		// on click - open the form
 		google.maps.event.addListener(marker, 'click', function() {
-			openForm(e.id);
+			openForm(e);
 		});
 		// on mouseover - open the tooltip		
 		google.maps.event.addListener(marker, 'mouseover', function() {
@@ -328,7 +328,6 @@ var map = null;
 function mapInit () {
   var main = document.getElementById('main');
   var html = '<a href="#" onclick="openDefaultForm()" class="basic">New Order</a><br><a href="#" onclick="getRoute()" class="basic">Routes</a><br>';
-';
   
   html += '<div id="map-canvas"></div>';
   	
