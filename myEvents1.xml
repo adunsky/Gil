@@ -112,7 +112,7 @@ function getEvents() {
   // Get the events for the dates displayed
 
   var optionalParams = {
-    'requestedFields': ['status', 'details'];
+    'requestedFields': ['status', 'details']
   };
 
 
