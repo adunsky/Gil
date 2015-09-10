@@ -191,8 +191,23 @@ function deleteMarkers() {
 }
 
 
-function openForm(id) {
-	window.open("http://googlemesh.com/Gilamos/#/newOrder?id=" + id + "&db=" + dbName + "&user=" + user);
+function openDefaultForm() {
+    window.open("http://googlemesh.com/Gilamos/#/newOrder?id=0" + "&db=" + dbName + "&user=" + user);
+}
+
+function openForm(e) {
+  var startIndex = e.details.indexOf("http://googlemesh.com");
+  var endIndex = -1;
+  if (startIndex>=0) {
+    var url = e.details.substring(startIndex);
+    endIndex = url.indexOf(">");
+    if (endIndex >= 0)
+      url = url.substring(0, endIndex);
+  }
+  if (startIndex < 0 || endIndex < 0)
+    alert("Event has no link to GoogMesh");
+  else  
+    window.open(url);
 
 }
 
@@ -234,8 +249,7 @@ function drawMarker(e, bounds) {
   	  		map.fitBounds(bounds); 
 		          
 		marker.info = new google.maps.InfoWindow({ content: e.title, disableAutoPan: true });
-		// marker.win = new google.maps.InfoWindow({ content: e.title + '<br><a href="#" onclick="openForm(\''+e.id+'\')">Update</a>' });
-
+		
 		// on click - open the form
 		google.maps.event.addListener(marker, 'click', function() {
 			openForm(e.id);
@@ -313,7 +327,9 @@ var map = null;
 
 function mapInit () {
   var main = document.getElementById('main');
-  var html = '<a href="#" onclick="openForm(0)" class="basic">New Order</a><br><a href="#" onclick="getRoute()" class="basic">Routes</a><br>';
+  var html = '<a href="#" onclick="openDefaultForm()" class="basic">New Order</a><br>';
+  // <a href="#" onclick="getRoute()" class="basic">Routes</a><br>';
+  
   html += '<div id="map-canvas"></div>';
   	
  	main.innerHTML = html;
