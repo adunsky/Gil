@@ -51,7 +51,7 @@
 		}
 	}
 	else {
-		echo " Columns not found in table" ;
+		echo "Columns not found in table" ;
 		return;
 	}
 

@@ -6,10 +6,9 @@
 	- events by time
 	- add installation time
 
-- add user role in get form
-- add "+" in empty form configuration
 
-- map gadget marker doesn't work in participant calendar
+- eventID is not needed anymore. only for old events
+- Add an option to send email notification to attendees
 
 - Web page to view order status 
 - New form fields sheet

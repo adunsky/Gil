@@ -1,5 +1,5 @@
 <div data-ng-controller="orderCtrl" data-ng-init="getOrder()">
-<script ng-src="https://apis.google.com/js/client.js" ng-init="getUser()"></script>
+<script ng-src="https://apis.google.com/js/client.js" ng-init="getUser(0)"></script>
 
 <title>Update order - {{orderID}}</title>
 <link ng-if="form.dir == 'rtl'" rel="stylesheet" href="css/style.css?v=1">
@@ -15,13 +15,30 @@
 <div class="col-sm-6 col-sm-offset-5">
 	<label style="margin-left:60px;">Order ID: {{orderID}}</label>
 </div>
+<div class="col-sm-6 col-sm-offset-5">
+	<p>User: {{user}} <a href="" ng-click="getUser(1)" style="text-decoration: underline"> change </a></p>
+</div>
     <!--Add a file picker for attachments -->
 <div class="col-sm-6 col-sm-offset-5">
-    <button ng-if="form.dir=='rtl'" class="btn btn-link" ng-click="selectFile()">צרף מסמכים</button>
-    <button ng-if="form.dir=='ltr'" class="btn btn-link" ng-click="selectFile()">Attach Files</button>    
-    <input type="file" multiple=true file-on-change="initUpload" style="display:none" id="file"/>
-    <button ng-if="form.dir=='rtl'" class="btn btn-link" ng-click="openFolder()">הצג ספרייה</button>
-    <button ng-if="form.dir=='ltr'" class="btn btn-link" ng-click="openFolder()">Show Folder</button>    
+	<div class="btn-group">
+	  <button type="button" class="btn btn-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" ng-click="setFolders()">
+	    {{attachFiles[form.dir]}}<span class="caret"></span>
+	  </button>
+	  <ul class="dropdown-menu">
+	    <li><a href="" ng-repeat="folder in folderList | orderBy:'title'" ng-click="selectFile(folder.title)">{{folder.title}}</a></li>
+	  </ul>
+	  <input type="file" multiple=true file-on-change="initUpload" style="display:none" id="file"/>
+	</div>
+	<span ng-if="fileExist" class="glyphicon glyphicon-folder-open" style="color: red"></span>
+	<span ng-if="!fileExist" class="glyphicon glyphicon-folder-close" style="color: grey"></span>
+	<div class="btn-group">
+	  <button type="button" class="btn btn-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" ng-click="setFolders()" ng-disabled="!fileExist">
+	    {{showFiles[form.dir]}} <span class="caret"></span>
+	  </button>
+	  <ul class="dropdown-menu">
+	    <li><a href="" ng-repeat="folder in folderList | orderBy:'title'" ng-click="openFolder(folder.title)" ng-if="folder.fileExist">{{folder.title}}</a></li>
+	  </ul>
+	</div>
     <br><br>
 </div>
 
@@ -61,7 +78,7 @@
 		      </div>
 
 		      <! ------    Edit TEXT fields   ------>
-		      <div class="form-group col-sm-12" ng-class="isRequired(field)" ng-if="field.fieldType!='Read Only' && (field.type=='TEXT' || field.type=='Email' || field.type=='Hyperlink' || field.type=='CHARGE')" >
+		      <div class="form-group col-sm-12" ng-class="isRequired(field)" ng-if="field.fieldType!='Read Only' && (field.type=='TEXT' || field.type=='CHARGE')" >
 		      	<label ng-if="form.dir=='ltr'" class="col-sm-5 control-label" for="{{field.name}}">{{field.name}}</label>
 		        <div class="col-sm-7">
 		          <input type="text" dir="{{form.dir}}" class="form-control" name="{{field.name}}" id="{{field.name}}" ng-model="field.value" ng-blur="checkUnique(field)" ng-change="field.value=validate(field)" autocomplete="on" ng-disabled="{{field.fieldType=='Read Only'}}">
@@ -115,21 +132,23 @@
 
 		   	<div ng-if="col==1 && form.dir=='rtl' || col==2 && form.dir=='ltr'">
 		     <div class="form-group col-sm-12" ng-if="!inProgress">
-		     	<div ng-if="form.dir=='ltr'" class="col-sm-5"></div>
+		     	<div ng-if="form.dir=='ltr'" class="col-sm-6"></div>
 		        <div class="col-sm-3">
-		          <button ng-if="form.dir=='rtl'" type="submit" ng-disabled="errorInForm()" class="btn btn-success" ng-click="updateOrder()">חשב ושמור</button>
-		          <button ng-if="form.dir=='ltr'" type="submit" class="btn btn-info" ng-click="calcOrder()">Calc</button>
+		          <button type="submit" ng-disabled="errorInForm()" class="btn btn-success" ng-click="updateOrder()">{{calcSaveButton[form.dir]}}</button>
 		        </div>
 		        <div class="col-sm-3">
-		          <button ng-if="form.dir=='rtl'" type="submit" class="btn btn-info" ng-click="calcOrder()">חשב</button>
-		          <button ng-if="form.dir=='ltr'" type="submit" ng-disabled="errorInForm()" class="btn btn-success" ng-click="updateOrder()">Calc & Save</button>		          
+		          <button type="submit" class="btn btn-info" ng-click="calcOrder()">{{calcButton[form.dir]}}</button>
 		        </div>
-		      </div>
-		 	  <div ng-if="form.dir=='ltr'" class="col-sm-5"></div>
-			  <div class="progress col-sm-7" ng-if="inProgress">
-			    <div class="progress-bar" role="progressbar" progress-bar-watch="progress" progress-bar aria-valuenow="" aria-valuemin="0" aria-valuemax="100" style="width:{{progress}}%"></div>
-			  </div>
-			  <span class="col-sm-5 error" ng-show="form.error">{{form.message}}</span>	
+		     </div>
+		 	 <div class="col-sm-12">
+		 	 	<div ng-if="form.dir=='ltr'" class="col-sm-5"></div>
+			  	<div class="progress col-sm-7" ng-if="inProgress">
+			    	<div class="progress-bar" role="progressbar" progress-bar-watch="progress" progress-bar aria-valuenow="" aria-valuemin="0" aria-valuemax="100" style="width:{{progress}}%"></div>
+			  	</div>
+			 </div>
+			 <div class="col-sm-12">
+			 	<div ng-if="form.dir=='ltr'" class="col-sm-6"></div>
+			 	<span class="col-sm-6 error" ng-show="form.error">{{form.message}}</span>	
 			</div>  	         
 	    </fieldset>
 	  </form>

@@ -233,6 +233,7 @@ orderApp.controller('formCtrl', function($scope, $http,  $location, myService){
  		input.user = $scope.user;
 		input.form = $scope.form;
 
+	    document.body.style.cursor = 'wait';
 		var content = angular.toJson(input);
         var request = $http({
                 method: "post",
@@ -244,12 +245,14 @@ orderApp.controller('formCtrl', function($scope, $http,  $location, myService){
         request.success(function (data) {
             $scope.message = data;
             console.log($scope.message);
+            document.body.style.cursor = 'default';
             alert("Form "+$scope.form.title+" updated successfuly");
             $scope.changed = false;
 			         	
         });
         request.error(function (data, status) {
             $scope.message = data;
+            document.body.style.cursor = 'default';
             alert("Error: "+$scope.message);
         });
 
@@ -263,8 +266,8 @@ orderApp.controller('formCtrl', function($scope, $http,  $location, myService){
 
  		}
  		if (ok) {
-			var win = window.open(location, '_self');
-			win.close();
+			//var win = window.open(location, '_self');
+			window.close();
 		}
  	}
 
@@ -508,9 +511,14 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, myService){
 // Forms controller
 orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $location, myService){
 
+		$scope.attachFiles = {'rtl': "צרף קבצים", 'ltr': "Attach Files"};
+		$scope.showFiles = {'rtl': "הצג קבצים", 'ltr': "Show Files"};
+		$scope.calcButton = {'rtl': "חשב", 'ltr': "Calc"};
+		$scope.calcSaveButton = {'rtl': "חשב ושמור", 'ltr': "Calc & Save"};
+
 		$scope.columns = ['2','1'];		// For the UI
 
-		$scope.order = myService.getOrder();
+		//$scope.order = myService.getOrder();
 		$scope.inProgress = false;
 
       	$scope.getOrder = function () {
@@ -553,7 +561,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 	      	 }
         		 catch (e) {
             		alert("Error: "+$scope.message);
-            		myService.setOrder(null);
+            		//myService.setOrder(null);
         		 } 
 			}); 
 		};
@@ -693,9 +701,11 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 	                console.log($scope.message);
 					if (!isNaN(data)) {	                
 	                	$scope.orderID = parseInt(data); // PHP returned a valid ID number
-	                	if ($scope.newDriveFolder && $scope.folderID) {
+	                	if ($scope.newDriveFolder && $scope.selectedParentFolder) {
 	                		// rename the temporary drive folder
-	                		$scope.authRenameFolder($scope.folderID, FOLDER_PREFIX + $scope.orderID);
+	                		for (var i=0; $scope.folderList[i]; i++)
+	                			if ($scope.folderList[i].folderID)
+	                				$scope.renameFolder($scope.folderList[i].folderID, FOLDER_PREFIX + $scope.orderID);
 	                	}
 	                	else {
 	                		$scope.close();
@@ -852,38 +862,43 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 
 			}
 
-			$scope.getUserInfo = function() {
+			$scope.getUserInfo = function(renew) {
 				gapi.client.load('oauth2', 'v2', function() {
 				  gapi.client.oauth2.userinfo.get().execute(function(resp) {
 				    // Get the user email
 				    $scope.user = resp.email;
 				    $scope.getUserRole($scope.user);
+				    $scope.initFolders(renew);
 				  })
 				});
 			}
 
-			$scope.getUser = function() {
-				if ($scope.user && $scope.user != "") {
-					// user already set (from gadget)
-					$scope.getUserRole($scope.user);
-					return;
-				}
+			$scope.getUser = function(renew) {	// called on init form
+
+				var authuser = 0;
+
 				if (!gapi || !gapi.auth) {
 					// wait until Google API library has loaded
-					window.setTimeout($scope.getUser, 1000);
+					setTimeout($scope.getUser, 1000, renew);
 					return;
 				}	
+
+				if (renew) {	// reset the user email
+					//$scope.user = "";
+					authuser = -1;
+				}
+
 				try {
 				    gapi.auth.authorize(
 				        {'client_id': CLIENT_ID, 
 				        'scope': 'https://www.googleapis.com/auth/userinfo.email', 
 				        'cookie_policy': 'single_host_origin',
-				        //'authuser': -1,
+				        'authuser': authuser,
 				        'immediate': true},
 				        function(authResult) {
 				        	if (authResult && !authResult.error) {
 					       		// authorization granted
-					       		$scope.getUserInfo();
+					       		$scope.getUserInfo(renew);
 							}
 							else {
 								// try manual authorization
@@ -891,11 +906,12 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 								    {'client_id': CLIENT_ID, 
 								     'scope': 'https://www.googleapis.com/auth/userinfo.email', 
 								     'cookie_policy': 'single_host_origin',
+								     'authuser': -1,
 					   			     'immediate': false},
 					   			    function(authResult) {
 					   			       	if (authResult && !authResult.error) {
 					   			       		// authorization granted
-					   			       		$scope.getUserInfo();
+					   			       		$scope.getUserInfo(renew);
 					   					}
 					   					else {
 							    			alert("Authorization failed !")
@@ -924,25 +940,144 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 			var CLIENT_ID = '785966582104-p03j542fcviuklf0kka21ushko2i7k0a.apps.googleusercontent.com';
 			var SCOPES = 'https://www.googleapis.com/auth/drive';
 			var FOLDER_PREFIX = '';
-			
-   			$scope.initUpload = function(event){
-   			var files = null;
-   			if (event)	
-   				files = event.target.files;
+			var parentFolder = 'GoogMesh';
 
-   			if ($scope.folderID) {
-   				// Already authorized
-   				$scope.uploadFiles(files, $scope.orderID);
-   				return;
-   			}
-   			/**
-   			 * Check if the current user has authorized to upload to the drive
-   			 */
-   			try {
-   			    gapi.auth.authorize(
+			$scope.getFolders = function() {
+				// reset the folder list and content flag
+				$scope.folderList = null;
+				$scope.fileExist = false;
+				gapi.client.load('drive', 'v2', function() {
+
+					// Search if GoogMesh folder exists
+					$qString = "title = '"+parentFolder+"' and trashed=false and mimeType='application/vnd.google-apps.folder' and sharedWithMe";
+					gapi.client.drive.files.list({
+					  'q' : $qString
+					  }).
+					  execute(function(resp) {
+					    if (resp.items && resp.items[0])  {
+					      // GoogMesh folder exists - insert into it
+					      $scope.parentFolderID = resp.items[0].id;
+					      $scope.getFolderList(resp.items[0].id);
+				      }
+				      else {
+				      		// Folder is not shared with the user - alert and quit
+				      	 	alert("Folder "+parentFolder+" is not shared with user "+$scope.user);
+
+				      }
+				    });
+				});
+			}
+
+
+			$scope.getFolderList = function(parentID) {
+				// Search for all folders under parent folder
+				$scope.folderList = [];
+				$qString = "trashed = false and mimeType = 'application/vnd.google-apps.folder'";
+				gapi.client.drive.children.list({
+				  	'folderId' : parentID, 
+				  	'q' : $qString
+				 }).
+			   	execute(function(resp) {
+			   		var i=0;
+			       	while(resp.items && resp.items[i])  {
+			       		var folder = resp.items[i++];
+			       		$scope.getFolderName(i, folder);
+			       	};
+
+			    });
+
+			}
+
+			$scope.getFolderName = function(folderNum, folder) {
+				gapi.client.drive.files.get({
+				  'fileId': folder.id
+				}).
+				execute(function(resp) {
+					folder.title = resp.title;
+					$scope.folderList.push(folder);
+			  		$scope.searchFilesFolder(folder, $scope.orderID);
+				});
+			}
+
+			$scope.searchFilesFolder = function(parentFolder, orderID) {
+				if (orderID <= 0)
+					return;	// not relevant for new orders
+
+			  var folderName = FOLDER_PREFIX+orderID;
+			  // Search if folder exists
+			  $qString = "title = '"+folderName+"'"+" and trashed = false and mimeType = 'application/vnd.google-apps.folder'";
+			  gapi.client.drive.children.list({
+			    'folderId' : parentFolder.id, 
+			    'q' : $qString
+			    }).
+			    execute(function(resp) {
+			      if (resp.items && resp.items[0])  {
+			        // folder exist - look for files
+		          	$scope.searchFiles(parentFolder, resp.items[0].id);
+			      }
+			  });
+			}
+
+			$scope.searchFiles = function(parentFolder, orderFolderID) {
+				// Search for files 
+				$qString = "trashed = false";
+				gapi.client.drive.children.list({
+				    'folderId' : orderFolderID, 
+				    'q' : $qString
+				  }).
+				  execute(function(resp) {
+				    if (resp.items && resp.items[0])  {
+				      // files exists
+			        	$scope.fileExist = true;
+			        	parentFolder.fileExist = true;
+			        	$scope.$apply();
+				    }
+				});
+
+			}
+
+			$scope.setFolders = function() {
+				if (!$scope.folderList || $scope.folderList.length == 0)	// no sub folders under parentFolder
+					alert("No folders found under "+parentFolder+" for user: "+$scope.user);
+					
+			}
+
+   			$scope.initFolders = function(renew){
+
+				if (!renew && $scope.folderList) {
+					// Already initialized
+					return;
+				}
+
+				if (!renew && $scope.parentFolderID ) {
+					$scope.getFolderList($scope.parentFolderID);
+					return;
+				}
+
+				$scope.getFolders();
+   			};
+			
+
+   			$scope.initUpload = function(event){
+				var files = null;
+				if (event)	
+					files = event.target.files;
+
+				if ($scope.selectedParentFolder && $scope.selectedParentFolder.folderID) {
+					// Already authorized
+					$scope.uploadFiles(files, $scope.orderID);
+					return;
+				}
+
+				/**
+				 * Check if the current user has authorized to upload to the drive
+				 */
+				try {
+   			    	gapi.auth.authorize(
    			        {'client_id': CLIENT_ID, 
    			        'scope': SCOPES, 
    			        'cookie_policy': 'single_host_origin',
+   			        'user_id': $scope.user,
    			        'authuser': -1,
    			        'immediate': true},
    			        function(authResult) {
@@ -955,6 +1090,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
    							gapi.auth.authorize(
    							    {'client_id': CLIENT_ID, 
    							     'scope': SCOPES, 
+   							     'authuser': -1,
    							     'cookie_policy': 'single_host_origin',
    				   			     'immediate': false},
    				   			    function(authResult) {
@@ -977,15 +1113,16 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 
 			$scope.setFolderID = function(folderID) {
 
-				$scope.folderID = folderID;
+				$scope.selectedParentFolder.folderID = folderID;
 				if ($scope.orderID <= 0)
 					// new folder
 					$scope.newDriveFolder = true;
 			}
 
-			$scope.openFolder = function()
+			$scope.openFolder = function(folderName)
 			{
-        		if (!$scope.folderID) {
+				$scope.setCurrentParentFolder(folderName);
+        		if (!$scope.selectedParentFolder.folderID) {
         			// simulate file upload just to get the folder ID from Google drive
         			$scope.initUpload(null);
         		}
@@ -995,15 +1132,27 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 
 			$scope.openFolderWindow = function()
 			{
-				if (!$scope.folderID)
-					window.setTimeout($scope.openFolderWindow, 1000);
+				if (!$scope.selectedParentFolder.folderID)	// wait for the order folder to get created
+					setTimeout($scope.openFolderWindow, 1000);
 				else
-					window.open("https://drive.google.com/folderview?id="+$scope.folderID);
+					window.open("https://drive.google.com/folderview?id="+$scope.selectedParentFolder.folderID);
 			}   
 
 
-			$scope.selectFile = function()
+			$scope.setCurrentParentFolder = function(folderName) {
+				$scope.selectedParentFolder = null;
+				for (var i=0; $scope.folderList[i]; i++) {
+					if ($scope.folderList[i].title == folderName) {
+						$scope.selectedParentFolder = $scope.folderList[i];
+						return;
+					}
+				}
+
+			}
+
+			$scope.selectFile = function(folderName)
 			{
+				$scope.setCurrentParentFolder(folderName);
 				$("#file").click();
 
 			}
@@ -1014,57 +1163,19 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 			 * @param {Object} evt Arguments from the file selector.
 			 */
 			$scope.uploadFiles = function(files, orderID) {
-			  	gapi.client.load('drive', 'v2', function() {
-			  		if ($scope.folderID) {
-			  			// folder already found - insert into it
-						$scope.insertFiles(files, $scope.folderID);
-			  		}
-			  		else	// need to find or create the parent folder
-			        	$scope.insertToParentFolder(orderID, files);
-			    });
+	        	$scope.insertToParentFolder(parentFolder, orderID, files);
 			}
 
 
-			$scope.insertToParentFolder = function(orderID, files) {
-			  var parentFolder = 'GoogMesh';
-			  // Search if GoogMesh folder exists
-			  $qString = "title = '"+parentFolder+"' and trashed=false and mimeType='application/vnd.google-apps.folder' and sharedWithMe";
-			  gapi.client.drive.files.list({
-			    'q' : $qString
-			    }).
-			    execute(function(resp) {
-			      if (resp.items && resp.items[0])  {
-			        // GoogMesh folder exists - insert into it
-			        $scope.insertToFolder(resp.items[0].id, orderID, files);
-
-			      }
-			      else {
-			      		// Folder is not shared with the user - alert and quit
-			      	 	alert("Folder "+parentFolder+" is not shared with this user ");
-			      	 	/*
-			          // folder doesn't exist - create it
-			          var request = gapi.client.request({
-			              'path': '/drive/v2/files/',
-			              'method': 'POST',
-			              'headers': {
-			                  'Content-Type': 'application/json',
-			                  //'Authorization': 'Bearer ' + access_token,             
-			              },
-			              'body':{
-			                  "title" : parentFolder,
-			                  "mimeType" : "application/vnd.google-apps.folder",
-			              }
-			          }).
-			          execute(function(file) {
-			            if (file)  {
-			              // GoogMesh folder exists - insert into it
-			              $scope.insertToFolder(file.id, orderID, files);
-
-			            }
-			          });  
-			          */    
-			      }
-			    });
+			$scope.insertToParentFolder = function(parentFolder, orderID, files) {
+				if ($scope.selectedParentFolder) {
+					$scope.insertToFolder($scope.selectedParentFolder.id, orderID, files);
+					return;
+				}
+			    else {
+			    	// Folder is not shared with the user - alert and quit
+			     	alert("Folder "+parentFolder+" is not shared with user "+$scope.user);
+				}
 			}
 
 			$scope.insertToFolder = function(parentID, orderID, files, callback) {
@@ -1126,17 +1237,23 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 			$scope.insertFiles = function(files, parentID) {
 				$fileNames = "";
 				$count = 0;
+				document.body.style.cursor = 'progress';
 				for ($i=0 ; $i < files.length ; $i++) {
 					$scope.insertFile(files[$i], parentID, function(file) {
+						$scope.fileExist = true;
+						$scope.selectedParentFolder.fileExist = true;
+						$scope.$apply();
 						$scope.filesUploaded = true;
 						console.log("File: ");
 						console.log(file);
 						$fileNames += file.originalFilename + "\n";
-						if (++$count == files.length)
+						if (++$count == files.length) {
 							// This is the last file uploaded
+							document.body.style.cursor = 'default';
 						  	alert("Files uploaded to Google drive:\n"+$fileNames);
+						}
 
-						});
+					});
 
 				}
 
@@ -1188,46 +1305,6 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 				}
 			}
 
-
-			$scope.authRenameFolder = function(folderID, newName) {
-   			try {
-   			    gapi.auth.authorize(
-   			        {'client_id': CLIENT_ID, 
-   			        'scope': SCOPES, 
-   			        'cookie_policy': 'single_host_origin',
-   			        'authuser': -1,
-   			        'immediate': true},
-   			        function(authResult) {
-   			        	if (authResult && !authResult.error) {
-   				       		// authorization granted
-   				       		$scope.renameFolder(folderID, newName);
-   						}
-   						else {
-   							// try manual authorization
-   							gapi.auth.authorize(
-   							    {'client_id': CLIENT_ID, 
-   							     'scope': SCOPES, 
-   							     'cookie_policy': 'single_host_origin',
-   				   			     'immediate': false},
-   				   			    function(authResult) {
-   				   			       	if (authResult && !authResult.error) {
-   				   			       		// authorization granted
-   				   			       		$scope.renameFolder(folderID, newName);
-   				   					}
-   				   					else {
-   						    			alert("Authorization failed !")
-   						    		}	
-		     					});
-   		     			}	
-		        	});
-   				}
-   				catch (e) { 
-   				    alert(e.message); 
-   				}
-
-
-
-			}
 			/**
 			 * Rename a file.
 			 *

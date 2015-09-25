@@ -208,7 +208,7 @@ function openForm(e) {
   if (startIndex < 0 || endIndex < 0)
     alert("Event has no link to GoogMesh");
   else  
-    window.open(url);
+    window.open(url + "&user=" + user);
 
 }
 

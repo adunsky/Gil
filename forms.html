@@ -21,7 +21,7 @@
 					</div>
 					<div class="col-sm-6">
 						<select class="form-control" name="{{formField.name}}" ng-model="formField.name" ng-change="updateField(formField)" ng-click="onSelectClick($event)">
-					        <option ng-repeat="field in fieldList">{{field.name}}</option>
+					        <option ng-repeat="field in fieldList | orderBy: 'name'">{{field.name}}</option>
 						</select>
 					</div>
 					<div class="col-sm-1">

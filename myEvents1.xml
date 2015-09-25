@@ -196,6 +196,7 @@ function openDefaultForm() {
 }
 
 function openForm(e) {
+  // parse the form url from the event description
   var startIndex = e.details.indexOf("http://googlemesh.com");
   var endIndex = -1;
   if (startIndex>=0) {
