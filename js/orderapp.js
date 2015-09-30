@@ -876,6 +876,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 			$scope.getUser = function(renew) {	// called on init form
 
 				var authuser = 0;
+				var userID = "";
 
 				if (!gapi || !gapi.auth) {
 					// wait until Google API library has loaded
@@ -883,8 +884,10 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 					return;
 				}	
 
-				if (renew) {	// reset the user email
-					//$scope.user = "";
+				if (renew) // reset the user 
+					authuser = -1;
+				else if ($scope.user!="") {		// keep the existing user
+					userID = $scope.user;
 					authuser = -1;
 				}
 
@@ -893,6 +896,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 				        {'client_id': CLIENT_ID, 
 				        'scope': 'https://www.googleapis.com/auth/userinfo.email', 
 				        'cookie_policy': 'single_host_origin',
+				        'user_id': userID,
 				        'authuser': authuser,
 				        'immediate': true},
 				        function(authResult) {
@@ -1135,7 +1139,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 				if (!$scope.selectedParentFolder.folderID)	// wait for the order folder to get created
 					setTimeout($scope.openFolderWindow, 1000);
 				else
-					window.open("https://drive.google.com/folderview?id="+$scope.selectedParentFolder.folderID);
+					window.open("https://drive.google.com/drive/u/0/folders/"+$scope.selectedParentFolder.folderID);
 			}   
 
 

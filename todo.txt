@@ -1,21 +1,17 @@
 
-- Solution for multiple shared folders per user (or form) 
-- Add an option to get route directions for a list of events, based on search
-	- filter on dates, free text or specific fields
-	- sort by date/time
-	- events by time
-	- add installation time
-
+- support templates for new documents
+//- Solution for multiple shared folders per user (or form) 
+//- Add an option to get route directions for a list of events, based on search
 
 - eventID is not needed anymore. only for old events
 - Add an option to send email notification to attendees
+- Add notification configuration on field change
 
 - Web page to view order status 
-- New form fields sheet
 
-Add script for logs
+//Add script for logs
 // Add orderID in forms
-Add celltype unique - verify uniqueness on save
+//Add celltype unique - verify uniqueness on save
 // record creation time - for billing
 // Add mandatory field per form
 // Add email from form
