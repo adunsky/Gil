@@ -894,7 +894,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 				try {
 				    gapi.auth.authorize(
 				        {'client_id': CLIENT_ID, 
-				        'scope': 'https://www.googleapis.com/auth/userinfo.email', 
+				        'scope': SCOPES, 
 				        'cookie_policy': 'single_host_origin',
 				        'user_id': userID,
 				        'authuser': authuser,
@@ -908,7 +908,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 								// try manual authorization
 								gapi.auth.authorize(
 								    {'client_id': CLIENT_ID, 
-								     'scope': 'https://www.googleapis.com/auth/userinfo.email', 
+								     'scope': SCOPES, 
 								     'cookie_policy': 'single_host_origin',
 								     'authuser': -1,
 					   			     'immediate': false},
@@ -942,7 +942,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 			// Code for file attachments
 
 			var CLIENT_ID = '785966582104-p03j542fcviuklf0kka21ushko2i7k0a.apps.googleusercontent.com';
-			var SCOPES = 'https://www.googleapis.com/auth/drive';
+			var SCOPES = ['https://www.googleapis.com/auth/userinfo.email','https://www.googleapis.com/auth/drive'];
 			var FOLDER_PREFIX = '';
 			var parentFolder = 'GoogMesh';
 
