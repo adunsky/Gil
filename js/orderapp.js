@@ -513,6 +513,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 
 		$scope.attachFiles = {'rtl': "צרף קבצים", 'ltr': "Attach Files"};
 		$scope.showFiles = {'rtl': "הצג קבצים", 'ltr': "Show Files"};
+		$scope.newFile = {'rtl': "קובץ חדש", 'ltr': "New File"};
 		$scope.calcButton = {'rtl': "חשב", 'ltr': "Calc"};
 		$scope.calcSaveButton = {'rtl': "חשב ושמור", 'ltr': "Calc & Save"};
 
@@ -945,11 +946,13 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 			var SCOPES = ['https://www.googleapis.com/auth/userinfo.email','https://www.googleapis.com/auth/drive'];
 			var FOLDER_PREFIX = '';
 			var parentFolder = 'GoogMesh';
+			var templateFolder = 'template';
 
 			$scope.getFolders = function() {
 				// reset the folder list and content flag
 				$scope.folderList = null;
 				$scope.fileExist = false;
+				$scope.templateExist = false;
 				gapi.client.load('drive', 'v2', function() {
 
 					// Search if GoogMesh folder exists
@@ -985,22 +988,71 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 			   		var i=0;
 			       	while(resp.items && resp.items[i])  {
 			       		var folder = resp.items[i++];
-			       		$scope.getFolderName(i, folder);
+			       		$scope.addFolder(folder);
 			       	};
 
 			    });
 
 			}
 
-			$scope.getFolderName = function(folderNum, folder) {
+			$scope.addFolder = function(folder) {
 				gapi.client.drive.files.get({
 				  'fileId': folder.id
 				}).
 				execute(function(resp) {
 					folder.title = resp.title;
 					$scope.folderList.push(folder);
-			  		$scope.searchFilesFolder(folder, $scope.orderID);
+					$scope.searchTemplates(folder);
+		  			$scope.searchFilesFolder(folder, $scope.orderID);
 				});
+			}
+
+			$scope.searchTemplates = function(parentFolder) {
+				$scope.templateList = [];	
+			  // Search if templates exists
+			  $qString = "title = '"+templateFolder+"'"+" and trashed = false and mimeType = 'application/vnd.google-apps.folder'";
+			  gapi.client.drive.children.list({
+			    'folderId' : parentFolder.id, 
+			    'q' : $qString
+			    }).
+			    execute(function(resp) {
+			      if (resp.items && resp.items[0])  {
+			        // folder exist - look for files
+		          	$scope.searchTemplateFiles(parentFolder, resp.items[0].id);
+			      }
+			  });
+			}
+
+			$scope.addTemplate = function(folder, file) {
+				gapi.client.drive.files.get({
+				  'fileId': file.id
+				}).
+				execute(function(resp) {
+					file.title = resp.title;
+					file.folder = folder;
+					file.link = resp.alternateLink;
+					$scope.templateList.push(file);
+					$scope.templateExist = true;
+					$scope.$apply();
+				});
+
+			}
+
+			$scope.searchTemplateFiles = function(parentFolder, templateFolderID) {
+				// Search for files 
+				$qString = "trashed = false";
+				gapi.client.drive.children.list({
+				    'folderId' : templateFolderID, 
+				    'q' : $qString
+				  }).
+				  execute(function(resp) {
+				    if (resp.items)
+				    	for(var i=0; resp.items[i]; i++) {
+					      	// templates exists
+					      	$scope.addTemplate(parentFolder, resp.items[i]);
+					    }
+				});
+
 			}
 
 			$scope.searchFilesFolder = function(parentFolder, orderID) {
@@ -1123,9 +1175,9 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 					$scope.newDriveFolder = true;
 			}
 
-			$scope.openFolder = function(folderName)
+			$scope.openFolder = function(folder)
 			{
-				$scope.setCurrentParentFolder(folderName);
+				$scope.selectedParentFolder = folder;
         		if (!$scope.selectedParentFolder.folderID) {
         			// simulate file upload just to get the folder ID from Google drive
         			$scope.initUpload(null);
@@ -1142,21 +1194,60 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 					window.open("https://drive.google.com/drive/u/0/folders/"+$scope.selectedParentFolder.folderID);
 			}   
 
-
-			$scope.setCurrentParentFolder = function(folderName) {
-				$scope.selectedParentFolder = null;
-				for (var i=0; $scope.folderList[i]; i++) {
-					if ($scope.folderList[i].title == folderName) {
-						$scope.selectedParentFolder = $scope.folderList[i];
-						return;
-					}
+			$scope.addFile = function(file)
+			{
+				document.body.style.cursor = 'progress';
+				$scope.selectedParentFolder = file.folder;
+				if (!$scope.selectedParentFolder.folderID) {
+					// simulate file upload just to get the folder ID from Google drive
+					$scope.initUpload(null);
 				}
-
+				$scope.copyTemplateFile(file);
 			}
 
-			$scope.selectFile = function(folderName)
+			$scope.copyTemplateFile = function(file)
 			{
-				$scope.setCurrentParentFolder(folderName);
+				if (!$scope.selectedParentFolder.folderID)	// wait for the order folder to get created
+					setTimeout($scope.copyTemplateFile, 1000, file);
+				else {
+					var fileName = file.title; // +$scope.orderID;
+					$scope.copyFile(file.id, file.folder.folderID, fileName, $scope.openFileCallback);
+					
+				}
+			}
+
+			$scope.openFileCallback = function(file) {
+				// copy was successful
+				$scope.fileExist = true;
+				$scope.selectedParentFolder.fileExist = true;
+				console.log('Copy ID: ' + file.id);
+				window.open(file.alternateLink);
+				document.body.style.cursor = 'default';
+				$scope.$apply();
+			}
+
+			$scope.copyFile = function(fileID, parentID, fileName, callback)
+			{
+				// get the parent resource
+				gapi.client.drive.files.get({
+				  'fileId': parentID
+				}).
+				execute(function(resp) {
+					var body = {'title': fileName,
+								'parents': [resp] };
+
+					// copy the file			
+					var request = gapi.client.drive.files.copy({
+					  'fileId': fileID,
+					  'resource': body
+					});
+					request.execute(callback);
+				});
+			}
+
+			$scope.selectFile = function(folder)
+			{
+				$scope.selectedParentFolder = folder;
 				$("#file").click();
 
 			}
