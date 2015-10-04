@@ -33,7 +33,9 @@
 	    {{attachFiles[form.dir]}}<span class="caret"></span>
 	  </button>
 	  <ul class="dropdown-menu">
-	    <li><a href="" ng-repeat="folder in folderList | orderBy:'title'" ng-click="selectFile(folder)">{{folder.title}}</a></li>
+	    <li>
+	    	<a href="" ng-repeat="folder in folderList | orderBy:'title'" ng-click="selectFile(folder)">{{folder.title}}</a>
+	    </li>
 	  </ul>
 	  <input type="file" multiple=true file-on-change="initUpload" style="display:none" id="file"/>
 	</div>
@@ -41,8 +43,15 @@
 	  <button type="button" class="btn btn-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" ng-click="setFolders()" ng-disabled="!fileExist">
 	    {{showFiles[form.dir]}} <span class="caret"></span>
 	  </button>
-	  <ul class="dropdown-menu">
-	    <li><a href="" ng-repeat="folder in folderList | orderBy:'title'" ng-click="openFolder(folder)" ng-if="folder.fileExist">{{folder.title}}</a></li>
+	  <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+	    <li class="dropdown-submenu" ng-repeat="folder in folderList | orderBy:'title'" >
+	    	<a href="" ng-click="openFolder(folder)" ng-if="folder.fileExist">{{folder.title}}</a>
+         	<ul class="dropdown-menu">
+	    		<li class="menu-item" ng-repeat="file in folder.fileList | orderBy:'title'" ng-click="openFile(file)"> 
+	    			<a href="">{{file.title}}</a> 
+	    		</li>
+	      	</ul>
+     	</li>
 	  </ul>
 	</div>
 	<span ng-if="fileExist" class="glyphicon glyphicon-folder-open" style="color: red"></span>

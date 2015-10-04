@@ -1,5 +1,7 @@
 
 - support templates for new documents
+	- add submenu to view files directly from the form
+	
 //- Solution for multiple shared folders per user (or form) 
 //- Add an option to get route directions for a list of events, based on search
 

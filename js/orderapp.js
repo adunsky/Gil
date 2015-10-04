@@ -511,9 +511,9 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, myService){
 // Forms controller
 orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $location, myService){
 
-		$scope.attachFiles = {'rtl': "צרף קבצים", 'ltr': "Attach Files"};
-		$scope.showFiles = {'rtl': "הצג קבצים", 'ltr': "Show Files"};
-		$scope.newFile = {'rtl': "קובץ חדש", 'ltr': "New File"};
+		$scope.attachFiles = {'rtl': "צרף מסמכים", 'ltr': "Attach Files"};
+		$scope.showFiles = {'rtl': "הצג מסמכים", 'ltr': "Show Files"};
+		$scope.newFile = {'rtl': "מסמך חדש", 'ltr': "New File"};
 		$scope.calcButton = {'rtl': "חשב", 'ltr': "Calc"};
 		$scope.calcSaveButton = {'rtl': "חשב ושמור", 'ltr': "Calc & Save"};
 
@@ -705,8 +705,8 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 	                	if ($scope.newDriveFolder && $scope.selectedParentFolder) {
 	                		// rename the temporary drive folder
 	                		for (var i=0; $scope.folderList[i]; i++)
-	                			if ($scope.folderList[i].folderID)
-	                				$scope.renameFolder($scope.folderList[i].folderID, FOLDER_PREFIX + $scope.orderID);
+	                			if ($scope.folderList[i].orderFolder)
+	                				$scope.renameFolder($scope.folderList[i].orderFolder, FOLDER_PREFIX + $scope.orderID);
 	                	}
 	                	else {
 	                		$scope.close();
@@ -1030,7 +1030,6 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 				execute(function(resp) {
 					file.title = resp.title;
 					file.folder = folder;
-					file.link = resp.alternateLink;
 					$scope.templateList.push(file);
 					$scope.templateExist = true;
 					$scope.$apply();
@@ -1074,6 +1073,29 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 			  });
 			}
 
+			$scope.addFileToList = function(parentFolder, file) {
+
+				if (file.title && file.alternateLink) {	// already got file details
+					file.link = file.alternateLink;
+					if (!parentFolder.fileList)	// initialize file list if doesn't exist
+						parentFolder.fileList = [];
+					parentFolder.fileList.push(file);				
+				}
+				else {	// get file title and link
+					gapi.client.drive.files.get({
+					  'fileId': file.id
+					}).
+					execute(function(resp) {
+						file.title = resp.title;
+						file.link = resp.alternateLink;
+						if (!parentFolder.fileList)	// initialize file list if doesn't exist
+							parentFolder.fileList = [];
+						parentFolder.fileList.push(file);
+					});
+				}
+
+			}
+
 			$scope.searchFiles = function(parentFolder, orderFolderID) {
 				// Search for files 
 				$qString = "trashed = false";
@@ -1083,7 +1105,11 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 				  }).
 				  execute(function(resp) {
 				    if (resp.items && resp.items[0])  {
-				      // files exists
+				      	// files exists
+				      	parentFolder.fileList = [];
+				      	for (var i=0; resp.items[i]; i++) {
+				      		$scope.addFileToList(parentFolder, resp.items[i]);
+				      	}
 			        	$scope.fileExist = true;
 			        	parentFolder.fileExist = true;
 			        	$scope.$apply();
@@ -1119,7 +1145,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 				if (event)	
 					files = event.target.files;
 
-				if ($scope.selectedParentFolder && $scope.selectedParentFolder.folderID) {
+				if ($scope.selectedParentFolder && $scope.selectedParentFolder.orderFolder) {
 					// Already authorized
 					$scope.uploadFiles(files, $scope.orderID);
 					return;
@@ -1167,9 +1193,21 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 
    			};
 
-			$scope.setFolderID = function(folderID) {
-
-				$scope.selectedParentFolder.folderID = folderID;
+			$scope.setOrderFolder = function(folder) {
+				if (folder.alternateLink) {
+					$scope.selectedParentFolder.orderFolder = folder;
+					$scope.selectedParentFolder.orderFolder.link = folder.alternateLink;
+				}
+				else {
+					// get the folder link
+					gapi.client.drive.files.get({
+					  'fileId': folder.id
+					}).
+					execute(function(resp) {
+						$scope.selectedParentFolder.orderFolder = folder;
+						$scope.selectedParentFolder.orderFolder.link = resp.alternateLink;
+					});
+				}
 				if ($scope.orderID <= 0)
 					// new folder
 					$scope.newDriveFolder = true;
@@ -1178,7 +1216,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 			$scope.openFolder = function(folder)
 			{
 				$scope.selectedParentFolder = folder;
-        		if (!$scope.selectedParentFolder.folderID) {
+        		if (!$scope.selectedParentFolder.orderFolder) {
         			// simulate file upload just to get the folder ID from Google drive
         			$scope.initUpload(null);
         		}
@@ -1188,17 +1226,20 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 
 			$scope.openFolderWindow = function()
 			{
-				if (!$scope.selectedParentFolder.folderID)	// wait for the order folder to get created
+				document.body.style.cursor = 'progress';
+				if (!$scope.selectedParentFolder.orderFolder)	// wait for the order folder to get created
 					setTimeout($scope.openFolderWindow, 1000);
-				else
-					window.open("https://drive.google.com/drive/u/0/folders/"+$scope.selectedParentFolder.folderID);
+				else {
+					window.open($scope.selectedParentFolder.orderFolder.link);
+					document.body.style.cursor = 'default';
+				}
 			}   
 
 			$scope.addFile = function(file)
 			{
 				document.body.style.cursor = 'progress';
 				$scope.selectedParentFolder = file.folder;
-				if (!$scope.selectedParentFolder.folderID) {
+				if (!$scope.selectedParentFolder.orderFolder) {
 					// simulate file upload just to get the folder ID from Google drive
 					$scope.initUpload(null);
 				}
@@ -1207,30 +1248,36 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 
 			$scope.copyTemplateFile = function(file)
 			{
-				if (!$scope.selectedParentFolder.folderID)	// wait for the order folder to get created
+				if (!$scope.selectedParentFolder.orderFolder)	// wait for the order folder to get created
 					setTimeout($scope.copyTemplateFile, 1000, file);
 				else {
 					var fileName = file.title; // +$scope.orderID;
-					$scope.copyFile(file.id, file.folder.folderID, fileName, $scope.openFileCallback);
+					$scope.copyFile(file.id, file.folder.orderFolder, fileName, $scope.copyFileCallback);
 					
 				}
 			}
 
-			$scope.openFileCallback = function(file) {
+
+			$scope.openFile = function(file) {
+				window.open(file.link);
+			}
+
+			$scope.copyFileCallback = function(file) {
 				// copy was successful
 				$scope.fileExist = true;
 				$scope.selectedParentFolder.fileExist = true;
+				$scope.addFileToList($scope.selectedParentFolder, file);
 				console.log('Copy ID: ' + file.id);
 				window.open(file.alternateLink);
 				document.body.style.cursor = 'default';
 				$scope.$apply();
 			}
 
-			$scope.copyFile = function(fileID, parentID, fileName, callback)
+			$scope.copyFile = function(fileID, parent, fileName, callback)
 			{
 				// get the parent resource
 				gapi.client.drive.files.get({
-				  'fileId': parentID
+				  'fileId': parent.id
 				}).
 				execute(function(resp) {
 					var body = {'title': fileName,
@@ -1290,9 +1337,9 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 			      	}
 			        // folder exist - insert into it
 			        if (files)
-			          	$scope.insertFiles(files, resp.items[0].id);
+			          	$scope.insertFiles(files, resp.items[0]);
 			          
-			          $scope.setFolderID(resp.items[0].id);
+			          $scope.setOrderFolder(resp.items[0]);
 			      }
 			      else {
 
@@ -1314,9 +1361,9 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 			            callback = function(file) {
 			              	// folder created - insert into it
 		              		if (files) 
-		              			$scope.insertFiles(files, file.id);
+		              			$scope.insertFiles(files, file);
 				            
-				            $scope.setFolderID(file.id);
+				            $scope.setOrderFolder(file);
 				            console.log("Folder: ");
 			    	        console.log(file);              
 			            };
@@ -1329,23 +1376,24 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 			}
 
 
-			$scope.insertFiles = function(files, parentID) {
-				$fileNames = "";
-				$count = 0;
+			$scope.insertFiles = function(files, parent) {
+				var fileNames = "";
+				var count = 0;
 				document.body.style.cursor = 'progress';
-				for ($i=0 ; $i < files.length ; $i++) {
-					$scope.insertFile(files[$i], parentID, function(file) {
+				for (var i=0 ; i < files.length ; i++) {
+					$scope.insertFile(files[i], parent.id, function(file) {
 						$scope.fileExist = true;
 						$scope.selectedParentFolder.fileExist = true;
 						$scope.$apply();
 						$scope.filesUploaded = true;
+						$scope.addFileToList($scope.selectedParentFolder, file);
 						console.log("File: ");
 						console.log(file);
-						$fileNames += file.originalFilename + "\n";
-						if (++$count == files.length) {
+						fileNames += file.originalFilename + "\n";
+						if (++count == files.length) {
 							// This is the last file uploaded
 							document.body.style.cursor = 'default';
-						  	alert("Files uploaded to Google drive:\n"+$fileNames);
+						  	alert("Files uploaded to Google drive:\n"+fileNames);
 						}
 
 					});
@@ -1405,10 +1453,10 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 			 *
 			 * @param {String} fileId <span style="font-size: 13px; ">ID of the file to rename.</span><br> * @param {String} newTitle New title for the file.
 			 */
-			$scope.renameFolder = function(fileId, newTitle) {
+			$scope.renameFolder = function(file, newTitle) {
 			  	var body = {'title': newTitle};
 			  	var request = gapi.client.drive.files.patch({
-			    	'fileId': fileId,
+			    	'fileId': file.id,
 			    	'resource': body
 			  	});
 			  	request.execute(function(resp) {
