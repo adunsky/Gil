@@ -16,7 +16,10 @@
 	<label style="margin-left:60px;">Order ID: {{orderID}}</label>
 </div>
 <div class="col-sm-6 col-sm-offset-5">
-	<p>User: {{user}} <a href="" ng-click="getUser(1)" style="text-decoration: underline"> change </a></p>
+	<p>User: {{user}} 
+		<label ng-if="user==''" style="color:red;"> Missing </label>
+		<a href="" ng-click="getUser(1)" style="text-decoration: underline">  Change </a>
+	</p>
 </div>
     <!--Add a file picker for attachments -->
 <div class="col-sm-7 col-sm-offset-5">
@@ -60,7 +63,7 @@
 </div>
 
 <br>
-<div class="container col-sm-12">
+<div class="container col-sm-12" ng-if="user!=''">
 		
 	<div class="col1 col-sm-6" ng-repeat="col in columns">	
 		<form role="form" name="editForm" target="autocomplete" action="about:blank" autocomplete="on">

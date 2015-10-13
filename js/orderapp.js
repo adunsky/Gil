@@ -788,6 +788,16 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 			}
   
   			$scope.errorInForm = function() {
+  				// First check if a user is logged in
+  				if (!$scope.user || $scope.user == "") {
+  					$scope.form.error = true;
+					if ($scope.form.dir == 'rtl')
+						$scope.form.message = "לא מוגדר משתמש";
+					else
+  						$scope.form.message = "User is not defined";
+  					return true;
+
+  				}
   				// return true if manadtory field is empty
   				for(var i=0; $scope.form && $scope.form.fields[i]; i++) {
   					if ($scope.form.fields[i].fieldType == 'Mandatory' && 
@@ -867,6 +877,10 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 				gapi.client.load('oauth2', 'v2', function() {
 				  gapi.client.oauth2.userinfo.get().execute(function(resp) {
 				    // Get the user email
+				    if (resp.email == "") {	// if no user is logged in - require the user to log in
+				    	getUser(true);
+				    	return;
+				    }
 				    $scope.user = resp.email;
 				    $scope.getUserRole($scope.user);
 				    $scope.initFolders(renew);
@@ -899,7 +913,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 				        'cookie_policy': 'single_host_origin',
 				        'user_id': userID,
 				        'authuser': authuser,
-				        'immediate': true},
+				        'immediate': !renew},
 				        function(authResult) {
 				        	if (authResult && !authResult.error) {
 					       		// authorization granted
