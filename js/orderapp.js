@@ -600,9 +600,22 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 					$timeout(setProgress, 200);
 			
 			}
-			
-			getTimezoneOffset = function () {
-				var offset = new Date().getTimezoneOffset()/60;
+
+            Date.prototype.stdTimezoneOffset = function() {
+                var jan = new Date(this.getFullYear(), 0, 1);
+                var jul = new Date(this.getFullYear(), 6, 1);
+                return Math.max(jan.getTimezoneOffset(), jul.getTimezoneOffset());
+            }
+
+			Date.prototype.dstOffset = function() {
+			    // calculate DST offset
+			    return (this.stdTimezoneOffset() -  this.getTimezoneOffset())/60;
+			}
+
+
+            getTimezoneOffset = function () {
+                var today = new Date();
+                var offset = today.getTimezoneOffset()/60+today.dstOffset();
 			    var hours = Math.abs(parseInt(offset));
 			    var minutes = (Math.abs(offset) - hours)*60;
 
