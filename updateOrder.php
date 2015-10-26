@@ -41,6 +41,7 @@
 
 		if ($input == 'U') {	// Unique value		
 			if (!isUnique($field, $orderID)) {
+				syslog (LOG_ERR, "Order ".$orderID.": field value ".$field["value"]." already exists !");
 				echo $field["value"]." already exists";
 				return;
 			}
@@ -94,11 +95,22 @@
 		$name = $field["index"];
 		$value = $field["value"];
 		$type = $field["type"];
+		$input = $field["input"];
 
 		if ($type == 'CHARGE' && $existingChargeValue != $value) {
 			$newCharge = true;
 			$chargeFieldValue = $value;
 		}
+
+		// check again that order is unique, in case duplicate (errounous locking) order values returned from spreadsheet
+		if ($input == 'U') {	// Unique value		
+			if (!isUnique($field, $orderID)) {
+				syslog (LOG_ERR, "Order ".$orderID.": field value, after calculation: ".$field["value"]." already exists !");
+				echo $field["value"]." already exists";
+				return;
+			}
+		}
+
 		if (strpos($type, "STARTTIME") === 0 || strpos($type, "ENDTIME") === 0)
 			$type = "DATETIME";  // it behaves like DATETIME
 		if ($type == "DATE" || $type == "DATETIME") {
