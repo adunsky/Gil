@@ -84,7 +84,12 @@ require_once "mydb.php";
 				  $client->getAuth()->refreshTokenWithAssertion($creds[array_search($client, $clients)]);
 				}
 			}
-			// Select events that needs update
+			// Look for Emails to send
+			checkForEmails();
+
+
+
+			// Look for calendar events that needs update
 			$sql = "SELECT * FROM $eventsTable WHERE updated='0';";
 			if (!$result = mysql_query($sql)) {
 				echo $currTime.'Select event table Failed! ' . mysql_error(); 
@@ -119,8 +124,6 @@ require_once "mydb.php";
 					else
 						$calendarCount = 1;
 
-					//$colorField = $calendar["colorField"];
-					$colorField = 0;	// not used						
 				}
 				$sql = "SELECT * FROM $mainTable WHERE id='$orderID';";
 				if (!$result = mysql_query($sql)) {
@@ -135,14 +138,9 @@ require_once "mydb.php";
 						$participantList = explode(",", $order[$participantsField]);	
 					else
 						$participantList = [];
-
-					if ($colorField)
-						$color = $order[$colorField];	
-					else 
-						$color = 0;										
+								
 				}
-				
-
+	
 				$date1 = "";
 				$date2 = "";
 				// query the fields table to find if it is a start time
@@ -218,7 +216,7 @@ require_once "mydb.php";
 
 				$params = [];
 				$params["maxResults"] = 2500;	// max number of events per calendar
-				$params["q"] = "Order ID :".$orderID;	// search by orderID in the dscription
+				$params["q"] =  '"Order ID :'.$orderID.'"';		// search by orderID in the dscription
 		    	$list = $services[$googleClient]->events->listEvents($calendarID, $params);	
 				foreach($list["items"] as $eventx) {
 					//echo $currTime."eventx ID= ".$eventx["htmlLink"]."<br>\n";
@@ -263,10 +261,7 @@ require_once "mydb.php";
 				$calEvent->setLocation($location);
 				$eventChanged = true;
 			}
-			if ($color) {
-				echo $currTime."Color: " . $color."<br\n";
-				$calEvent->setColorId(getColor($color));				
-			}
+
 			$allDay = false;
 			// if there are no 2 valid dates it is an all day event
 			if ($date1 == "" || $date2 == "" || $date1 == $date2 || !strtotime($date1) || !strtotime($date2) || strtotime($date1) >= strtotime($date2) ) {
@@ -420,29 +415,13 @@ function getSearchFields($order) {
 
 }
 
+function checkForEmails() {
+	// Look for awaiting emails in the emails table
 
-$Colors  =  array( 
-  		"cyan" => "1",
-		"teal" => "2",
-		"purple" => "3",
-		"Magenta" => "4",
-		"yellow" => "5",
-		"orange" => "6",
-		"Turquoise" => "7",
-		"silver" => "8",
-		"blue" => "9",
-		"green" => "10",
-		"red" => "11"
- );
 
-        //  GetColor  returns  an  associative  array  with  the  red,  green  and  blue 
-        //  values  of  the  desired  color 
-        
-	  function  getColor($Colorname) 
-	  { 
-	    global  $Colors; 
-	    return  $Colors[$Colorname]; 
-	  }
+}
+
+
 ?>
 
 
