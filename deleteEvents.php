@@ -104,7 +104,7 @@ use Google\Spreadsheet\ServiceRequestFactory;
 		$params = [];
 
 		if ($orderID)
-			$params["q"] = $orderID;	// search by orderID in the dscription		
+			$params["q"] = "Order ID :".$orderID;	// search by orderID in the dscription		
 
 		$params["maxResults"] = 2500;	// max number of events per calendar
     	$list = $service->events->listEvents($calendarID, $params);	
