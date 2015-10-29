@@ -4,10 +4,9 @@
    */ 
 	require_once "mydb.php";
 	require_once "spreadsheet.php";
-	
-	//include_once "calendar.php";
-	
-   $postdata = file_get_contents("php://input");
+	require_once "gmail.php";
+
+	$postdata = file_get_contents("php://input");
    //echo "postdata: " . $postdata;
 
     $data = json_decode($postdata, true);
@@ -46,6 +45,7 @@
 	foreach ($order as $field) {
 		$value = $field["value"];
 		$type = $field["type"];
+
 		if (strpos($type, "STARTTIME") === 0 || strpos($type, "ENDTIME") === 0) {
 			$type = "DATETIME";  // it behaves like DATETIME
 		}

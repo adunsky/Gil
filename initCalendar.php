@@ -35,47 +35,53 @@ function initCalendar($clientNumber) {
 	$clientmail = $customer["clientMail"];
 	$clientkeypath = $customer["clientKeyPath"];
 
-	$client = new Google_Client();
-	$client->setApplicationName($appName);
-	$client->setClientId($clientid);
-	$service = new Google_Service_Calendar($client);
-	
-	/************************************************
-	  If we have an access token, we can carry on.
-	  Otherwise, we'll get one with the help of an
-	  assertion credential. In other examples the list
-	  of scopes was managed by the Client, but here
-	  we have to list them manually. We also supply
-	  the service account
-	 ************************************************/
-	
-	if (isset($_SESSION[$clientid])) {
-	  echo "Got token from session\n";	
-	  $client->setAccessToken($_SESSION[$clientid]);
-	}
+	for ($i=0; $i<5; $i++) {	// retry to initialize 5 times before failing
+		try {
+			$client = new Google_Client();
+			$client->setApplicationName($appName);
+			$client->setClientId($clientid);
+			$service = new Google_Service_Calendar($client);
 
-	$key = file_get_contents($clientkeypath);
-	$cred = new Google_Auth_AssertionCredentials(
-	    $clientmail,
-	    array('https://www.googleapis.com/auth/calendar'),
-	    $key
-	);
-	$client->setAssertionCredentials($cred);
-	
-	
-	if ($client->getAuth()->isAccessTokenExpired()) {
-	  $client->getAuth()->refreshTokenWithAssertion($cred);
-	}
-		   
-	if ($client->getAccessToken()) {
-		  	$_SESSION[$clientid] = $client->getAccessToken();
-		  	return $service;
-	} 
-	else {
-			echo "could not access calendar";
-			return null;
-	}  
+			/************************************************
+			  If we have an access token, we can carry on.
+			  Otherwise, we'll get one with the help of an
+			  assertion credential. In other examples the list
+			  of scopes was managed by the Client, but here
+			  we have to list them manually. We also supply
+			  the service account
+			 ************************************************/
+			
+			if (isset($_SESSION[$clientid])) {
+			  echo "Got token from session\n";	
+			  $client->setAccessToken($_SESSION[$clientid]);
+			}
 
+			$key = file_get_contents($clientkeypath);
+			$cred = new Google_Auth_AssertionCredentials(
+			    $clientmail,
+			    array('https://www.googleapis.com/auth/calendar'),
+			    $key
+			);
+			$client->setAssertionCredentials($cred);
+			
+			
+			if ($client->getAuth()->isAccessTokenExpired()) {
+			  $client->getAuth()->refreshTokenWithAssertion($cred);
+			}
+				   
+			if ($client->getAccessToken()) {
+				  	$_SESSION[$clientid] = $client->getAccessToken();
+				  	return $service;
+			} 
+			else {
+					echo "could not access calendar";
+			}  
+		}
+		catch(Exception $e) {
+			echo "Exception: " .$e->getMessage() ."<br>\n";
+		}			
+	}
+	return null;
 }
 
 

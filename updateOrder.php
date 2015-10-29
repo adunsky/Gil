@@ -102,11 +102,11 @@
 			$chargeFieldValue = $value;
 		}
 
-		// check again that order is unique, in case duplicate (errounous locking) order values returned from spreadsheet
+		// check again that order is unique, in case of duplicate (error) order values returned from spreadsheet
 		if ($input == 'U') {	// Unique value		
 			if (!isUnique($field, $orderID)) {
 				syslog (LOG_ERR, "Order ".$orderID.": field value, after calculation: ".$field["value"]." already exists !");
-				echo $field["value"]." already exists";
+				echo "System error - please try again !<br>\n". $field["value"]." already exists";
 				return;
 			}
 		}
@@ -190,8 +190,63 @@
 			}
 		}
 	}
+
+	updateEmails($orderID);
 	syslog (LOG_INFO, "Order update complete: ".$orderID);
 	echo $orderID;
 	
+
+function updateEmails($orderID) {
+	global $mainTable, $emailCfgTable, $emailsTable;
+
+	$sql = "SELECT * FROM $mainTable WHERE id = $orderID;";
+	$result = mysql_query($sql) or die('get order Failed! ' . mysql_error()); 
+	$order = mysql_fetch_assoc($result);
+	if (!$order) {
+		// failed to get the order from main
+		syslog(LOG_ERR, "Failed to select order from main: ".$orderID);
+		return;
+	}
+	$sql = "SELECT * FROM $emailCfgTable";
+	$result = mysql_query($sql) or die('get emailCfg Failed! ' . mysql_error()); 	
+
+	while($emailCfg = mysql_fetch_assoc($result)) {
+		//	found email to queue in emails table
+		$num = $emailCfg["num"];
+		$emailTo = $order[$emailCfg["emailTo"]];
+		$fromName = $order[$emailCfg["fromName"]];
+		$fromEmail = $order[$emailCfg["fromEmail"]];
+		$subject = $order[$emailCfg["subject"]];
+		$content = $order[$emailCfg["content"]];
+		$schedule = $order[$emailCfg["schedule"]];
+
+		if ((!filter_var($fromEmail, FILTER_VALIDATE_EMAIL) === false) &&
+			$emailTo != "" &&
+			$fromName != "" &&
+			$subject != "") {
+
+			// valid email fields
+			$sql = "SELECT * FROM $emailsTable WHERE orderID = $orderID AND num = $num;";
+			$res = mysql_query($sql) or die('get order Failed! ' . mysql_error());
+			if (mysql_num_rows($res) > 0) {
+				// update existing email
+				$sql = "UPDATE $emailsTable SET emailTo='$emailTo', fromName='$fromName', fromEmail='$fromEmail', subject='$subject', content='$content', schedule='$schedule', updated='0' WHERE num='$num' AND orderID='$orderID';";
+				if (!mysql_query($sql)) die('Update Email Failed !' . mysql_error());
+				syslog(LOG_INFO, "Updated email to: ".$emailTo." at: ".$schedule." for order: ".$orderID);
+
+
+			}
+			else {
+				// insert new email to send
+				$sql = "INSERT INTO $emailsTable VALUES ('$num', '$orderID', '$emailTo', '$fromName', '$fromEmail', '$subject', '$content', '$schedule', 0)";
+				if (!mysql_query($sql)) die('Insert Email Failed !' . mysql_error());
+				syslog(LOG_INFO, "Inserted Email to: ".$emailTo." at: ".$schedule." for order: ".$orderID);
+			}
+		}
+		else
+			syslog(LOG_ERR, "Invalid email fields: ".$emailTo." , ".$fromName." , ".$fromEmail." , ".$subject." for order: ".$orderID);	
+	}
+
+}	
  
 ?>

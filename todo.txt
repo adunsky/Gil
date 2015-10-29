@@ -1,5 +1,12 @@
 - add try-catch and retry to init calendar 
-- don't allow to enter forms without a user
+// - don't allow to enter forms without a user
+- Add SMS and email notifications service
+	- need to add subject and content for each email field
+	- How to set From address to customer in email
+	- add access to spreadsheet in admin console:
+		https://admin.google.com/googmesh.com/AdminHome?chromeless=1#OGX:ManageOauthClients
+		
+- Add multiple lines in Main for scalability
 
 - support templates for new documents
 	//- add submenu to view files directly from the form

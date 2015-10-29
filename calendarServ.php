@@ -22,6 +22,8 @@ include_once "google-api-php-client-master/examples/templates/base.php";
 require_once realpath(dirname(__FILE__) . '/google-api-php-client-master/autoload.php');
 
 require_once "mydb.php";
+require_once "gmail.php";
+
 //session_start();
    
 	// get arguments from command line		
@@ -87,12 +89,11 @@ require_once "mydb.php";
 			// Look for Emails to send
 			checkForEmails();
 
-
-
 			// Look for calendar events that needs update
 			$sql = "SELECT * FROM $eventsTable WHERE updated='0';";
 			if (!$result = mysql_query($sql)) {
 				echo $currTime.'Select event table Failed! ' . mysql_error(); 
+				sleep(1);
 				continue;
 			}
 			if ((mysql_num_rows($result) > 0) && ($event = mysql_fetch_array($result, MYSQL_ASSOC))) {
@@ -416,9 +417,25 @@ function getSearchFields($order) {
 }
 
 function checkForEmails() {
+	global $emailsTable;
+
+	$currTime = date("M d H:i:s ");
 	// Look for awaiting emails in the emails table
-
-
+	$sql = "SELECT * FROM $emailsTable WHERE updated='0';";
+	if (!$result = mysql_query($sql)) {
+		echo $currTime.'Select emails table Failed! ' . mysql_error(); 
+		return;
+	}
+	while ($email = mysql_fetch_array($result, MYSQL_ASSOC)) {
+		$num = $email["num"];
+		$orderID = $email["orderID"];
+		// found email to send
+		if (strtotime($email["schedule"]) <= strtotime($currTime)) {
+			sendMail($email["emailTo"], $email["fromName"], $email["fromEmail"], $email["subject"], $email["content"]);
+			mysql_query("UPDATE $emailsTable SET updated='1' WHERE num='$num' AND orderID='$orderID';");
+			echo $currTime."Sent email to: ".$email["emailTo"]." subject: ".$email["subject"]."\n";
+		}
+	}
 }
 
 
