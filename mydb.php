@@ -36,6 +36,8 @@
 	$calendarsTable = '_calendars';
 	$eventsTable = '_events';
 	$usersTable = '_users';	
+	$emailCfgTable = '_emailCfg';	
+	$emailsTable = '_emails';
 	$clientIDTable = '_clientids';
 	
 function selectDB($dbName)	{
@@ -82,7 +84,7 @@ function getClient($DBName, $number) {
 } 
 
 function getClientInfo($DBname) {
-		global $lang, $logo;
+		global $lang, $logo, $custName;
 
 	    $sql =  "SELECT * FROM customers.customers WHERE customers.customers.dbName='$DBname';";
 	    $result = mysql_query($sql);
@@ -90,6 +92,7 @@ function getClientInfo($DBname) {
       	$ssName = $customer["ssName"];
       	$lang = $customer["lang"];
       	$logo = $customer["logo"];
+      	$custName = $customer["name"];
 
       	return $ssName;
 } 
