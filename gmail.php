@@ -76,7 +76,7 @@ function sendMail($to, $fromName, $fromEmail, $subject, $message) {
 	$service = initGmail($sender);
 	if (!$service)
 		syslog(LOG_ERR, "no Gmail service");
-	try {
+	else try {
 		$mail = new PHPMailer();
 		$mail->CharSet = "UTF-8";
 		//$mail->Encoding = 'base64';
@@ -109,7 +109,7 @@ function sendMail($to, $fromName, $fromEmail, $subject, $message) {
 		$data = base64_encode($mime);
 		$data = str_replace(array('+','/','='),array('-','_',''),$data); // url safe
 		$m->setRaw($data);
-		syslog(LOG_INFO, "email message: ".$data);
+		//syslog(LOG_INFO, "email message: ".$data);
 		//var_dump($m);
 		$service->users_messages->send($sender, $m);
 	}
