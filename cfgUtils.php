@@ -426,7 +426,6 @@ function createEventsTable($worksheetFeed, $eventsTable) {
 
 
 
-
 function updateListValueTable($worksheetFeed, $listValueTable) {
 		// create listValue table
 		$sql = "DROP TABLE IF EXISTS $listValueTable;";
@@ -434,21 +433,34 @@ function updateListValueTable($worksheetFeed, $listValueTable) {
 		$sql = "CREATE TABLE $listValueTable (`index` INT(32), `value` VARCHAR(64));";
 				// echo $sql;
 		$result = mysql_query($sql) or die('Create listValue table Failed! ' . mysql_error());
-		echo "Table ".$listValueTable." created<br>\n"; 
+		echo "Table ".$listValueTable." created<br>"; 
 		
 		$worksheet = $worksheetFeed->getByTitle('CellType');
 		$cellFeed = $worksheet->getCellFeed();
 
 		$row = 2;
 		$cellEntry = $cellFeed->getCell($row, 1);	
+
+		$row = 2;
+		$cellEntry = $cellFeed->getCell($row, 1);	
 		while ($cellEntry && ($name = $cellEntry->getContent()) != "") {
-			$cellEntry = $cellFeed->getCell($row, 2);	
+			$col = 2;
+			$cellEntry = $cellFeed->getCell($row, $col++);	
 			$type = $cellEntry->getContent();
  
-			$cellEntry = $cellFeed->getCell($row, 3);	
-			$input = $cellEntry->getContent();
-			
-			$cellEntry = $cellFeed->getCell($row, 4);
+			$cellEntry = $cellFeed->getCell($row, $col++);	
+			if (!$cellEntry)
+				$input = 'N';
+			else
+				$input = $cellEntry->getContent();
+
+			$cellEntry = $cellFeed->getCell($row, $col++);
+			if (!$cellEntry)
+				$searchable = 'N';
+			else
+				$searchable = $cellEntry->getContent();
+
+			$cellEntry = $cellFeed->getCell($row, $col++);
 			if ($cellEntry)
 				$default = $cellEntry->getContent();
 			else 
@@ -456,7 +468,6 @@ function updateListValueTable($worksheetFeed, $listValueTable) {
 
 			if ($type == "LIST") {
 				// Add list values to list table
-				$col = 5;	
 				$cellEntry = $cellFeed->getCell($row, $col);	
 				while ($cellEntry && ($value = $cellEntry->getContent()) != "") {
 					$value = mysql_real_escape_string($value);
@@ -469,6 +480,7 @@ function updateListValueTable($worksheetFeed, $listValueTable) {
 			$cellEntry = $cellFeed->getCell(++$row, 1);
 		}
 }
+
 
 function createLogTable($logTable) {
 	// create log table
