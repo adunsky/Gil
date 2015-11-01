@@ -90,10 +90,12 @@ orderApp.controller('formCtrl', function($scope, $http,  $location, myService){
 
 	$scope.getLastRow = function(col) {
 		var index = 0;
-		for (var i=0; i<$scope.form.fields.length; i++) {
+		if ($scope.form.fields) {
+			for (var i=0; i<$scope.form.fields.length; i++) {
 
-			if ($scope.form.fields[i].col == col)
-				index = i;
+				if ($scope.form.fields[i].col == col)
+					index = i;
+			}
 		}
 		return index+1;
 
@@ -148,10 +150,12 @@ orderApp.controller('formCtrl', function($scope, $http,  $location, myService){
 
  	$scope.findFieldIndex = function(field) {
 
- 		for (var i=0; i<$scope.form.fields.length; i++ ) {
+ 		if ($scope.form.fields) {
+	 		for (var i=0; i<$scope.form.fields.length; i++ ) {
 
- 			if ($scope.form.fields[i].fieldIndex == field.fieldIndex)
- 				return i;
+	 			if ($scope.form.fields[i].fieldIndex == field.fieldIndex)
+	 				return i;
+	 		}
  		}
  		return -1;	// not found
 
