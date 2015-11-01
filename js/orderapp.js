@@ -199,6 +199,8 @@ orderApp.controller('formCtrl', function($scope, $http,  $location, myService){
  			$newField.fieldType = field.fieldType;
  		}
 
+ 		if (!$scope.form.fields)
+ 			$scope.form.fields = [];
  		$newField.col = targetCol;
  		$newField.name = "";
  		$scope.form.fields.splice(targetIndex, 0, $newField);	// add a new field
