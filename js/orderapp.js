@@ -633,7 +633,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 
 			$scope.setFormValues = function()	{
 				if ($scope.order) 
-					for(var i=0; $scope.form && $scope.form.fields[i]; i++) {
+					for(var i=0; $scope.form && $scope.form.fields && $scope.form.fields[i]; i++) {
 		      			var fieldIndex = $scope.form.fields[i].fieldIndex-2;
 		      			$scope.form.fields[i].input = $scope.order[fieldIndex].input;
 		      			if ($scope.form.fields[i].type == 'EmbedHyperlink')
@@ -812,7 +812,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 
   				}
   				// return true if manadtory field is empty
-  				for(var i=0; $scope.form && $scope.form.fields[i]; i++) {
+  				for(var i=0; $scope.form && $scope.form.fields && $scope.form.fields[i]; i++) {
   					if ($scope.form.fields[i].fieldType == 'Mandatory' && 
   						($scope.form.fields[i].value == null || $scope.form.fields[i].value == "")) {
   						$scope.form.error = true;
