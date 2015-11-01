@@ -5,3 +5,4 @@ cd /var/www/html/Gilamos
 php calendarServ.php db=samgal > cal.log &
 php calendarServ.php db=demo > calDemo.log & 
 php calendarServ.php db=instdel > calInst.log & 
+php calendarServ.php db=arava > arava.log & 

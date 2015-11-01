@@ -133,6 +133,79 @@ function createFieldTypeTable($worksheetFeed, $fieldTable, $listValueTable) {
 		}
 }
 
+
+function updateFormTables($worksheetFeed, $formsTable, $formFieldsTable) {
+		// Create Form table	
+		$sql = "DROP TABLE IF EXISTS $formsTable;";
+		$result = mysql_query($sql) or die('Drop table Failed! ' . mysql_error());
+		
+		$sql = "CREATE TABLE $formsTable ( title VARCHAR(64), number INT(32));";
+				// echo $sql;
+		$result = mysql_query($sql) or die('Create Forms table Failed! ' . mysql_error());
+	
+		echo "Table ".$formsTable." created<br>"; 
+
+		$result = mysql_query("SHOW COLUMNS FROM $formFieldsTable LIKE 'col'");
+		if (mysql_num_rows($result) > 0)
+			$colExists = true;
+		else
+			$colExists = false;
+
+		if (!$colExists) {	// recreate the form fields table if the column doesn't exist
+			$sql = "DROP TABLE IF EXISTS $formFieldsTable;";
+			$result = mysql_query($sql) or die('Drop table Failed! ' . mysql_error());
+			$sql = "CREATE TABLE $formFieldsTable ( formNumber INT(32), fieldIndex INT(32), fieldType VARCHAR(32), col INT(16));";
+					// echo $sql;
+			$result = mysql_query($sql) or die('Create fields table Failed! ' . mysql_error());
+			
+			echo "Table ".$formFieldsTable." created<br>"; 
+		}
+		$worksheet = $worksheetFeed->getByTitle('Forms');
+		$cellFeed = $worksheet->getCellFeed();
+		
+		$col = 2;
+		$row = 1;
+		
+		$cellEntry = $cellFeed->getCell(1,$col);		
+		while ($cellEntry && ($title = $cellEntry->getContent()) != "") {
+			//echo $keys[$i];
+
+			// insert forms to forms table
+			$formNumber = $col-1;
+			$sql = "INSERT INTO $formsTable VALUES ('$title', '$formNumber');";
+					// echo $sql;
+			$result = mysql_query($sql) or die('Insert to forms table Failed! ' . mysql_error());
+			echo "Table ".$title." inserted to forms table<br>"; 
+			
+			if (!$colExists) {	// update the fields only if the column doesn't exist
+				// now insert the fields of the form
+				$row = 2;
+				$fieldTitle = $cellFeed->getCell($row, 1);
+				while ($fieldTitle && $fieldTitle->getContent() != "") {
+					$fieldCellEntry = $cellFeed->getCell($row, $col);
+					if ($fieldCellEntry)	
+						$type = $fieldCellEntry->getContent();	// The correct title with spaces	
+					else 	
+						$type = "";
+						
+					if ($type != "") {
+						if ($type == "Read Only")	// set column by the type
+							$column = 2;
+						else
+							$column = 1;
+						// add field to form
+						$sql = "INSERT INTO $formFieldsTable VALUES ('$formNumber', '$row', '$type', '$column');";
+						$result = mysql_query($sql) or die('Insert field Failed! ' . mysql_error());
+						
+					} 
+					$fieldTitle = $cellFeed->getCell(++$row, 1);
+				}	// while
+			}
+			$cellEntry = $cellFeed->getCell(1,++$col);				
+		}
+}
+
+
 function createFormTables($worksheetFeed, $formsTable, $formFieldsTable) {
 		// Create Form table	
 		$sql = "DROP TABLE IF EXISTS $formsTable;";

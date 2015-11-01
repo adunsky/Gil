@@ -106,7 +106,7 @@
 		if ($input == 'U') {	// Unique value		
 			if (!isUnique($field, $orderID)) {
 				syslog (LOG_ERR, "Order ".$orderID.": field value, after calculation: ".$field["value"]." already exists !");
-				echo "System error - please try again !<br>\n". $field["value"]." already exists";
+				echo "System error - please try again !<br>\n". " Duplicate order: ".$field["value"];
 				return;
 			}
 		}
