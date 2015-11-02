@@ -22,12 +22,11 @@
 		return;	
 	
 	$eventID = $_GET["eventID"];
-	syslog(LOG_INFO, "getOrder called, eventID: ".$eventID." orderID: ".$orderID);
-
+	$user = $_GET["user"];	
+	
 	if ($eventID == '0' && $orderID == 0) { // it is a new order - verify the user email
 		//echo $eventID;
 		$newOrder = true;
-		$user = $_GET["user"];	
 		if ($eventID == '0' && !authUserForm($user, $formID)) {
 			echo "The user is not authorized to perform this action.";
 			return;	
@@ -36,7 +35,7 @@
 	else
 		$newOrder = false;
 
-	
+	syslog(LOG_INFO, "getOrder called, eventID: ".$eventID." orderID: ".$orderID." user: ".$user);	
 	// First get all the fields
 	$sql = "SELECT * FROM $fieldTable;";
 	$result = mysql_query($sql) or die('get fields Failed! ' . mysql_error()); 

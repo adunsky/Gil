@@ -8,25 +8,9 @@
    font-size: 20px;
 }
 
-.error {
-	color: red;
-}
-.datetime-picker div > table .btn-default {
-  	border: 0;
-}
 
 .container {
 	text-align: left;
 
 }
 
-
-h1 {
-text-align: center;
-	
-}
-
-#iframe {
-
-	height: 400px;
-}

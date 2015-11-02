@@ -555,22 +555,23 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 
      		$http.get("getOrder.php", { params: { eventID: eventID, db: $scope.dbName, calendarNum: calendarNum, orderID: $scope.orderID, user: $scope.user } })
      		.success(function(data) {
-             $scope.message = data;
-             console.log($scope.message);
-      	    try {
-   	        		$updatedOrder = angular.fromJson(data);
-   	        		if ($updatedOrder) {
-   	        			$scope.orderID = $updatedOrder.orderID;
-   	        			$scope.order = $updatedOrder.order;
-             			myService.setOrder($scope.order);
-             			$scope.getFormFields($updatedOrder.formID, $scope.user);
-					}
-	      	 }
-        		 catch (e) {
+             	$scope.message = data;
+             	console.log($scope.message);
+	      	    try {
+	   	        		$updatedOrder = angular.fromJson(data);
+		      	}
+        		catch (e) {
             		alert("Error: "+$scope.message);
             		//myService.setOrder(null);
-        		 } 
+        		} 
+	    		if ($updatedOrder) {
+	    			$scope.orderID = $updatedOrder.orderID;
+	    			$scope.order = $updatedOrder.order;
+	 				myService.setOrder($scope.order);
+	 				$scope.getFormFields($updatedOrder.formID, $scope.user);
+				}
 			}); 
+
 		};
 		
 			
@@ -578,20 +579,17 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 				if (!$scope.form) {
 		     		$http.get("getForms.php", { params: { db: $scope.dbName, form: form, user: user } })
 		     		.success(function(data) {
-		             $scope.message = data;
-		             console.log($scope.message);
-		      	    try {
-		   	        		$scope.form = angular.fromJson(data);
-		   	        		if ($scope.form) {
-		             			$scope.setFormValues();
-
-							}
-			      	 }
-		        		 catch (e) {
-		            		alert("Error: "+$scope.message);
-
-		        		 } 
-	
+			            $scope.message = data;
+			            console.log($scope.message);
+			      	    try {
+			   	        		$scope.form = angular.fromJson(data);
+				      	}
+			        	catch (e) {
+			            	alert("Error: "+$scope.message);
+			        	} 
+	   	        		if ($scope.form) {
+	             			$scope.setFormValues();
+						}
 					}); 
 				}
 				else { // form exist - set it to current form and set it's values
@@ -638,8 +636,8 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 			}	
 
 			$scope.setFormValues = function()	{
-				if ($scope.order) 
-					for(var i=0; $scope.form && $scope.form.fields && $scope.form.fields[i]; i++) {
+				if ($scope.order && $scope.form && $scope.form.fields) 
+					for(var i=0; $scope.form.fields[i]; i++) {
 		      			var fieldIndex = $scope.form.fields[i].fieldIndex-2;
 		      			$scope.form.fields[i].input = $scope.order[fieldIndex].input;
 		      			if ($scope.form.fields[i].type == 'EmbedHyperlink')
@@ -818,18 +816,19 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 
   				}
   				// return true if manadtory field is empty
-  				for(var i=0; $scope.form && $scope.form.fields && $scope.form.fields[i]; i++) {
-  					if ($scope.form.fields[i].fieldType == 'Mandatory' && 
-  						($scope.form.fields[i].value == null || $scope.form.fields[i].value == "")) {
-  						$scope.form.error = true;
+  				if ($scope.form && $scope.form.fields)
+	  				for(var i=0; $scope.form.fields[i]; i++) {
+	  					if ($scope.form.fields[i].fieldType == 'Mandatory' && 
+	  						($scope.form.fields[i].value == null || $scope.form.fields[i].value == "")) {
+	  						$scope.form.error = true;
 
-						if ($scope.form.dir == 'rtl')
-							$scope.form.message = "שדות חובה חסרים";
-						else
-  							$scope.form.message = "Missing required fields";
-  						return true;
-  					}
-  				}
+							if ($scope.form.dir == 'rtl')
+								$scope.form.message = "שדות חובה חסרים";
+							else
+	  							$scope.form.message = "Missing required fields";
+	  						return true;
+	  					}
+	  				}
   				$scope.form.error = false;
   				return false;
   			}

@@ -66,7 +66,7 @@
 		}
 	}
 
-	syslog(LOG_INFO, "updateOrder called on ".$ssName." orderID: ".$orderID);
+	syslog(LOG_INFO, "updateOrder called on ".$ssName." orderID: ".$orderID." user: ".$user);
 
 	for ($i=0; initGoogleAPI($ssName) == null && $i<5; $i++)
 		syslog(LOG_ERR, "InitGoogleApi Failed"); // retry 5 times to initialize
