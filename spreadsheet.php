@@ -147,12 +147,7 @@ function getCalcFields($order) {
 	global $spreadsheet, $mainSpreadsheetName;	
 	set_time_limit (60); // This may take a while
 	date_default_timezone_set("Asia/Jerusalem");
-	$profile = false;
-	
-	if ($profile) {
-		$currTime = date("h:i:s");
-		syslog(LOG_INFO, " Start SS init : ".$currTime);
-	} 
+
 	//$spreadsheet = initGoogleAPI();
 	if ($spreadsheet == null)
 		return null;
@@ -160,26 +155,35 @@ function getCalcFields($order) {
 		syslog(LOG_INFO, "Getting worksheets");	
 		$worksheetFeed = $spreadsheet->getWorksheets();
 		syslog(LOG_INFO, "Getting Main worksheet");	
-		$worksheet = $worksheetFeed->getByTitle('Main');
+
+		$mainCounter = 0;
+		$locked = false;
+		while (!$locked) {
+			$worksheet = $worksheetFeed->getByTitle('Main'.$mainCounter);
+			if (!$worksheet) {
+				$mainCounter = 0;
+				// tried all Main worksheets - wait until unlocked
+				syslog(LOG_INFO, "Waiting for spreadsheet to unlock: Main".$mainCounter);
+				sleep(1);
+			}
+			else {
+				// try to lock the worksheet
+				syslog(LOG_INFO, "Trying to lock spreadsheet: Main".$mainCounter);
+			    if (get_named_lock($mainSpreadsheetName.$mainCounter)) {
+			    	// success locking the worksheet
+			    	$locked = true;
+			    }
+			    else // failed to lock it - try next Main
+			    	$mainCounter++;
+		    }
+		}
+	
 		syslog(LOG_INFO, "Getting cell feed");
 		$cellFeed = $worksheet->getCellFeed();
-		
-		// write order to spreadsheet
-		if ($profile) {	
-			$currTime = date("h:i:s");
-			syslog(LOG_INFO, " Start SS write : ".$currTime); 
-		}
-		
-	   while (!($locked = get_named_lock($mainSpreadsheetName))) { // wait until unlocked
-	   	//echo "Waiting for spreadsheet to unlock <br>\n";
-	   	sleep(1);
-	   	syslog(LOG_INFO, "Waiting for spreadsheet to unlock ");
-	   }
-	
-	
+
 		// batch update
 		$batchRequest = new Google\Spreadsheet\Batch\BatchRequest();
-		
+		// write order to spreadsheet		
 		syslog(LOG_INFO, "Writing to spreadsheet...");
 		foreach ($order as $field) {
 			$col = $field["index"];
@@ -233,12 +237,9 @@ function getCalcFields($order) {
 		$batchRes = $cellFeed->insertBatch($batchRequest);	
 		if ($batchRes->hasErrors())
 			syslog(LOG_ERR, "Error in batch<br>\n");	
-		if ($profile) {
-			$currTime = date("h:i:s");
-			syslog (LOG_INFO, " End SS write : ".$currTime); 
-		}	
+
 		//sleep(5);
-			// now get the computed values
+		// now get the computed values
 		syslog(LOG_INFO, "Reading from spreadsheet...");		
 		$listFeed = $worksheet->getListFeed();
 		
@@ -272,10 +273,6 @@ function getCalcFields($order) {
 	
 			if (!array_key_exists(++$i, $order))
 				break;	// reached the end of the array
-		}
-		if ($profile) {	
-			$currTime = date("h:i:s");
-			syslog (LOG_INFO, " End SS read : ".$currTime); 
 		}
 	}
 	//catch exception
