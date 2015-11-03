@@ -1354,53 +1354,61 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 
 			$scope.insertToFolder = function(parentID, orderID, files, callback) {
 			  var folderName = FOLDER_PREFIX+orderID;
-			  // Search if folder exists
-			  $qString = "title = '"+folderName+"'"+" and trashed = false and mimeType = 'application/vnd.google-apps.folder'";
-			  gapi.client.drive.children.list({
-			    'folderId' : parentID, 
-			    'q' : $qString
+				if (files && $scope.selectedParentFolder.orderFolder) {
+					// order folder exists - insert into it
+					$scope.insertFiles(files, $scope.selectedParentFolder.orderFolder);
+					return;
+				}
+
+				// wait until folder is created
+				document.body.style.cursor = 'wait';
+			  	// Search if folder exists
+			  	$qString = "title = '"+folderName+"'"+" and trashed = false and mimeType = 'application/vnd.google-apps.folder'";
+			  	gapi.client.drive.children.list({
+			    	'folderId' : parentID, 
+			    	'q' : $qString
 			    }).
 			    execute(function(resp) {
-			      if (resp.items && resp.items[0])  {
-			      	if (orderID <= 0) {
-						// Temporary folder is in use - try a different one with --orderID
-						$scope.insertToFolder(parentID, --$scope.orderID, files);
-						return;
-			      	}
-			        // folder exist - insert into it
-			        if (files)
-			          	$scope.insertFiles(files, resp.items[0]);
+			      	if (resp.items && resp.items[0])  {
+			      		if (orderID <= 0) {
+							// Temporary folder is in use - try a different one with --orderID
+							$scope.insertToFolder(parentID, --$scope.orderID, files);
+							return;
+				      	}
+			        	// folder exist - insert into it
+			        	if (files)
+			          		$scope.insertFiles(files, resp.items[0]);
 			          
-			          $scope.setOrderFolder(resp.items[0]);
-			      }
-			      else {
+			          	$scope.setOrderFolder(resp.items[0]);
+			      	}
+			      	else {
 
-			        // folder doesn't exist - create it
-			        var request = gapi.client.request({
-			            'path': '/drive/v2/files/',
-			            'method': 'POST',
-			            'headers': {
-			                'Content-Type': 'application/json',
-			                //'Authorization': 'Bearer ' + access_token,             
-			            },
-			            'body':{
-			                "title" : folderName,
-			                'parents': [{"id": parentID}],
-			                "mimeType" : "application/vnd.google-apps.folder",
-			            }
-			        });
-			        if (!callback) {
-			            callback = function(file) {
-			              	// folder created - insert into it
-		              		if (files) 
-		              			$scope.insertFiles(files, file);
-				            
-				            $scope.setOrderFolder(file);
-				            console.log("Folder: ");
-			    	        console.log(file);              
-			            };
-			        }
-			        request.execute(callback);
+			        	// folder doesn't exist - create it
+			        	var request = gapi.client.request({
+				            'path': '/drive/v2/files/',
+				            'method': 'POST',
+				            'headers': {
+				                'Content-Type': 'application/json',
+				                //'Authorization': 'Bearer ' + access_token,             
+			            	},
+			            	'body':{
+			                	"title" : folderName,
+			            	    'parents': [{"id": parentID}],
+			                	"mimeType" : "application/vnd.google-apps.folder",
+			            	}
+			        	});
+			        	if (!callback) {
+				            callback = function(file) {
+				              	// folder created - insert into it
+			              		if (files) 
+			              			$scope.insertFiles(files, file);
+					            
+					            $scope.setOrderFolder(file);
+					            console.log("Folder: ");
+				    	        console.log(file);              
+				            };
+				        }
+			        	request.execute(callback);
 			      }
 			    });
 			      

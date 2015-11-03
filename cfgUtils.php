@@ -45,7 +45,7 @@ function createMainTable($worksheetFeed, $fieldTable, $mainTable)	{
 			
 			$ID = $column["index"];
 			$type = $column["type"];
-			if ($type == 'TEXT' || $type == 'LIST' || $type == 'CHARGE')		// translate TEXT in the worksheet to VARCHAR(64)
+			if ($type == 'TEXT' || $type == 'LIST' || $type == 'CHARGE' || $type == 'Email')		// translate TEXT in the worksheet to VARCHAR(64)
 				$type = 'VARCHAR(64)';
 			elseif ($type == 'Hyperlink' || $type == 'EmbedHyperlink')
 					$type = 'VARCHAR(256)';	// For long links

@@ -101,6 +101,7 @@ function sendMail($to, $fromName, $fromEmail, $subject, $message) {
 				syslog(LOG_ERR, "Ignoring invalid email address: ".$email);
 		}
 		$mail->Subject = $subject;
+		$message += "\nSent by GoogMesh";
 		$mail->Body = $message;
 		$mail->preSend();
 		$mime = $mail->getSentMIMEMessage();
