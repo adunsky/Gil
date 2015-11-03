@@ -66,7 +66,7 @@ use Google\Spreadsheet\ServiceRequestFactory;
 		}
 		if ($command == "forms") {	
 			// Create form and field form tables	
-			updateFormTables($worksheetFeed, $formsTable, $formFieldsTable);	
+			updateFormTables($worksheetFeed, false);	
 		}		
 		if ($command == "calendars") {
 			// update calendars and users that share them
@@ -96,7 +96,7 @@ use Google\Spreadsheet\ServiceRequestFactory;
 			updateFieldTypeTable($worksheetFeed, $fieldTable, $listValueTable);
 		
 			// Create form and field form tables	
-			createFormTables($worksheetFeed, $formsTable, $formFieldsTable);	
+			updateFormTables($worksheetFeed, false);	
 			
 			updateCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fieldTable);
 			

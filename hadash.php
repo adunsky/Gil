@@ -62,8 +62,8 @@ use Google\Spreadsheet\ServiceRequestFactory;
 			// Create FieldType table
 			createFieldTypeTable($worksheetFeed, $fieldTable, $listValueTable);
 		
-			// Create form and field form tables	
-			createFormTables($worksheetFeed, $formsTable, $formFieldsTable);	
+			// Create FormTables form and field form tables	
+			updateFormTables($worksheetFeed, true);	
 	
 			// Create main table
 			createMainTable($worksheetFeed, $fieldTable, $mainTable);		
@@ -85,6 +85,10 @@ use Google\Spreadsheet\ServiceRequestFactory;
 			// Create log table		
 			createLogTable($logTable);
 		}
+		if (command == "forms")
+			// Create FormTables form and field form tables	
+			updateFormTables($worksheetFeed, true);			 
+
 		if ($command == "calendars") { // recreate calendars and events 
 			// remove the google calendars
 			removeCalendars($worksheetFeed, $calendarsTable, $eventsTable);					

@@ -1,14 +1,25 @@
-- add try-catch and retry to init calendar 
+- test new and updated configuration of forms, calendars
+- check if location field is mandatory
+
+// add try-catch and retry to init calendar 
 // - don't allow to enter forms without a user
-- Add SMS and email notifications service
-	- need to add subject and content for each email field
-	- How to set From address to customer in email
-	- add access to spreadsheet in admin console:
+//- Add SMS and email notifications service
+//	- need to add subject and content for each email field
+//	- How to set From address to customer in email
+//	- add access to spreadsheet in admin console:
 		https://admin.google.com/googmesh.com/AdminHome?chromeless=1#OGX:ManageOauthClients
-		
+- how to send email to many reciepients
+
 - Add multiple lines in Main for scalability
 
-- support templates for new documents
+- Add progress bar window for file uploads
+
+audit trail - store all changes per record, with user
+ - for each record' store google spreadsheet and get it for free
+
+- backup script on server ?
+
+//- support templates for new documents
 	//- add submenu to view files directly from the form
 	
 //- Solution for multiple shared folders per user (or form) 
@@ -30,8 +41,6 @@ Add folder name cell ?
 
 //Use client list for scalability of calendars
 
-audit trail - store all changes per record, with user
-
 //Add validation for "+=-" etc..
 //Support english forms
 //New calendar configuration:
@@ -43,7 +52,7 @@ audit trail - store all changes per record, with user
 Default start hour - 8:00 am
 Event gadget - try
 Security authorization - get user credentials through oath2
-Track change by user
+//Track change by user
 //Add support for attachments - Google drive
 //	- take care of concurrent new orders
 	- how to handle multiple drive folders (accounts) for the same order
