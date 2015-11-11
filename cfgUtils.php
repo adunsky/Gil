@@ -171,7 +171,7 @@ function updateFormTables($worksheetFeed, $new) {
 			$sql = "INSERT INTO $formsTable VALUES ('$title', '$formNumber');";
 					// echo $sql;
 			$result = mysql_query($sql) or die('Insert to forms table Failed! ' . mysql_error());
-			echo "Table ".$title." inserted to forms table<br>"; 
+			echo "Form ".$title." inserted to forms table<br>"; 
 			
 			if ($new) {	// update the fields only if the column doesn't exist
 				// now insert the fields of the form

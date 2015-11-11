@@ -143,7 +143,7 @@ function release_named_lock($lockname) {
 }
 
 
-function getCalcFields($order) {
+function getCalcFields($order, $oldValues) {
 	global $spreadsheet, $mainSpreadsheetName;	
 	set_time_limit (60); // This may take a while
 	date_default_timezone_set("Asia/Jerusalem");
@@ -163,7 +163,7 @@ function getCalcFields($order) {
 			if (!$worksheet) {
 				$mainCounter = 0;
 				// tried all Main worksheets - wait until unlocked
-				syslog(LOG_INFO, "Waiting for spreadsheet to unlock: Main".$mainCounter);
+				syslog(LOG_INFO, "Waiting for spreadsheet to unlock...");
 				sleep(1);
 			}
 			else {
@@ -177,14 +177,15 @@ function getCalcFields($order) {
 			    	$mainCounter++;
 		    }
 		}
-	
-		syslog(LOG_INFO, "Getting cell feed");
-		$cellFeed = $worksheet->getCellFeed();
 
-		// batch update
-		$batchRequest = new Google\Spreadsheet\Batch\BatchRequest();
+		syslog(LOG_INFO, "Getting List feed");
+		$listFeed = $worksheet->getListFeed();
+		
+		$entries = $listFeed->getEntries();
+		$listEntry = $entries[0]; 
+		$values = $listEntry->getValues();
 		// write order to spreadsheet		
-		syslog(LOG_INFO, "Writing to spreadsheet...");
+		syslog(LOG_INFO, "Writing to spreadsheet: Main".$mainCounter);
 		foreach ($order as $field) {
 			$col = $field["index"];
 			$value = $field["value"];
@@ -192,6 +193,9 @@ function getCalcFields($order) {
 			$type = $field["type"];
 			$name = $field["name"];
 	
+			$currValue = next($values);	// get the next value 
+			$currKey = key($values);
+
 			if ($input == 'Y' || $input == 'U') { // it is an input field
 					if (strpos($type, "STARTTIME") === 0 || strpos($type, "ENDTIME") === 0)
 						$type = "DATETIME";  // it behaves like DATETIME
@@ -215,45 +219,55 @@ function getCalcFields($order) {
 	 						$value = "'".$value;
 
 	 					}
-	 					
-	 				if ($value == "")
-	 					$value = "_none"; // ensure non empty cells for the batch to work
-	 				else
-						$value = str_replace('"','', $value);	// remove qoutes from values
-					$inputCell = $cellFeed->getCell(2, $col);
-					if (empty($inputCell)) {
-	        			// CellEntry doesn't exist. Use edit cell.
-	        			syslog(LOG_INFO, "Empty field updated manually: ".$name);
-	        			$cellFeed->editCell(2, $col, $value);
-	        		}
-	        		else {	
-	 					$inputCell->setContent($value);
-		        		$batchRequest->addEntry($inputCell);
-				 	//echo "Value: ".$value."<br>\n";
-	        		}
-			}		
-				
-		}	
-		$batchRes = $cellFeed->insertBatch($batchRequest);	
-		if ($batchRes->hasErrors())
-			syslog(LOG_ERR, "Error in batch<br>\n");	
 
-		//sleep(5);
+	 				if ($value != "")
+						$value = str_replace('"','', $value);	// remove qoutes from values
+
+	        		$values[$currKey] = $value;
+			}
+			else
+				$values[$currKey] = "";
+
+
+		}
+		$listEntry->update($values);
+
+		syslog(LOG_INFO, "writing old values...");
+		reset($values);
+		$key = key($values);
+		$values[$key] = "old";
+		foreach ($oldValues as $field) {
+			$currValue = next($values);	// get the next value 
+			$key = key($values);
+			$values[$key] = $field["value"];
+		}
+		$oldEntry = $entries[1];
+		$oldEntry->update($values);
+		//var_dump($values);
+
 		// now get the computed values
-		syslog(LOG_INFO, "Reading from spreadsheet...");		
+		syslog(LOG_INFO, "Done writing...");
+
+		// Must recall the feeds to get the calculated values
+		syslog(LOG_INFO, "Getting list feed...");		
 		$listFeed = $worksheet->getListFeed();
 		
 		$entries = $listFeed->getEntries();
-		$listEntry = $entries[0]; 
+		$listEntry = $entries[2]; 
 		$values = $listEntry->getValues();
-		//var_dump($values);
-	
 	
 		release_named_lock($mainSpreadsheetName);
-	
-		$i = -1;
-		foreach ($values as $value) { // update the output values
-			if ($i > -1) {// skip the first column
+		$i = 0;
+		syslog(LOG_INFO, "Reading from spreadsheet...");
+		foreach ($order as $field) { // update the output values
+			$col = $field["index"];
+			$input = $field["input"];
+			$type = $field["type"];
+
+			$value = next($values);
+
+			if ($input != 'Y' && $input != 'U') { // it is an output field
+
 				if ($value == "#N/A")
 					syslog(LOG_ERR, "Error: ".$i." : ".$value);
 				if ($value == "_none")
@@ -270,11 +284,10 @@ function getCalcFields($order) {
 					$order[$i]["value"] = $value;
 				}
 			}
-	
-			if (!array_key_exists(++$i, $order))
-				break;	// reached the end of the array
+			$i++;
 		}
-	}
+
+	}	// try
 	//catch exception
 	catch(Exception $e) {
 		release_named_lock($mainSpreadsheetName);

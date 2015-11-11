@@ -1,6 +1,6 @@
 var orderApp = angular.module('orderApp', ['ngRoute', 'ngDraggable', 'ui.bootstrap', 'ui.bootstrap.datetimepicker']);
 
-orderApp.factory('myService', function () {
+orderApp.service('orderService', function () {
 	var Order = [];
 	var Forms = [];
 
@@ -12,15 +12,15 @@ orderApp.factory('myService', function () {
 		Order = [];
 		for (i=0; order[i] != null; i++) {
 			order[i].dateTimeCalendarisOpen = false;
-			Order.push(order[i]);
+			Order[i] = {};
+			Order[i].value = order[i].value;	// store the old value
 		}	
 						
 	}
 
-	
 	return {
 	    getOrder: getOrder,
-	    setOrder: setOrder    
+	    setOrder: setOrder  
 	}
 });
 
@@ -33,9 +33,6 @@ orderApp.config(function($routeProvider){
         .when('/newOrder',{
                 templateUrl: 'newOrder.html'
           })
-        .when('/order',{
-                templateUrl: 'order.html'
-          })
         .when('/forms',{
                 templateUrl: 'forms.html'
           })
@@ -46,7 +43,7 @@ orderApp.config(function($routeProvider){
 });
 
 
-orderApp.controller('formCtrl', function($scope, $http,  $location, myService){
+orderApp.controller('formCtrl', function($scope, $http,  $location, orderService){
 
   	$scope.fieldTypes = ['Edit', 'Mandatory', 'Read Only'];
   	$scope.columns = ["2", "1"];
@@ -172,6 +169,18 @@ orderApp.controller('formCtrl', function($scope, $http,  $location, myService){
 
  	}
 
+ 	$scope.fieldExists = function(field) {
+
+ 		if ($scope.form.fields) {
+	 		for (var i=0; i<$scope.form.fields.length; i++ ) {
+
+	 			if ($scope.form.fields[i].fieldIndex && $scope.form.fields[i].name == field.name)
+	 				return true;
+	 		}
+ 		}
+ 		return false;	// not found
+
+ 	}
 
  	$scope.removeField = function(field) {
 
@@ -214,6 +223,11 @@ orderApp.controller('formCtrl', function($scope, $http,  $location, myService){
  		var field = $scope.findFieldName(formField);
  		var fieldFormIndex = $scope.form.fields.indexOf(formField);
 
+ 		if ($scope.fieldExists(field)) {
+ 			alert("Field "+field.name+" already exists in this form");
+ 			formField.name = "";
+ 		}
+
  		if (formField.name != "") {
 	 		$scope.form.fields[fieldFormIndex].fieldIndex = field.index;
 	 		$scope.form.fields[fieldFormIndex].name = field.name;
@@ -226,7 +240,7 @@ orderApp.controller('formCtrl', function($scope, $http,  $location, myService){
 
 	 	}
 	 	else { // no value selected - remove it
- 			$scope.form.fields.splice(fieldFormIndex, 1);
+ 			//$scope.form.fields.splice(fieldFormIndex, 1);
  		}
  		$scope.changed = true;
  	}
@@ -279,7 +293,7 @@ orderApp.controller('formCtrl', function($scope, $http,  $location, myService){
 
 });
 
-orderApp.controller('routeCtrl', function($scope, $http,  $location, myService){
+orderApp.controller('routeCtrl', function($scope, $http,  $location, orderService){
 
 	$scope.filterList = [];
 	$scope.optimize = true;
@@ -515,7 +529,7 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, myService){
 
 
 // Forms controller
-orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $location, myService){
+orderApp.controller ('orderCtrl', function orderController ($scope, $http, $timeout, $sce, $location, orderService){
 
 		$scope.attachFiles = {'rtl': "צרף מסמכים", 'ltr': "Attach Files"};
 		$scope.showFiles = {'rtl': "הצג מסמכים", 'ltr': "Show Files"};
@@ -525,7 +539,6 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 
 		$scope.columns = ['2','1'];		// For the UI
 
-		//$scope.order = myService.getOrder();
 		$scope.inProgress = false;
 
       	$scope.getOrder = function () {
@@ -562,12 +575,12 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 		      	}
         		catch (e) {
             		alert("Error: "+$scope.message);
-            		//myService.setOrder(null);
+            		//orderService.setOrder(null);
         		} 
 	    		if ($updatedOrder) {
 	    			$scope.orderID = $updatedOrder.orderID;
 	    			$scope.order = $updatedOrder.order;
-	 				myService.setOrder($scope.order);
+	 				orderService.setOrder($scope.order);
 	 				$scope.getFormFields($updatedOrder.formID, $scope.user);
 				}
 			}); 
@@ -696,7 +709,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 	      $scope.updateOrder = function () {
 	      		document.body.style.cursor = 'wait';
 	      		$scope.progress = 0;
-					$scope.inProgress = true;
+				$scope.inProgress = true;
 	      		setProgress(); 
 	      		$scope.updateValues(); 
 	      		// get the order ID and send to PHP
@@ -705,7 +718,8 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 				$updatedOrder.order = $scope.order;	      		
 				$updatedOrder.orderID = $scope.orderID;	      		
 				$updatedOrder.user = $scope.user;	      		
-	      		
+	      		$updatedOrder.oldValues = orderService.getOrder();
+
 	            var content = angular.toJson($updatedOrder);
 	            var request = $http({
 	                    method: "post",
@@ -846,11 +860,13 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 	      		document.body.style.cursor = 'wait';
 	      		$scope.progress = 0;
 					$scope.inProgress = true;
+
 	      		setProgress(); 	      		
 	      		$scope.updateValues(); 
-					$updatedOrder = {};
-					$updatedOrder.dbName = $scope.dbName;						
-					$updatedOrder.order = $scope.order;	      		
+				$updatedOrder = {};
+				$updatedOrder.dbName = $scope.dbName;						
+				$updatedOrder.order = $scope.order;	 
+				$updatedOrder.oldValues = orderService.getOrder();     		
 	      		
 	            var content = angular.toJson($updatedOrder);
 	            var request = $http({
@@ -866,7 +882,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 	               try {
 							$scope.order = angular.fromJson(data);
 							$scope.setFormValues();
-		            	myService.setOrder($scope.order);
+		            		//orderService.setOrder($scope.order);
 		            }						
 						catch (e) {
 							alert("Error: "+$scope.message);
@@ -877,7 +893,7 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 	            request.error(function (data, status) {
 	                $scope.message = data;
 	                $scope.inProgress = false;
-						 document.body.style.cursor = 'default';	                
+					document.body.style.cursor = 'default';	                
 	                alert($scope.message);
 	            });
 
@@ -1173,9 +1189,15 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 			
 
    			$scope.initUpload = function(event){
-				var files = null;
-				if (event)	
-					files = event.target.files;
+				var files = [];
+				if (event) {
+					// copy the files so we can reset the event
+					for (var i=0; i < event.target.files.length; i++)
+						files[i] = event.target.files[i];
+
+				}	
+
+				document.getElementById('file').value = null;	// reset the file input for next time
 
 				if ($scope.selectedParentFolder && $scope.selectedParentFolder.orderFolder) {
 					// Already authorized
@@ -1354,9 +1376,10 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 
 			$scope.insertToFolder = function(parentID, orderID, files, callback) {
 			  var folderName = FOLDER_PREFIX+orderID;
-				if (files && $scope.selectedParentFolder.orderFolder) {
+				if ($scope.selectedParentFolder.orderFolder) {
 					// order folder exists - insert into it
-					$scope.insertFiles(files, $scope.selectedParentFolder.orderFolder);
+					if (files)
+						$scope.insertFiles(files, $scope.selectedParentFolder, $scope.selectedParentFolder.orderFolder);
 					return;
 				}
 
@@ -1375,11 +1398,13 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 							$scope.insertToFolder(parentID, --$scope.orderID, files);
 							return;
 				      	}
+
+				      	$scope.setOrderFolder(resp.items[0]);
 			        	// folder exist - insert into it
 			        	if (files)
-			          		$scope.insertFiles(files, resp.items[0]);
+			          		$scope.insertFiles(files, $scope.selectedParentFolder, resp.items[0]);
 			          
-			          	$scope.setOrderFolder(resp.items[0]);
+			          	
 			      	}
 			      	else {
 
@@ -1399,11 +1424,11 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 			        	});
 			        	if (!callback) {
 				            callback = function(file) {
+				            	$scope.setOrderFolder(file);
 				              	// folder created - insert into it
 			              		if (files) 
-			              			$scope.insertFiles(files, file);
+			              			$scope.insertFiles(files, $scope.selectedParentFolder, file);
 					            
-					            $scope.setOrderFolder(file);
 					            console.log("Folder: ");
 				    	        console.log(file);              
 				            };
@@ -1415,25 +1440,96 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 			  
 			}
 
+			$scope.updateProgress = function() {
+				$scope.uploadProgress += $scope.increment;
+				$scope.progressCounter++;
+				$scope.$apply();
+				if ($scope.uploading)
+					setTimeout($scope.updateProgress, 100);
+			}
 
-			$scope.insertFiles = function(files, parent) {
-				var fileNames = "";
-				var count = 0;
-				document.body.style.cursor = 'progress';
+			$scope.closeUpload = function() {
+				$("#upload_popup").hide();
+				$scope.uploading = false;
+			}
+
+			$scope.showUploadProgress = function() {
+				$scope.uploading = true;
+				
+				$("#upload_popup").show();
+				$("#upload_popup").draggable({
+				    handle : ".modal-header"
+				});
+				$("#upload_popup").width(400);
+				$("#upload_popup").css('position', 'fixed');
+				$("#upload_popup").css('z-index', 9999);
+				$("#upload_popup").css('top', '0');
+				$("#upload_popup").css('left', '0');
+				$scope.updateProgress();
+			}
+
+			$scope.insertFiles = function(files, selectedParentFolder, orderFolder) {
+				$scope.progressCounter = 1;				
+				if (!$scope.uploading) { // reset if it is not currently uploading
+					$scope.uploadedSize = 0;
+					$scope.totalUploadSize = 0;
+					$scope.fileCount = 0;
+					$scope.sizePerCount = 3000;		// based on upload speed
+					$scope.uploadProgress = 0;
+					$scope.uploadStatus = "Uploading...";
+					$scope.uploadList = "";
+				}
+
+				for (var i=0; i < files.length ; i++) {
+					$scope.totalUploadSize += files[i].size;
+				}
+
+				if (!$scope.uploading)	// calculate initial increment size
+					$scope.increment = ($scope.sizePerCount/$scope.totalUploadSize)*100;
+
+				if (files.length > 0) {
+					$scope.fileCount += files.length;
+					$scope.showUploadProgress();
+				}
+
+				//document.body.style.cursor = 'progress';
 				for (var i=0 ; i < files.length ; i++) {
-					$scope.insertFile(files[i], parent.id, function(file) {
-						$scope.fileExist = true;
-						$scope.selectedParentFolder.fileExist = true;
+					$scope.insertFile(files[i], orderFolder.id, function(file) {
+						$scope.uploadedSize += parseInt(file.fileSize);
+						$scope.uploadProgress = ($scope.uploadedSize/$scope.totalUploadSize) * 100
+
+						if (file.error) {
+							alert ("Error: "+file.error.message+"\nPlease reload the form and try again");
+						}
+						else {
+							// successfuly uploaded file
+							if ($scope.uploadList == "")
+								$scope.uploadList = "Completed:\n";
+							$scope.uploadList += file.originalFilename+"\n";
+							$scope.fileExist = true;
+							selectedParentFolder.fileExist = true;
+							$scope.filesUploaded = true;
+							$scope.addFileToList(selectedParentFolder, file);
+							console.log("File uploaded: "+file);
+							$scope.sizePerCount = (parseInt(file.fileSize)/$scope.progressCounter + $scope.sizePerCount)/2;
+							if ($scope.totalUploadSize > $scope.uploadedSize) {
+								// files left to upload
+								var portionSize = $scope.sizePerCount/($scope.totalUploadSize-$scope.uploadedSize);
+								$scope.increment = portionSize*100;
+							}
+							console.log("size per count: "+$scope.sizePerCount);
+							console.log("increment: "+$scope.increment);
+							console.log("total: "+$scope.uploadProgress);
+						}	
+						$scope.progressCounter = 1;
 						$scope.$apply();
-						$scope.filesUploaded = true;
-						$scope.addFileToList($scope.selectedParentFolder, file);
-						console.log("File: ");
-						console.log(file);
-						fileNames += file.originalFilename + "\n";
-						if (++count == files.length) {
+						if (--$scope.fileCount <= 0) { // all concurrent uploads completed
 							// This is the last file uploaded
 							document.body.style.cursor = 'default';
-						  	alert("Files uploaded to Google drive:\n"+fileNames);
+							$scope.uploading = false;
+							$scope.uploadProgress = 120;
+							$scope.uploadStatus = "Done !";
+							//$("#upload_popup").hide();
 						}
 
 					});
@@ -1512,7 +1608,6 @@ orderApp.controller('orderCtrl', function($scope, $http, $timeout, $sce, $locati
 				window.close();		        	
 	        }
 })
-
 .directive('progressBar', function() {		// This code is needed to support ie
   return {
     restrict: 'A',

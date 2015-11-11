@@ -62,6 +62,34 @@
 	<br><br>
 </div>
 
+<!-- Modal -->
+
+	<div class="modal-dialog modal-sm" id="upload_popup" data-backdrop="false" style="display: none;">
+
+	    <!-- Modal content-->
+	    <div class="modal-content">
+		    <div class="modal-header">
+		        <button type="button" class="close" data-dismiss="modal-dialog" ng-click="closeUpload()">&times;</button>
+		        <h4 class="modal-title">{{uploadStatus}}</h4>
+		    </div>
+		    <div class="modal-body">
+		        <p style="white-space: pre-wrap;">{{uploadList}}</p>
+
+				<div class="progress col-sm-12">
+			    	<div class="progress-bar" role="progressbar" progress-bar-watch="progress" progress-bar aria-valuenow="" aria-valuemin="0" aria-valuemax="100" style="width:{{uploadProgress}}%"></div>
+			  	</div>
+
+			  	<br>
+		    </div>
+		    <div class="modal-footer">
+		        <button type="button" class="btn btn-default" data-dismiss="modal-dialog" ng-click="closeUpload()">Close</button>
+		    </div>
+	    </div>
+
+	</div>
+
+
+
 <br>
 <div class="container col-sm-12" ng-if="user!=''">
 		

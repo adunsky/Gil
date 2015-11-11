@@ -12,6 +12,7 @@
     $data = json_decode($postdata, true);
   	$dbName = $data["dbName"]; 
 	$origOrder = $data["order"];
+	$oldValues = $data["oldValues"];
 	
 	if (!selectDB($dbName)) {
 		syslog(LOG_ERR, "Failed to select client DB: "+$dbName);
@@ -31,7 +32,7 @@
 
 	$i=0;
 	// call spreadsheet to calculate fields
-	while (!($order = getCalcFields($origOrder)) && $i++ < 5) {
+	while (!($order = getCalcFields($origOrder, $oldValues)) && $i++ < 5) {
 		// retry call to spreadsheet 
 		syslog(LOG_ERR, "getCalcFields Failed. retrying...");
 	}

@@ -1,29 +1,27 @@
-- test new and updated configuration of forms, calendars
+- optimize spreadsheet read/write:
+	- separate input and output lines
+	- use listEntry to write/read:
+		- write values
+		- write old values
+		- read calculated values
+
+
+- enable removing of forms, calendars
+
+- change email configuration to general notifications (email, popup, )
+
 - check if location field is mandatory
 
-// add try-catch and retry to init calendar 
-// - don't allow to enter forms without a user
-//- Add SMS and email notifications service
-//	- need to add subject and content for each email field
-//	- How to set From address to customer in email
-//	- add access to spreadsheet in admin console:
-		https://admin.google.com/googmesh.com/AdminHome?chromeless=1#OGX:ManageOauthClients
 - how to send email to many reciepients
-
-- Add multiple lines in Main for scalability
+	- cc, bcc
+	- attachments
 
 - Add progress bar window for file uploads
 
 audit trail - store all changes per record, with user
- - for each record' store google spreadsheet and get it for free
+ - for each record' store google spreadsheet and get audit trail for free
 
 - backup script on server ?
-
-//- support templates for new documents
-	//- add submenu to view files directly from the form
-	
-//- Solution for multiple shared folders per user (or form) 
-//- Add an option to get route directions for a list of events, based on search
 
 - eventID is not needed anymore. only for old events
 - Add an option to send email notification to attendees
@@ -31,6 +29,19 @@ audit trail - store all changes per record, with user
 
 - Web page to view order status 
 
+// - Add multiple lines in Main for scalability
+// add try-catch and retry to init calendar 
+// - don't allow to enter forms without a user
+//- Add SMS and email notifications service
+//	- need to add subject and content for each email field
+//	- How to set From address to customer in email
+//	- add access to spreadsheet in admin console:
+		https://admin.google.com/googmesh.com/AdminHome?chromeless=1#OGX:ManageOauthClients
+//- support templates for new documents
+	//- add submenu to view files directly from the form
+	
+//- Solution for multiple shared folders per user (or form) 
+//- Add an option to get route directions for a list of events, based on search
 //Add script for logs
 // Add orderID in forms
 //Add celltype unique - verify uniqueness on save
