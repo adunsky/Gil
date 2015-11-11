@@ -226,7 +226,7 @@ function getCalcFields($order, $oldValues) {
 	        		$values[$currKey] = $value;
 			}
 			else
-				$values[$currKey] = "";
+				$values[$currKey] = $value;
 
 
 		}
