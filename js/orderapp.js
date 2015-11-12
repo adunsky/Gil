@@ -998,9 +998,11 @@ orderApp.controller ('orderCtrl', function orderController ($scope, $http, $time
 
 			$scope.getFolders = function() {
 				// reset the folder list and content flag
-				$scope.folderList = null;
+				$scope.folderList = [];
 				$scope.fileExist = false;
 				$scope.templateExist = false;
+				$scope.templateList = [];	
+
 				gapi.client.load('drive', 'v2', function() {
 
 					// Search if GoogMesh folder exists
@@ -1009,14 +1011,14 @@ orderApp.controller ('orderCtrl', function orderController ($scope, $http, $time
 					  'q' : $qString
 					  }).
 					  execute(function(resp) {
-					    if (resp.items && resp.items[0])  {
+					  if (resp.items && resp.items[0])  {
 					      // GoogMesh folder exists - insert into it
 					      $scope.parentFolderID = resp.items[0].id;
 					      $scope.getFolderList(resp.items[0].id);
 				      }
 				      else {
 				      		// Folder is not shared with the user - alert and quit
-				      	 	alert("Folder "+parentFolder+" is not shared with user "+$scope.user);
+				      	 	//alert("Folder "+parentFolder+" is not shared with user "+$scope.user);
 
 				      }
 				    });
@@ -1026,13 +1028,13 @@ orderApp.controller ('orderCtrl', function orderController ($scope, $http, $time
 
 			$scope.getFolderList = function(parentID) {
 				// Search for all folders under parent folder
-				$scope.folderList = [];
-				$qString = "trashed = false and mimeType = 'application/vnd.google-apps.folder'";
-				gapi.client.drive.children.list({
-				  	'folderId' : parentID, 
+				$qString = "'"+parentID+"' in parents and trashed = false and mimeType = 'application/vnd.google-apps.folder'";
+				gapi.client.drive.files.list({
 				  	'q' : $qString
 				 }).
 			   	execute(function(resp) {
+			   		if (resp.error && resp.message=="User Rate Limit Exceeded")
+			   			setTimeout($scope.getFolderList, 500, parentID);	
 			   		var i=0;
 			       	while(resp.items && resp.items[i])  {
 			       		var folder = resp.items[i++];
@@ -1044,19 +1046,13 @@ orderApp.controller ('orderCtrl', function orderController ($scope, $http, $time
 			}
 
 			$scope.addFolder = function(folder) {
-				gapi.client.drive.files.get({
-				  'fileId': folder.id
-				}).
-				execute(function(resp) {
-					folder.title = resp.title;
-					$scope.folderList.push(folder);
-					$scope.searchTemplates(folder);
-		  			$scope.searchFilesFolder(folder, $scope.orderID);
-				});
+				$scope.folderList.push(folder);
+				$scope.searchFilesFolder(folder, $scope.orderID);
+				// wait a second before initializing the templates to avoid hitting google query limit
+				setTimeout($scope.searchTemplates, 500, folder);
 			}
 
 			$scope.searchTemplates = function(parentFolder) {
-				$scope.templateList = [];	
 			  // Search if templates exists
 			  $qString = "title = '"+templateFolder+"'"+" and trashed = false and mimeType = 'application/vnd.google-apps.folder'";
 			  gapi.client.drive.children.list({
@@ -1064,39 +1060,43 @@ orderApp.controller ('orderCtrl', function orderController ($scope, $http, $time
 			    'q' : $qString
 			    }).
 			    execute(function(resp) {
-			      if (resp.items && resp.items[0])  {
-			        // folder exist - look for files
-		          	$scope.searchTemplateFiles(parentFolder, resp.items[0].id);
-			      }
+			    	if (resp.error && resp.message=="User Rate Limit Exceeded")
+			    		setTimeout($scope.searchTemplates, 500, parentFolder);	
+		    		else
+		    			if (resp.error)
+		    				alert(resp.message);		    	
+			      	if (resp.items && resp.items[0])  {
+			        	// folder exist - look for files
+		          		$scope.searchTemplateFiles(parentFolder, resp.items[0].id);
+			      	}
 			  });
 			}
 
 			$scope.addTemplate = function(folder, file) {
-				gapi.client.drive.files.get({
-				  'fileId': file.id
-				}).
-				execute(function(resp) {
-					file.title = resp.title;
-					file.folder = folder;
-					$scope.templateList.push(file);
-					$scope.templateExist = true;
-					$scope.$apply();
-				});
+				file.folder = folder;
+				$scope.templateList.push(file);
+				$scope.templateExist = true;
+				$scope.$apply();
 
 			}
 
 			$scope.searchTemplateFiles = function(parentFolder, templateFolderID) {
 				// Search for files 
-				$qString = "trashed = false";
-				gapi.client.drive.children.list({
-				    'folderId' : templateFolderID, 
+				$qString = "'"+templateFolderID+"' in parents and trashed = false";
+				gapi.client.drive.files.list({
 				    'q' : $qString
 				  }).
 				  execute(function(resp) {
+				  	if (resp.error && resp.message=="User Rate Limit Exceeded")
+				  		setTimeout($scope.searchTemplateFiles, 500, parentFolder, templateFolderID);
+				  	else
+				  		if (resp.error)
+				  			alert(resp.message);
 				    if (resp.items)
 				    	for(var i=0; resp.items[i]; i++) {
 					      	// templates exists
 					      	$scope.addTemplate(parentFolder, resp.items[i]);
+					      	console.log("parent: "+parentFolder.title+" file: "+resp.items[i].title);
 					    }
 				});
 
@@ -1114,10 +1114,15 @@ orderApp.controller ('orderCtrl', function orderController ($scope, $http, $time
 			    'q' : $qString
 			    }).
 			    execute(function(resp) {
-			      if (resp.items && resp.items[0])  {
-			        // folder exist - look for files
-		          	$scope.searchFiles(parentFolder, resp.items[0].id);
-			      }
+			    	if (resp.error && resp.message=="User Rate Limit Exceeded")
+			    		setTimeout($scope.searchFilesFolder, 500, parentFolder, orderID);
+			    	else
+			    		if (resp.error)
+			    			alert(resp.message);			    	
+			      	if (resp.items && resp.items[0])  {
+			        	// folder exist - look for files
+		          		$scope.searchFiles(parentFolder, resp.items[0].id);
+			      	}
 			  });
 			}
 
@@ -1129,29 +1134,17 @@ orderApp.controller ('orderCtrl', function orderController ($scope, $http, $time
 						parentFolder.fileList = [];
 					parentFolder.fileList.push(file);				
 				}
-				else {	// get file title and link
-					gapi.client.drive.files.get({
-					  'fileId': file.id
-					}).
-					execute(function(resp) {
-						file.title = resp.title;
-						file.link = resp.alternateLink;
-						if (!parentFolder.fileList)	// initialize file list if doesn't exist
-							parentFolder.fileList = [];
-						parentFolder.fileList.push(file);
-					});
-				}
-
 			}
 
 			$scope.searchFiles = function(parentFolder, orderFolderID) {
 				// Search for files 
-				$qString = "trashed = false";
-				gapi.client.drive.children.list({
-				    'folderId' : orderFolderID, 
+				$qString = "'"+orderFolderID+"' in parents and trashed = false";
+				gapi.client.drive.files.list({
 				    'q' : $qString
 				  }).
 				  execute(function(resp) {
+				  	if (resp.error && resp.message=="User Rate Limit Exceeded")
+				  		setTimeout($scope.searchFiles, 500, parentFolder, orderFolderID);
 				    if (resp.items && resp.items[0])  {
 				      	// files exists
 				      	parentFolder.fileList = [];
@@ -1200,7 +1193,7 @@ orderApp.controller ('orderCtrl', function orderController ($scope, $http, $time
 				document.getElementById('file').value = null;	// reset the file input for next time
 
 				if ($scope.selectedParentFolder && $scope.selectedParentFolder.orderFolder) {
-					// Already authorized
+					// Already initialized
 					$scope.uploadFiles(files, $scope.orderID);
 					return;
 				}
@@ -1383,8 +1376,6 @@ orderApp.controller ('orderCtrl', function orderController ($scope, $http, $time
 					return;
 				}
 
-				// wait until folder is created
-				document.body.style.cursor = 'wait';
 			  	// Search if folder exists
 			  	$qString = "title = '"+folderName+"'"+" and trashed = false and mimeType = 'application/vnd.google-apps.folder'";
 			  	gapi.client.drive.children.list({
@@ -1495,6 +1486,7 @@ orderApp.controller ('orderCtrl', function orderController ($scope, $http, $time
 				//document.body.style.cursor = 'progress';
 				for (var i=0 ; i < files.length ; i++) {
 					$scope.insertFile(files[i], orderFolder.id, function(file) {
+						// update the progress bar
 						$scope.uploadedSize += parseInt(file.fileSize);
 						$scope.uploadProgress = ($scope.uploadedSize/$scope.totalUploadSize) * 100
 
@@ -1508,10 +1500,9 @@ orderApp.controller ('orderCtrl', function orderController ($scope, $http, $time
 							$scope.uploadList += file.originalFilename+"\n";
 							$scope.fileExist = true;
 							selectedParentFolder.fileExist = true;
-							$scope.filesUploaded = true;
 							$scope.addFileToList(selectedParentFolder, file);
 							console.log("File uploaded: "+file);
-							$scope.sizePerCount = (parseInt(file.fileSize)/$scope.progressCounter + $scope.sizePerCount)/2;
+							$scope.sizePerCount = ((parseInt(file.fileSize)/$scope.progressCounter) + $scope.sizePerCount)/2;
 							if ($scope.totalUploadSize > $scope.uploadedSize) {
 								// files left to upload
 								var portionSize = $scope.sizePerCount/($scope.totalUploadSize-$scope.uploadedSize);
