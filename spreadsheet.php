@@ -144,7 +144,7 @@ function release_named_lock($lockname) {
 
 
 function getCalcFields($order, $oldValues) {
-	global $spreadsheet, $mainSpreadsheetName;	
+	global $spreadsheet, $mainSpreadsheetName, $useOldValues;	
 	set_time_limit (60); // This may take a while
 	date_default_timezone_set("Asia/Jerusalem");
 
@@ -193,6 +193,9 @@ function getCalcFields($order, $oldValues) {
 			$type = $field["type"];
 			$name = $field["name"];
 	
+			if (!is_string($value))	// ensure that value is a string
+				$value = "";
+
 			$currValue = next($values);	// get the next value 
 			$currKey = key($values);
 
@@ -229,22 +232,25 @@ function getCalcFields($order, $oldValues) {
 				$values[$currKey] = $value;
 
 
+			//echo $name.": ".$value."\n";
+
 		}
 		$listEntry->update($values);
 
-		syslog(LOG_INFO, "writing old values...");
-		reset($values);
-		$key = key($values);
-		$values[$key] = "old";
-		foreach ($oldValues as $field) {
-			$currValue = next($values);	// get the next value 
+		if ($useOldValues) {
+			syslog(LOG_INFO, "writing old values...");
+			reset($values);
 			$key = key($values);
-			$values[$key] = $field["value"];
+			$values[$key] = "old";
+			foreach ($oldValues as $field) {
+				$currValue = next($values);	// get the next value 
+				$key = key($values);
+				$values[$key] = $field["value"];
+			}
+			$oldEntry = $entries[1];
+			$oldEntry->update($values);
+			//var_dump($values);
 		}
-		$oldEntry = $entries[1];
-		$oldEntry->update($values);
-		//var_dump($values);
-
 		// now get the computed values
 		syslog(LOG_INFO, "Done writing...");
 

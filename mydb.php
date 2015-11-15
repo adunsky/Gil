@@ -84,7 +84,7 @@ function getClient($DBName, $number) {
 } 
 
 function getClientInfo($DBname) {
-		global $lang, $logo, $custName;
+		global $lang, $logo, $custName, $useOldValues;
 
 	    $sql =  "SELECT * FROM customers.customers WHERE customers.customers.dbName='$DBname';";
 	    $result = mysql_query($sql);
@@ -93,6 +93,10 @@ function getClientInfo($DBname) {
       	$lang = $customer["lang"];
       	$logo = $customer["logo"];
       	$custName = $customer["name"];
+      	if (array_key_exists("useOldValues", $customer))
+      		$useOldValues = $customer["useOldValues"];
+      	else
+      		$useOldValues = 0;
 
       	return $ssName;
 } 
