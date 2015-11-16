@@ -146,7 +146,6 @@ function release_named_lock($lockname) {
 function getCalcFields($order, $oldValues) {
 	global $spreadsheet, $mainSpreadsheetName, $useOldValues;	
 	set_time_limit (60); // This may take a while
-	date_default_timezone_set("Asia/Jerusalem");
 
 	//$spreadsheet = initGoogleAPI();
 	if ($spreadsheet == null)
@@ -329,4 +328,59 @@ function importOrders($spreadsheetName) {
 	echo "Completed reading ".$i." records<br>\n";
 	return $orders;
 }
+
+
+function writeBackup($spreadsheetName) {
+ 	global $mainTable, $fieldTable;
+
+ 	date_default_timezone_set("Asia/Jerusalem");
+	syslog(LOG_INFO, "Writing backup to ".$spreadsheetName."...\n");
+	$spreadsheet = initGoogleAPI($spreadsheetName);
+	if (!$spreadsheet) {
+		syslog(LOG_ERR, "Backup file doesn't exist");
+		return;
+	}
+	
+	$worksheetFeed = $spreadsheet->getWorksheets();
+	//var_dump($worksheetFeed[0]);
+
+	$worksheet = $worksheetFeed[0];	// the first worksheeth
+	$listFeed = $worksheet->getListFeed();
+	$entries = $listFeed->getEntries();
+
+	$rows = count($entries)-1;
+	syslog(LOG_INFO, "deleting ". $rows. " rows\n");
+
+	for ($i=$rows ; $i>=0 ; $i--) 
+		$entries[$i]->delete();
+
+
+	$sql = "SELECT * FROM $mainTable";
+    $result = mysql_query($sql);
+    $row = [];
+    $field = [];
+
+    $sql = "Select * FROM $fieldTable";
+    $res = mysql_query($sql);
+    for ($i=0; $field[$i] = mysql_fetch_array($res); $i++);
+
+    while ($record = mysql_fetch_array($result)) {
+    	for ($i=0; array_key_exists($i, $field); $i++) {
+    		//$key = $field[$i]["name"];
+    		$key = "col".$i;
+    		$row[$key] = $record[$i];
+    	}
+
+    	//var_dump($row);
+     	$listFeed->insert($row); 
+    }
+
+
+    $worksheet->update(date("d/m/Y H:i"));
+
+	syslog(LOG_INFO, "Completed writing backup to ".$spreadsheetName."...\n");
+	
+}
+
+
 ?>

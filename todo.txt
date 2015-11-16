@@ -5,6 +5,10 @@
 		- write old values
 		- read calculated values
 
+optimize drive access:
+	- get file list in one call
+	- get file name later
+	- retry in case of error
 
 - enable removing of forms, calendars
 

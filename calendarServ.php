@@ -30,13 +30,14 @@ require_once "gmail.php";
 	parse_str(implode('&', array_slice($argv, 1)), $_GET);
 	
 	$dbName = $_GET['db'];
-	//echo $dbName;
+	//error_log( $dbName, 3, $logFileName);
 			
 	if (!selectDB($dbName))
 		return;	
 	getClientInfo($dbName); 	// to set the global $lang
 
 	$clientList = getClientList($dbName);
+	$logFileName = "cal".$custName.".log";
 
 	$clients = [];
 	$services = [];
@@ -47,14 +48,14 @@ require_once "gmail.php";
 		$clientid = $clientInfo["clientID"];
 		$clientmail = $clientInfo["clientMail"];
 		$clientkeypath = $clientInfo["clientKeyPath"];
-		echo "Client: ".$clientNum." clientID: ".$clientid."\n";
+		error_log( "Client: ".$clientNum." clientID: ".$clientid."\n", 3, $logFileName);
 
 		$clients[$clientNum] = new Google_Client();
 		$clients[$clientNum]->setApplicationName($appname);
 		$clients[$clientNum]->setClientId($clientid);
 		$services[$clientNum] = new Google_Service_Calendar($clients[$clientNum]);
 		if (!$services[$clientNum])
-			echo "Failed to create service: ".$clientNum."\n";
+			error_log( "Failed to create service: ".$clientNum."\n", 3, $logFileName);
 		
 		/************************************************
 		  If we have an access token, we can carry on.
@@ -82,7 +83,7 @@ require_once "gmail.php";
 			foreach ($clients as $client) {
 				// refresh clients if needed
 				if ($client->getAuth()->isAccessTokenExpired()) {
-				  echo $currTime."Refreshing client token: ".array_search($client, $clients)."<br>\n";	
+				  error_log( $currTime."Refreshing client token: ".array_search($client, $clients)."\n", 3, $logFileName);	
 				  $client->getAuth()->refreshTokenWithAssertion($creds[array_search($client, $clients)]);
 				}
 			}
@@ -92,7 +93,7 @@ require_once "gmail.php";
 			// Look for calendar events that needs update
 			$sql = "SELECT * FROM $eventsTable WHERE updated='0';";
 			if (!$result = mysql_query($sql)) {
-				echo $currTime.'Select event table Failed! ' . mysql_error(); 
+				error_log( $currTime.'Select event table Failed! ' . mysql_error(), 3, $logFileName); 
 				sleep(1);
 				continue;
 			}
@@ -103,11 +104,11 @@ require_once "gmail.php";
 	    		$calendarNum = $event["calendarID"];
 	    		$date = $event["eventDate"];
 
-	         	echo $currTime."found event to update in event table for order ". $orderID." Date: ".$date."<br>\n";
+	         	error_log( $currTime."found event to update in event table for order ". $orderID." Date: ".$date."\n", 3, $logFileName);
 	         
 				$sql = "SELECT * FROM $calendarsTable WHERE number = '$calendarNum';";
 				if (!$result = mysql_query($sql)) {
-					echo $currTime.'Select calendar table Failed! ' . mysql_error(); 
+					error_log( $currTime.'Select calendar table Failed! ' . mysql_error(), 3, $logFileName); 
 					continue;
 				}
 				if ((mysql_num_rows($result) > 0) && ($calendar = mysql_fetch_array($result, MYSQL_ASSOC))) {
@@ -128,7 +129,7 @@ require_once "gmail.php";
 				}
 				$sql = "SELECT * FROM $mainTable WHERE id='$orderID';";
 				if (!$result = mysql_query($sql)) {
-					echo $currTime.'Select main table Failed! ' . mysql_error(); 
+					error_log( $currTime.'Select main table Failed! ' . mysql_error(), 3, $logFileName); 
 					continue;
 				}
 				if ((mysql_num_rows($result) > 0) && ($order = mysql_fetch_array($result, MYSQL_ASSOC))) {
@@ -147,7 +148,7 @@ require_once "gmail.php";
 				// query the fields table to find if it is a start time
 				$sql = "SELECT * FROM $fieldTable WHERE `index`='$fieldIndex';";
 				if (!$result = mysql_query($sql)) {
-					echo $currTime.'Select field table Failed! ' . mysql_error(); 
+					error_log( $currTime.'Select field table Failed! ' . mysql_error(), 3, $logFileName); 
 					continue;
 				}
 				if ((mysql_num_rows($result) > 0) && ($field = mysql_fetch_array($result, MYSQL_ASSOC))) {
@@ -155,11 +156,11 @@ require_once "gmail.php";
 					if (strpos($type1, "STARTTIME") === 0) {
 						$twinNum = substr($type1, strlen("STARTTIME")); // this is the index of the start-end twin
 						$type2 = "ENDTIME".$twinNum;
-						echo $currTime."found end time: ".$type2."<br>\n";							
+						error_log( $currTime."found end time: ".$type2."\n", 3, $logFileName);							
 						// query the field table for the end date
 						$sql = "SELECT * FROM $fieldTable WHERE type='$type2';";
 						if (!$result = mysql_query($sql)) {
-							echo $currTime.'Select field table Failed! ' . mysql_error(); 
+							error_log( $currTime.'Select field table Failed! ' . mysql_error(), 3, $logFileName); 
 							continue;
 						}
 						if ((mysql_num_rows($result) > 0) && ($field = mysql_fetch_array($result, MYSQL_ASSOC))) {
@@ -174,7 +175,7 @@ require_once "gmail.php";
 				// query the fields table to find if it is an end time
 				$sql = "SELECT * FROM $fieldTable WHERE `index`='$fieldIndex';";
 				if (!$result = mysql_query($sql)) {
-					echo $currTime.'Select field table Failed! ' . mysql_error(); 
+					error_log( $currTime.'Select field table Failed! ' . mysql_error(), 3, $logFileName); 
 					continue;
 				}
 				if ((mysql_num_rows($result) > 0) && ($field = mysql_fetch_array($result, MYSQL_ASSOC))) {
@@ -182,18 +183,18 @@ require_once "gmail.php";
 					if (strpos($type1, "ENDTIME") === 0) {
 						$twinNum = substr($type1, strlen("ENDTIME")); // this is the index of the start-end twin
 						$type2 = "STARTTIME".$twinNum;
-						// echo $currTime."looking for: ".$type2."<br>\n";
+						// error_log( $currTime."looking for: ".$type2."\n", 3, $logFileName);
 						// query the field table for the end date
 						$sql = "SELECT * FROM $fieldTable WHERE type='$type2';";
 						if (!$result = mysql_query($sql)) {
-							echo $currTime.'Select field table Failed! ' . mysql_error(); 
+							error_log( $currTime.'Select field table Failed! ' . mysql_error(), 3, $logFileName); 
 							continue;
 						}
 						if ((mysql_num_rows($result) > 0) && ($field = mysql_fetch_array($result, MYSQL_ASSOC))) {
 							$fieldIndex2 = $field["index"];							
 							$date1 = $order[$fieldIndex2];	// found the start time
 							$date2 = $date;	// this is the end time
-							// echo $currTime."Found starttime: ".$date1."<br>\n";
+							// error_log( $currTime."Found starttime: ".$date1."\n", 3, $logFileName);
 						}			
 					}
 
@@ -201,14 +202,14 @@ require_once "gmail.php";
 			
 	  		}
 			else { 
-			 	//echo $currTime."No event to update<br>";
+			 	//error_log( $currTime."No event to update", 3, $logFileName);
 				flush();
 			  	sleep(1);
 			  	continue;
 			}	
 			
 			$calEvent = null;
-			//echo $currTime."eventID= ".$eventID."<br>\n";
+			//error_log( $currTime."eventID= ".$eventID."\n", 3, $logFileName);
 
 			$googleClient = getClientForCalendar($calendarCount);
 
@@ -220,9 +221,9 @@ require_once "gmail.php";
 				$params["q"] =  '"Order ID :'.$orderID.'"';		// search by orderID in the dscription
 		    	$list = $services[$googleClient]->events->listEvents($calendarID, $params);	
 				foreach($list["items"] as $eventx) {
-					//echo $currTime."eventx ID= ".$eventx["htmlLink"]."<br>\n";
+					//error_log( $currTime."eventx ID= ".$eventx["htmlLink"]."\n", 3, $logFileName);
 					if ($eventID == $eventx["id"] || strpos($eventx["htmlLink"], $eventID ) != false) {
-		    			echo $currTime." found existing event in calendar: ". $calendarID."<br>\n";
+		    			error_log( $currTime." found existing event in calendar: ". $calendarID."\n", 3, $logFileName);
 		    			$calEvent = $eventx;
 		    			break;
 					}
@@ -234,20 +235,20 @@ require_once "gmail.php";
 			}
 			$new = false;
 			if (!$calEvent) {
-				echo $currTime."Event doesn't exist for order ".$orderID."<br>\n";
+				error_log( $currTime."Event doesn't exist for order ".$orderID."\n", 3, $logFileName);
 				$calEvent = new Google_Service_Calendar_Event();
 				$new = true;
 			}
 
 			if (!strtotime($date) || ($date == '0000-00-00 00:00:00')) {
-				echo $currTime."Removing event with invalid date: ".$date."<br>\n";
+				error_log( $currTime."Removing event with invalid date: ".$date."\n", 3, $logFileName);
 				// The new event date is empty or not valid - remove the event from the calendar
 				if (!$new && $calEvent)
 					$services[$googleClient]->events->delete($calendarID, $calEvent->getId());
 				// Remove the event from the events table
 				$sql = "DELETE FROM $eventsTable WHERE calendarID='$calendarNum' AND orderID='$orderID' AND eventID = '$eventID';";
 				if (!$result = mysql_query($sql)) {
-					echo $currTime.'Delete from events table Failed! ' . mysql_error(); 
+					error_log( $currTime.'Delete from events table Failed! ' . mysql_error(), 3, $logFileName); 
 				}
 				continue; // Don't continue to process this event
 			}
@@ -255,7 +256,7 @@ require_once "gmail.php";
 			$eventChanged = false;
 			if ($calEvent->getSummary() != $eventName) {
 				$calEvent->setSummary($eventName);
-				echo $currTime."New title: ".$eventName."<br>\n";
+				error_log( $currTime."New title: ".$eventName."\n", 3, $logFileName);
 				$eventChanged = true;
 			}
 			if ($calEvent->getLocation() != $location) {
@@ -280,14 +281,14 @@ require_once "gmail.php";
 				$start->setTimeZone("Asia/Jerusalem");
 				$date = date('Y-m-d\TH:i:s', $timestamp1);
 				$start->setDateTime($date);
-				echo $currTime."Start: ".$date."<br>\n";
+				error_log( $currTime."Start: ".$date."\n", 3, $logFileName);
 			}
 			$wasStart = $calEvent->getStart();
-			//echo $currTime."Was start: ";
+			//error_log( $currTime."Was start: ", 3, $logFileName);
 			//var_dump($wasStart);
 			if ($wasStart != $start) {
 				$calEvent->setStart($start);
-				//echo $currTime." New start: ";
+				//error_log( $currTime." New start: ", 3, $logFileName);
 				//var_dump($start);
 				$eventChanged = true;
 			}					
@@ -296,7 +297,7 @@ require_once "gmail.php";
 			if ($allDay) {
 				$timestamp2 = strtotime($date."+1 days"); // end date is one day later
 				$date2 = date("Y-m-d", $timestamp2);					
-				//echo $currTime."End: ".$date2."\n";
+				//error_log( $currTime."End: ".$date2."\n", 3, $logFileName);
 				$end->setDate($date2);	// no time set - all day event
 			}		
 			else { 
@@ -305,7 +306,7 @@ require_once "gmail.php";
 				$end->setTimeZone("Asia/Jerusalem");
 				$endDate = date('Y-m-d\TH:i:s', $timestamp2); // Back to string
 				$end->setDateTime($endDate);
-				echo $currTime."End: ".$endDate."<br>\n";
+				error_log( $currTime."End: ".$endDate."\n", 3, $logFileName);
 			}
 			if ($calEvent->getEnd() != $end) {
 				$calEvent->setEnd($end);
@@ -335,10 +336,10 @@ require_once "gmail.php";
 					$attendee = new Google_Service_Calendar_EventAttendee();
 					$attendee->setEmail($email);
 					array_push($attendees, $attendee);
-					echo $currTime."Participant added: ".$email."\n";
+					error_log( $currTime."Participant added: ".$email."\n", 3, $logFileName);
 				}
 				else
-					echo $currTime."Invalid participant email ignored: ".$participant."\n";
+					error_log( $currTime."Invalid participant email ignored: ".$participant."\n", 3, $logFileName);
 			}
 			if (count($attendees) > 0) {
 				//if (count(array_diff($attendees, $calEvent->getAttendees()))>0) {
@@ -351,7 +352,7 @@ require_once "gmail.php";
 			$description = "<a href=http://googlemesh.com/Gilamos/#/newOrder?db=".$dbName."&orderID=".$orderID."&calendarNum=".$calendarNum.">".$linkTitle."</a>
 							<p>Order ID :".$orderID."<br>".getSearchFields($order)."</p>";
 			if($new) {
-				// echo $currTime."Calendar: ".$calendarNum." Client: ".$googleClient."\n";
+				// error_log( $currTime."Calendar: ".$calendarNum." Client: ".$googleClient."\n", 3, $logFileName);
 				// insert a new event with description with the orderID, so we can find it				
 				$calEvent->setDescription($description);
 				$updatedEvent = $services[$googleClient]->events->insert($calendarID, $calEvent);
@@ -359,33 +360,33 @@ require_once "gmail.php";
 				$eventID = substr($updatedEvent["htmlLink"], $eidpos+4);
 				$calEvent = $updatedEvent;
 				$eventChanged = false;
-				echo $currTime."New event created for orderID: ".$orderID."<br>\n";
+				error_log( $currTime."New event created for orderID: ".$orderID."\n", 3, $logFileName);
 			}
 			else  // existing event - update the description if needed
 				if ($calEvent->getDescription() != $description) {
-					//echo $currTime."old description: ".$calEvent->getDescription()."<br>";
-					//echo $currTime."new description: ".$description."<br>";
+					//error_log( $currTime."old description: ".$calEvent->getDescription()."", 3, $logFileName);
+					//error_log( $currTime."new description: ".$description."", 3, $logFileName);
 					$calEvent->setDescription($description);
 					$eventChanged = true;
 				}
 			if ($eventChanged) {
 				$updatedEvent = $services[$googleClient]->events->update($calendarID, $calEvent->getId(), $calEvent);
 				//var_dump($updatedEvent);
-				echo $currTime."Existing event updated<br>\n";
+				error_log( $currTime."Existing event updated\n", 3, $logFileName);
 			}
 			$sql = "UPDATE $eventsTable set eventID='$eventID', updated='1' WHERE calendarID='$calendarNum' AND orderID='$orderID';";
 			if (!$result = mysql_query($sql)) {
-				echo $currTime.'Update events table Failed! ' . mysql_error(); 
+				error_log( $currTime.'Update events table Failed! ' . mysql_error(), 3, $logFileName); 
 				continue;
 			}
 			else
-				echo $currTime."Event table updated<br>\n";
+				error_log( $currTime."Event table updated\n", 3, $logFileName);
 	
 
 		}	// try
 		//catch exception
 		catch(Exception $e) {
-			  echo $currTime.'Exception: ' .$e->getMessage(). "<br>";
+			  error_log( $currTime.'Exception: ' .$e->getMessage(). "", 3, $logFileName);
 			  syslog(LOG_ERR, "Exception in Calendar service: ".$e->getMessage());
 			  sleep(1);
 			  continue;
@@ -402,7 +403,7 @@ function getSearchFields($order) {
 
 	$sql = "SELECT * FROM $fieldTable WHERE searchable='Y';";
 	if (!$result = mysql_query($sql)) {
-		echo $currTime.'Select search fields Failed! ' . mysql_error(); 
+		error_log( $currTime.'Select search fields Failed! ' . mysql_error(), 3, $logFileName); 
 		return "";
 	}
 	$str = "";
@@ -423,7 +424,7 @@ function checkForEmails() {
 	// Look for awaiting emails in the emails table
 	$sql = "SELECT * FROM $emailsTable WHERE updated='0';";
 	if (!$result = mysql_query($sql)) {
-		echo $currTime.'Select emails table Failed! ' . mysql_error(); 
+		error_log( $currTime.'Select emails table Failed! ' . mysql_error(), 3, $logFileName); 
 		return;
 	}
 	while ($email = mysql_fetch_array($result, MYSQL_ASSOC)) {
@@ -433,7 +434,7 @@ function checkForEmails() {
 		if (strtotime($email["schedule"]) <= strtotime($currTime)) {
 			sendMail($email["emailTo"], $email["fromName"], $email["fromEmail"], $email["subject"], $email["content"]);
 			mysql_query("UPDATE $emailsTable SET updated='1' WHERE num='$num' AND orderID='$orderID';");
-			echo $currTime."Sent email to: ".$email["emailTo"]." subject: ".$email["subject"]."\n";
+			error_log( $currTime."Sent email to: ".$email["emailTo"]." subject: ".$email["subject"]."\n", 3, $logFileName);
 		}
 	}
 }
