@@ -2,7 +2,8 @@
 mkdir /tmp/Google_Client
 chmod 777 /tmp/Google_Client/
 cd /var/www/html/Gilamos
-php calendarServ.php db=samgal > cal.log &
-php calendarServ.php db=demo > calDemo.log & 
-php calendarServ.php db=instdel > calInst.log & 
-php calendarServ.php db=arava > arava.log & 
+php calendarServ.php db=samgal
+php calendarServ.php db=demo
+php calendarServ.php db=instdel
+php calendarServ.php db=arava
+php backup.php db=samgal time=00:00
