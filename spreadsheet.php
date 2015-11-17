@@ -334,7 +334,7 @@ function writeBackup($spreadsheetName) {
  	global $mainTable, $fieldTable;
 
  	date_default_timezone_set("Asia/Jerusalem");
-	syslog(LOG_INFO, "Writing backup to ".$spreadsheetName."...\n");
+	syslog(LOG_INFO, "Writing backup to ".$spreadsheetName."...");
 	$spreadsheet = initGoogleAPI($spreadsheetName);
 	if (!$spreadsheet) {
 		syslog(LOG_ERR, "Backup file doesn't exist");
@@ -349,10 +349,17 @@ function writeBackup($spreadsheetName) {
 	$entries = $listFeed->getEntries();
 
 	$rows = count($entries)-1;
-	syslog(LOG_INFO, "deleting ". $rows. " rows\n");
+	syslog(LOG_INFO, "deleting ". $rows. " rows");
 
-	for ($i=$rows ; $i>=0 ; $i--) 
-		$entries[$i]->delete();
+	for ($i=$rows ; $i>=0 ; $i--) {
+		try {
+			$entries[$i]->delete();
+		}
+		catch(Exception $e) {
+			syslog (LOG_ERR, "Exception: " .$e->getMessage());
+			$i++;	
+		}
+	}
 
 
 	$sql = "SELECT * FROM $mainTable";
@@ -364,21 +371,31 @@ function writeBackup($spreadsheetName) {
     $res = mysql_query($sql);
     for ($i=0; $field[$i] = mysql_fetch_array($res); $i++);
 
+	syslog(LOG_INFO, "writing backup to ". $spreadsheetName);
+
     while ($record = mysql_fetch_array($result)) {
     	for ($i=0; array_key_exists($i, $field); $i++) {
     		//$key = $field[$i]["name"];
     		$key = "col".$i;
     		$row[$key] = $record[$i];
     	}
-
-    	//var_dump($row);
-     	$listFeed->insert($row); 
+    	while (true) {
+	    	//var_dump($row);
+	    	$error = false;
+	    	try {
+	     		$listFeed->insert($row); 
+	     		break;
+	     	}
+	     	catch(Exception $e) {
+	     		syslog (LOG_ERR, "Exception: " .$e->getMessage());
+	     	}
+     	}
     }
 
 
     $worksheet->update(date("d/m/Y H:i"));
 
-	syslog(LOG_INFO, "Completed writing backup to ".$spreadsheetName."...\n");
+	syslog(LOG_INFO, "Completed writing backup to ".$spreadsheetName."...");
 	
 }
 

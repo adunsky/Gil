@@ -56,7 +56,7 @@ use Google\Spreadsheet\ServiceRequestFactory;
  			if ($now > $targetTime)
  				$targetTime = strtotime("+1 day", $targetTime);
 
- 			syslog(LOG_INFO, "Waiting until ".date("d-m-Y H:i", $targetTime)."\n");
+ 			syslog(LOG_INFO, "Waiting until ".date("d-m-Y H:i", $targetTime));
 			time_sleep_until($targetTime);
 
  			writeBackup($custName."-backup");

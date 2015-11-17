@@ -37,7 +37,7 @@ require_once "gmail.php";
 	getClientInfo($dbName); 	// to set the global $lang
 
 	$clientList = getClientList($dbName);
-	$logFileName = "cal".$custName.".log";
+	$logFileName = $custName.".log";
 
 	$clients = [];
 	$services = [];
