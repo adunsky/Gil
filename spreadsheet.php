@@ -224,6 +224,8 @@ function getCalcFields($order, $oldValues) {
 
 	 				if ($value != "")
 						$value = str_replace('"','', $value);	// remove qoutes from values
+					else
+						$value = "_none";
 
 	        		$values[$currKey] = $value;
 			}
