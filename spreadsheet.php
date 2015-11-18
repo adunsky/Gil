@@ -329,22 +329,35 @@ function importOrders($spreadsheetName) {
 	return $orders;
 }
 
+function getFirstWorksheet($spreadsheetName) {
+
+	for ($i=0; $i<5; $i++) {	// retry 5 times
+		$spreadsheet = initGoogleAPI($spreadsheetName);
+		if (!$spreadsheet) {
+			syslog(LOG_ERR, "Backup file: ".$spreadsheetName." doesn't exist");
+			return null;
+		}
+		
+		$worksheetFeed = $spreadsheet->getWorksheets();
+		//var_dump($worksheetFeed[0]);
+
+		if ($worksheet = $worksheetFeed[0])	// if the first worksheeth is not null
+			return $worksheet;	
+	}
+}
+
 
 function writeBackup($spreadsheetName) {
  	global $mainTable, $fieldTable;
 
  	date_default_timezone_set("Asia/Jerusalem");
 	syslog(LOG_INFO, "Writing backup to ".$spreadsheetName."...");
-	$spreadsheet = initGoogleAPI($spreadsheetName);
-	if (!$spreadsheet) {
-		syslog(LOG_ERR, "Backup file doesn't exist");
+
+	$worksheet = getFirstWorksheet($spreadsheetName);
+	if (!$worksheet) {
+		syslog(LOG_ERR, "Failed to get backup worksheet");
 		return;
 	}
-	
-	$worksheetFeed = $spreadsheet->getWorksheets();
-	//var_dump($worksheetFeed[0]);
-
-	$worksheet = $worksheetFeed[0];	// the first worksheeth
 	$listFeed = $worksheet->getListFeed();
 	$entries = $listFeed->getEntries();
 
@@ -357,6 +370,9 @@ function writeBackup($spreadsheetName) {
 		}
 		catch(Exception $e) {
 			syslog (LOG_ERR, "Exception: " .$e->getMessage());
+			$worksheet = getFirstWorksheet($spreadsheetName);
+			$listFeed = $worksheet->getListFeed();
+			$entries = $listFeed->getEntries();
 			$i++;	
 		}
 	}
@@ -388,6 +404,8 @@ function writeBackup($spreadsheetName) {
 	     	}
 	     	catch(Exception $e) {
 	     		syslog (LOG_ERR, "Exception: " .$e->getMessage());
+	     		$worksheet = getFirstWorksheet($spreadsheetName);
+	     		$listFeed = $worksheet->getListFeed();
 	     	}
      	}
     }
