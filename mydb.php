@@ -120,15 +120,16 @@ function authUserForm($user, $formID) {
 	$cal = mysql_query($sql) or die('get calendar-form Failed! ' . mysql_error()); 
 	while ($calData = mysql_fetch_array($cal, MYSQL_ASSOC)) {	
 		$calNum = $calData["number"];
+		$calName = $calData["name"];
 		$sql = "SELECT * FROM $usersTable WHERE email='$user' AND calendarNum='$calNum';";
 		$usr = mysql_query($sql) or die('get user data Failed! ' . mysql_error()); 
 		if (mysql_num_rows($usr) > 0) {
 			// found the calendar in the user table
-			syslog(LOG_INFO, "User authorization approved: ".$user);
+			syslog(LOG_INFO, "User ".$user." authorization approved to calendar: ".$calName);
 			return true;	
 		}		
 	}
-	syslog(LOG_INFO, "User authorization failed: ".$user);
+	syslog(LOG_ERR, "User: ".$user." authorization to calendar: ".$calName." failed!");
 	return false;
 }
 

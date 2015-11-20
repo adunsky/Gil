@@ -390,7 +390,7 @@ function writeBackup($spreadsheetName) {
     for ($i=0; $field[$i] = mysql_fetch_array($res); $i++);
 
 	syslog(LOG_INFO, "writing backup to ". $spreadsheetName);
-
+	$recordNum = 0;
     while ($record = mysql_fetch_array($result)) {
     	for ($i=0; array_key_exists($i, $field); $i++) {
     		//$key = $field[$i]["name"];
@@ -410,6 +410,9 @@ function writeBackup($spreadsheetName) {
 	     		$listFeed = $worksheet->getListFeed();
 	     	}
      	}
+     	$recordNum++;
+     	if (fmod($recordNum, 100) == 0)
+     		syslog(LOG_INFO, "backup wrote ".$recordNum." records");
     }
 
 

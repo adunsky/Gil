@@ -1,5 +1,5 @@
-<div data-ng-controller="orderCtrl" data-ng-init="getOrder()">
-<script ng-src="https://apis.google.com/js/client.js" ng-init="getUser(0)"></script>
+<div data-ng-controller="orderCtrl" data-ng-init="getUser(0)">
+<script ng-src="https://apis.google.com/js/client.js"></script>
 
 <title>Update order - {{orderID}}</title>
 <link ng-if="form.dir == 'rtl'" rel="stylesheet" href="css/style.css?v=1">
@@ -91,7 +91,7 @@
 
 
 <br>
-<div class="container col-sm-12" ng-if="user!=''">
+<div class="container col-sm-12" ng-if="order">
 		
 	<div class="col1 col-sm-6" ng-repeat="col in columns">	
 		<form role="form" name="editForm" target="autocomplete" action="about:blank" autocomplete="on">

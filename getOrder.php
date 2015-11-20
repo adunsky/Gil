@@ -15,27 +15,26 @@
 	else
 		$calendarID = 0;
 
-	$row = [];
-	$formID = 1; // This is the default form
-
 	if (!selectDB($dbName))
 		return;	
 	
 	$eventID = $_GET["eventID"];
 	$user = $_GET["user"];	
-	
-	if ($eventID == '0' && $orderID == 0) { // it is a new order - verify the user email
+
+	syslog(LOG_INFO, "getOrder called, eventID: ".$eventID." orderID: ".$orderID." user: ".$user);	
+	if ($eventID == '0' && $orderID == 0) { 
 		//echo $eventID;
-		$newOrder = true;
-		if ($eventID == '0' && !authUserForm($user, $formID)) {
-			echo "The user is not authorized to perform this action.";
-			return;	
-		}
+		$newOrder = true;	// it is a new order
 	}
 	else
 		$newOrder = false;
 
-	syslog(LOG_INFO, "getOrder called, eventID: ".$eventID." orderID: ".$orderID." user: ".$user);	
+
+	$row = [];
+	$order = null;
+	$formID = 1;	// default form
+	$participantField = 0;
+
 	// First get all the fields
 	$sql = "SELECT * FROM $fieldTable;";
 	$result = mysql_query($sql) or die('get fields Failed! ' . mysql_error()); 
@@ -54,7 +53,6 @@
 		return;
 	}
 
-
 	if ($eventID != '0') {	// find the orderID and calendarID based on the eventID
 		$sql = "SELECT * FROM $eventsTable WHERE eventID = '$eventID';";
 		$result = mysql_query($sql) or die('get eventID Failed! ' . mysql_error()); 
@@ -68,16 +66,20 @@
 		}
 	}
 
-	if ($orderID != 0 && $calendarID != 0) {
-		// orderID and calendarID are known	
+	// get form and calendar info
+	if ($calendarID != 0) {
 		$sql = "SELECT * FROM $calendarsTable WHERE number = '$calendarID';";
 		$result = mysql_query($sql) or die('get form from calendar Failed! ' . mysql_error()); 
 		if (mysql_num_rows($result) > 0)	{
 			//  found calendar
 			$calendar=mysql_fetch_array($result, MYSQL_ASSOC);
 			$formID = $calendar["formNumber"];
+			$participantField = $calendar["participants"];
 		}
-	
+	}
+
+	// now get the order data
+	if ($orderID != 0) {
 		$sql = "SELECT * FROM $mainTable WHERE id = '$orderID';";
 		$result = mysql_query($sql) or die('get order Failed! ' . mysql_error()); 
 		if (mysql_num_rows($result) > 0)	{
@@ -114,6 +116,25 @@
 			$orderID = -1;	// order not found in DB
 	}
 
+
+	// check user authorizarion
+	if (!authUserForm($user, $formID)) {
+		$sql = "SELECT * FROM $formsTable WHERE number = '$formID';";
+		$result = mysql_query($sql) or die('get form table Failed! ' . mysql_error()); 
+		if ($form = mysql_fetch_array($result))	{
+			$formName = $form["title"];
+		}
+		else
+			$formName = "";
+
+		if (!$order || !authParticipant($order, $participantField, $user)) {
+
+			echo "User: ".$user." is not authorized to form: ".$formName;
+			return;
+		}
+	}
+
+
 	if (!$newOrder && $orderID <= 0) {
 		// failed to find an existing order in the DB
 		echo "Invalid record ID";
@@ -147,5 +168,25 @@
 	$data["formID"] = --$formID;	// subtract 1 since it is an array index
 	$data["order"] = $row;
 	echo json_encode($data);
+
+
+function authParticipant($order, $participantField, $user) {
+	if ($participantField)
+		$participantList = explode(",", $order[$participantField]);	
+	else
+		$participantList = [];
+
+	foreach ($participantList as $participant) {
+		$parEmail = filter_var($participant, FILTER_SANITIZE_EMAIL);
+		if ($user == $parEmail) {
+			syslog(LOG_INFO, "User: ".$user." authorized as a participant");
+			return TRUE;	// user is a participant in this order
+		}
+	}
+	
+	syslog(LOG_ERR, "User: ".$user." was NOT authorized as a participant");
+	return FALSE;
+}
+
 
 ?>

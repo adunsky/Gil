@@ -112,7 +112,7 @@ orderApp.controller('formCtrl', function($scope, $http,  $location, orderService
 		if (argv.user)
 				$scope.user = argv.user;
 			else {
-				$scope.user = ""; // $scope.getUser();
+				$scope.user = ""; 
 			}
 
 		if (argv.form)
@@ -121,25 +121,25 @@ orderApp.controller('formCtrl', function($scope, $http,  $location, orderService
 
  		$http.get("getFields.php", { params: { db: $scope.dbName, user: $scope.user } })
  		.success(function(data) {
-         	$scope.message = data;
-         	console.log($scope.message);
+         	var message = data;
+         	console.log(message);
   	    	try {
 	        		$scope.fieldList = angular.fromJson(data);
 	        		if ($scope.fieldList) {
 	        			$scope.fieldList.push("");
     					$http.get("getForms.php", { params: { db: $scope.dbName, form: $scope.formID, user: $scope.user } })
     					.success(function(data) {
-    			        	$scope.message = data;
-    			        	console.log($scope.message);
+    			        	message = data;
+    			        	console.log(message);
     			        	$scope.form = data;
 
     			        });
 					}
 					else
-						alert("Error: "+$scope.message);
+						alert("Error: "+message.trim());
       	 	}
     		catch (e) {
-        		alert("Error: "+$scope.message);
+        		alert("Error: "+message.trim());
     		} 
 		}); 
 
@@ -169,12 +169,12 @@ orderApp.controller('formCtrl', function($scope, $http,  $location, orderService
 
  	}
 
- 	$scope.fieldExists = function(field) {
+ 	$scope.fieldExists = function(field, fieldIndex) {
 
  		if ($scope.form.fields) {
 	 		for (var i=0; i<$scope.form.fields.length; i++ ) {
 
-	 			if ($scope.form.fields[i].fieldIndex && $scope.form.fields[i].name == field.name)
+	 			if ($scope.form.fields[i].fieldIndex && $scope.form.fields[i].name == field.name &&	i != fieldIndex)
 	 				return true;
 	 		}
  		}
@@ -223,7 +223,7 @@ orderApp.controller('formCtrl', function($scope, $http,  $location, orderService
  		var field = $scope.findFieldName(formField);
  		var fieldFormIndex = $scope.form.fields.indexOf(formField);
 
- 		if ($scope.fieldExists(field)) {
+ 		if ($scope.fieldExists(field, fieldFormIndex)) {
  			alert("Field "+field.name+" already exists in this form");
  			formField.name = "";
  		}
@@ -263,17 +263,17 @@ orderApp.controller('formCtrl', function($scope, $http,  $location, orderService
         });
             /* Check whether the HTTP Request is Successfull or not. */
         request.success(function (data) {
-            $scope.message = data;
-            console.log($scope.message);
+            var message = data;
+            console.log(message);
             document.body.style.cursor = 'default';
             alert("Form "+$scope.form.title+" updated successfuly");
             $scope.changed = false;
 			         	
         });
         request.error(function (data, status) {
-            $scope.message = data;
+            var message = data;
             document.body.style.cursor = 'default';
-            alert("Error: "+$scope.message);
+            alert("Error: "+message);
         });
 
 
@@ -336,7 +336,7 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, orderServic
 		if (argv.user)
 				$scope.user = argv.user;
 			else {
-				$scope.user = ""; // $scope.getUser();
+				$scope.user = "";
 			}
 
 		if (argv.start)
@@ -541,49 +541,45 @@ orderApp.controller ('orderCtrl', function orderController ($scope, $http, $time
 
 		$scope.inProgress = false;
 
-      	$scope.getOrder = function () {
-     		
-		   	var eventID, calendarNum;
-			
-			var argv = $location.search();      		
-			if (argv.id)
-				eventID = argv.id;
-			else
-				eventID = 0;
-			if (argv.calendarNum)
-				calendarNum = argv.calendarNum;
-			else
-				calendarNum = 0;
-			if (argv.orderID)
-				$scope.orderID = argv.orderID;
-			else
-				$scope.orderID = 0;
-			if (argv.db)
-				$scope.dbName = argv.db;
-			if (argv.user)
- 				$scope.user = argv.user;
- 			else {
- 				$scope.user = ""; // $scope.getUser();
- 			}		
+      	$scope.getOrder = function (eventID, calendarNum) {
+    	var eventID, calendarNum;
+ 	
+	 	var argv = $location.search();      		
+	 	if (argv.id)
+	 		eventID = argv.id;
+	 	else
+	 		eventID = 0;
+	 	if (argv.calendarNum)
+	 		calendarNum = argv.calendarNum;
+	 	else
+	 		calendarNum = 0; 
+	 	if (argv.orderID)
+	 		$scope.orderID = argv.orderID;
+	 	else
+	 		$scope.orderID = 0;
+	 	if (argv.db)
+	 		$scope.dbName = argv.db;
 
-     		$http.get("getOrder.php", { params: { eventID: eventID, db: $scope.dbName, calendarNum: calendarNum, orderID: $scope.orderID, user: $scope.user } })
-     		.success(function(data) {
-             	$scope.message = data;
-             	console.log($scope.message);
-	      	    try {
-	   	        		$updatedOrder = angular.fromJson(data);
-		      	}
-        		catch (e) {
-            		alert("Error: "+$scope.message);
-            		//orderService.setOrder(null);
-        		} 
-	    		if ($updatedOrder) {
-	    			$scope.orderID = $updatedOrder.orderID;
-	    			$scope.order = $updatedOrder.order;
-	 				orderService.setOrder($scope.order);
-	 				$scope.getFormFields($updatedOrder.formID, $scope.user);
-				}
-			}); 
+ 		$http.get("getOrder.php", { params: { eventID: eventID, db: $scope.dbName, calendarNum: calendarNum, orderID: $scope.orderID, user: $scope.user } })
+ 		.success(function(data) {
+         	var message = data;
+         	console.log(message);
+      	    try {
+   	        		$updatedOrder = angular.fromJson(data);
+	      	}
+    		catch (e) {
+        		alert("Error: "+message.trim());
+        		$updatedOrder = null;
+        		$scope.order = null;
+        		//orderService.setOrder(null);
+    		} 
+    		if ($updatedOrder) {
+    			$scope.orderID = $updatedOrder.orderID;
+    			$scope.order = $updatedOrder.order;
+ 				orderService.setOrder($scope.order);
+ 				$scope.getFormFields($updatedOrder.formID, $scope.user);
+			}
+		}); 
 
 		};
 		
@@ -592,13 +588,13 @@ orderApp.controller ('orderCtrl', function orderController ($scope, $http, $time
 				if (!$scope.form) {
 		     		$http.get("getForms.php", { params: { db: $scope.dbName, form: form, user: user } })
 		     		.success(function(data) {
-			            $scope.message = data;
-			            console.log($scope.message);
+			            var message = data;
+			            console.log(message);
 			      	    try {
 			   	        		$scope.form = angular.fromJson(data);
 				      	}
 			        	catch (e) {
-			            	alert("Error: "+$scope.message);
+			            	alert("Error: "+message.trim());
 			        	} 
 	   	        		if ($scope.form) {
 	             			$scope.setFormValues();
@@ -729,8 +725,8 @@ orderApp.controller ('orderCtrl', function orderController ($scope, $http, $time
 	            });
 	                /* Check whether the HTTP Request is Successfull or not. */
 	            request.success(function (data) {
-	                $scope.message = data;
-	                console.log($scope.message);
+	                var message = data;
+	                console.log(message);
 					if (!isNaN(data)) {	                
 	                	$scope.orderID = parseInt(data); // PHP returned a valid ID number
 	                	if ($scope.newDriveFolder && $scope.selectedParentFolder) {
@@ -746,13 +742,13 @@ orderApp.controller ('orderCtrl', function orderController ($scope, $http, $time
 	                else {
 	                	//$scope.orderID = data; // PHP returned invalid ID number
 	                	$scope.inProgress = false;
-	                	alert("Error: "+$scope.message);
+	                	alert("Error: "+message.trim());
 	                }	
 	            });
 	            request.error(function (data, status) {
-	                $scope.message = data;
+	                var message = data;
 	                $scope.inProgress = false;
-	                alert("Error: "+$scope.message);
+	                alert("Error: "+message.trim());
 	            });
 	      }   
          
@@ -776,8 +772,8 @@ orderApp.controller ('orderCtrl', function orderController ($scope, $http, $time
 				if (field.input == 'U' && field.value != "")	{	// check if unique value already exist in DB
 		     		$http.get("checkUnique.php", { params: { orderID: $scope.orderID, db: $scope.dbName, index: field.fieldIndex, value: field.value } })
 		     		.success(function(data) {
-		             $scope.message = data;
-		             console.log($scope.message);
+		             var message = data;
+		             console.log(message);
 		             if (data.trim() == "false") {
 		             	// not unique
 		             	field.error = true;
@@ -877,24 +873,24 @@ orderApp.controller ('orderCtrl', function orderController ($scope, $http, $time
 	            });
 	                /* Check whether the HTTP Request is Successfull or not. */
 	            request.success(function (data) {
-	               $scope.message = data;
-	               console.log($scope.message);
+	               var message = data;
+	               console.log(message);
 	               try {
 							$scope.order = angular.fromJson(data);
 							$scope.setFormValues();
 		            		//orderService.setOrder($scope.order);
 		            }						
 						catch (e) {
-							alert("Error: "+$scope.message);
+							alert("Error: "+message.trim());
 						}						
 						document.body.style.cursor = 'default';
 		            $scope.inProgress = false;	
 	            });
 	            request.error(function (data, status) {
-	                $scope.message = data;
+	                var message = data;
 	                $scope.inProgress = false;
 					document.body.style.cursor = 'default';	                
-	                alert($scope.message);
+	                alert(message.trim());
 	            });
 
 			};
@@ -907,7 +903,7 @@ orderApp.controller ('orderCtrl', function orderController ($scope, $http, $time
 
 			}
 
-			$scope.getUserInfo = function(renew) {
+			$scope.loadUserForm = function(renewUser) {
 				gapi.client.load('oauth2', 'v2', function() {
 				  gapi.client.oauth2.userinfo.get().execute(function(resp) {
 				    // Get the user email
@@ -915,30 +911,38 @@ orderApp.controller ('orderCtrl', function orderController ($scope, $http, $time
 				    	getUser(true);
 				    	return;
 				    }
-				    $scope.user = resp.email;
-				    $scope.getUserRole($scope.user);
-				    $scope.initFolders(renew);
+
+				    if ($scope.user != resp.email) {	// user was changed - reload form
+					    $scope.user = resp.email;
+				    	$scope.getOrder();
+					    $scope.getUserRole($scope.user);
+					    $scope.initFolders(renewUser);
+					}
 				  })
 				});
 			}
 
-			$scope.getUser = function(renew) {	// called on init form
+			$scope.getUser = function(renewUser) {	// called on init form
 
 				var authuser = 0;
 				var userID = "";
 
+				var argv = $location.search();  
+
+				if (argv.user)
+	 				userID = argv.user;
+
 				if (!gapi || !gapi.auth) {
 					// wait until Google API library has loaded
-					setTimeout($scope.getUser, 1000, renew);
+					setTimeout($scope.getUser, 1000, renewUser);
 					return;
 				}	
 
-				if (renew) // reset the user 
-					authuser = -1;
-				else if ($scope.user!="") {		// keep the existing user
-					userID = $scope.user;
-					authuser = -1;
-				}
+				if (renewUser)
+					userID = "";	 // reset the user 
+
+				if (renewUser || userID != "")
+					authuser = -1;	// don't use the default logged in user
 
 				try {
 				    gapi.auth.authorize(
@@ -947,11 +951,11 @@ orderApp.controller ('orderCtrl', function orderController ($scope, $http, $time
 				        'cookie_policy': 'single_host_origin',
 				        'user_id': userID,
 				        'authuser': authuser,
-				        'immediate': !renew},
+				        'immediate': !renewUser},
 				        function(authResult) {
 				        	if (authResult && !authResult.error) {
 					       		// authorization granted
-					       		$scope.getUserInfo(renew);
+					       		$scope.loadUserForm(renewUser);
 							}
 							else {
 								// try manual authorization
@@ -964,7 +968,7 @@ orderApp.controller ('orderCtrl', function orderController ($scope, $http, $time
 					   			    function(authResult) {
 					   			       	if (authResult && !authResult.error) {
 					   			       		// authorization granted
-					   			       		$scope.getUserInfo(renew);
+					   			       		$scope.loadUserForm(renewUser);
 					   					}
 					   					else {
 							    			alert("Authorization failed !")
@@ -1165,14 +1169,14 @@ orderApp.controller ('orderCtrl', function orderController ($scope, $http, $time
 					
 			}
 
-   			$scope.initFolders = function(renew){
+   			$scope.initFolders = function(renewUser){
 
-				if (!renew && $scope.folderList) {
+				if (!renewUser && $scope.folderList) {
 					// Already initialized
 					return;
 				}
 
-				if (!renew && $scope.parentFolderID ) {
+				if (!renewUser && $scope.parentFolderID ) {
 					$scope.getFolderList($scope.parentFolderID);
 					return;
 				}
