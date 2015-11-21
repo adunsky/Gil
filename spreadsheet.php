@@ -344,8 +344,9 @@ function getFirstWorksheet($spreadsheetName) {
 		//var_dump($worksheetFeed[0]);
 
 		if ($worksheet = $worksheetFeed[0])	// if the first worksheeth is not null
-			return $worksheet;	
+			return $worksheet;
 	}
+	syslog(LOG_ERR, "Failed to initialize backup spreadsheet ".$spreadsheetName);
 }
 
 
@@ -357,7 +358,6 @@ function writeBackup($spreadsheetName) {
 
 	$worksheet = getFirstWorksheet($spreadsheetName);
 	if (!$worksheet) {
-		syslog(LOG_ERR, "Failed to get backup worksheet");
 		return;
 	}
 	$listFeed = $worksheet->getListFeed();
@@ -378,7 +378,7 @@ function writeBackup($spreadsheetName) {
 			$i++;	
 		}
 		if (fmod($i, 100) == 0)
-			syslog(LOG_INFO, "backup deleted ".$i." records");
+			syslog(LOG_INFO, $i." records left to delete");
 	}
 
 
@@ -417,16 +417,10 @@ function writeBackup($spreadsheetName) {
      		syslog(LOG_INFO, "backup wrote ".$recordNum." records");
     }
 
-    while (true) {	// retry loop
-	    try {
-	    	$worksheet->update(date("d/m/Y H:i"));
-	    	break;
-	 	}
-	 	catch(Exception $e) {
-	 		syslog (LOG_ERR, "Exception: " .$e->getMessage());
-	 		$worksheet = getFirstWorksheet($spreadsheetName);
-	 	}
-	}
+    $worksheet = getFirstWorksheet($spreadsheetName);
+    if ($worksheet)
+		$worksheet->update(date("d/m/Y H:i"));
+
 	syslog(LOG_INFO, "Completed writing backup to ".$spreadsheetName."...");
 	
 }
