@@ -397,7 +397,7 @@ function writeBackup($spreadsheetName) {
     		$key = "col".$i;
     		$row[$key] = $record[$i];
     	}
-    	while (true) {
+    	while (true) {	// retry loop
 	    	//var_dump($row);
 	    	$error = false;
 	    	try {
@@ -415,9 +415,15 @@ function writeBackup($spreadsheetName) {
      		syslog(LOG_INFO, "backup wrote ".$recordNum." records");
     }
 
-
-    $worksheet->update(date("d/m/Y H:i"));
-
+    while (true) {	// retry loop
+    try {
+    	$worksheet->update(date("d/m/Y H:i"));
+    	break;
+ 	}
+ 	catch(Exception $e) {
+ 		syslog (LOG_ERR, "Exception: " .$e->getMessage());
+ 		$worksheet = getFirstWorksheet($spreadsheetName);
+ 	}
 	syslog(LOG_INFO, "Completed writing backup to ".$spreadsheetName."...");
 	
 }
