@@ -377,6 +377,8 @@ function writeBackup($spreadsheetName) {
 			$entries = $listFeed->getEntries();
 			$i++;	
 		}
+		if (fmod($i, 100) == 0)
+			syslog(LOG_INFO, "backup deleted ".$i." records");
 	}
 
 
