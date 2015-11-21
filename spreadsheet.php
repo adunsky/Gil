@@ -416,14 +416,15 @@ function writeBackup($spreadsheetName) {
     }
 
     while (true) {	// retry loop
-    try {
-    	$worksheet->update(date("d/m/Y H:i"));
-    	break;
- 	}
- 	catch(Exception $e) {
- 		syslog (LOG_ERR, "Exception: " .$e->getMessage());
- 		$worksheet = getFirstWorksheet($spreadsheetName);
- 	}
+	    try {
+	    	$worksheet->update(date("d/m/Y H:i"));
+	    	break;
+	 	}
+	 	catch(Exception $e) {
+	 		syslog (LOG_ERR, "Exception: " .$e->getMessage());
+	 		$worksheet = getFirstWorksheet($spreadsheetName);
+	 	}
+	}
 	syslog(LOG_INFO, "Completed writing backup to ".$spreadsheetName."...");
 	
 }
