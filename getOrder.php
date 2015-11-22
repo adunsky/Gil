@@ -32,7 +32,6 @@
 
 	$row = [];
 	$order = null;
-	$formID = 1;	// default form
 	$participantField = 0;
 
 	// First get all the fields
@@ -74,8 +73,24 @@
 			//  found calendar
 			$calendar=mysql_fetch_array($result, MYSQL_ASSOC);
 			$formID = $calendar["formNumber"];
+			$calName = $calendar["name"];
 			$participantField = $calendar["participants"];
 		}
+		else
+			echo "Calendar ".$calendarID." does not exist";
+	}
+	else {
+		// calendar = 0  == > get the default form and calendar name
+		$sql = "SELECT * FROM $calendarsTable WHERE formNumber = '1';";
+		$result = mysql_query($sql) or die('get form from calendar Failed! ' . mysql_error()); 
+		if (mysql_num_rows($result) > 0)	{
+			//  found calendar
+			$calendar=mysql_fetch_array($result, MYSQL_ASSOC);
+			$formID = $calendar["formNumber"];
+			$calName = $calendar["name"];
+		}
+		else
+			echo "Calendar ".$calendarID." does not exist";
 	}
 
 	// now get the order data
@@ -118,18 +133,10 @@
 
 
 	// check user authorizarion
-	if (!authUserForm($user, $formID)) {
-		$sql = "SELECT * FROM $formsTable WHERE number = '$formID';";
-		$result = mysql_query($sql) or die('get form table Failed! ' . mysql_error()); 
-		if ($form = mysql_fetch_array($result))	{
-			$formName = $form["title"];
-		}
-		else
-			$formName = "";
-
+	if (!authUserCalendar($user, $calName)) {
 		if (!$order || !authParticipant($order, $participantField, $user)) {
 
-			echo "User: ".$user." is not authorized to form: ".$formName;
+			echo "User: ".$user." is not authorized to calendar: ".$calName;
 			return;
 		}
 	}

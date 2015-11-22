@@ -113,22 +113,22 @@ function getUserRole($user) {
 	return "";
 }
 
-function authUserForm($user, $formID) {
+function authUserCalendar($user, $calName) {
 	global $calendarsTable, $usersTable;
 	
-	$sql = "SELECT * FROM $calendarsTable WHERE formNumber='$formID';";
-	$cal = mysql_query($sql) or die('get calendar-form Failed! ' . mysql_error()); 
-	while ($calData = mysql_fetch_array($cal, MYSQL_ASSOC)) {	
-		$calNum = $calData["number"];
-		$calName = $calData["name"];
+	// loop on all calendars with the same name
+	$sql = "SELECT * FROM $calendarsTable WHERE name='$calName';";
+	$calRes = mysql_query($sql) or die('get calendar name Failed! ' . mysql_error()); 
+	while ($calByName = mysql_fetch_array($calRes, MYSQL_ASSOC)) {
+		$calNum = $calByName["number"];	
 		$sql = "SELECT * FROM $usersTable WHERE email='$user' AND calendarNum='$calNum';";
 		$usr = mysql_query($sql) or die('get user data Failed! ' . mysql_error()); 
 		if (mysql_num_rows($usr) > 0) {
 			// found the calendar in the user table
 			syslog(LOG_INFO, "User ".$user." authorization approved to calendar: ".$calName);
 			return true;	
-		}		
-	}
+		}
+	}		
 	syslog(LOG_ERR, "User: ".$user." authorization to calendar: ".$calName." failed!");
 	return false;
 }
