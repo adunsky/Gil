@@ -1,14 +1,3 @@
-- optimize spreadsheet read/write:
-	- separate input and output lines
-	- use listEntry to write/read:
-		- write values
-		- write old values
-		- read calculated values
-
-optimize drive access:
-	- get file list in one call
-	- get file name later
-	- retry in case of error
 
 - enable removing of forms, calendars
 
@@ -25,7 +14,8 @@ optimize drive access:
 audit trail - store all changes per record, with user
  - for each record' store google spreadsheet and get audit trail for free
 
-- backup script on server ?
+- backup script on server
+ 	update column names
 
 - eventID is not needed anymore. only for old events
 - Add an option to send email notification to attendees
@@ -33,6 +23,16 @@ audit trail - store all changes per record, with user
 
 - Web page to view order status 
 
+//- optimize spreadsheet read/write:
+//	- separate input and output lines
+//	- use listEntry to write/read:
+//		- write values
+//		- write old values
+//		- read calculated values
+// optimize drive access:
+//	- get file list in one call
+//	- get file name later
+//	- retry in case of error
 // - Add multiple lines in Main for scalability
 // add try-catch and retry to init calendar 
 // - don't allow to enter forms without a user

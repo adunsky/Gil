@@ -76,8 +76,10 @@
 			$calName = $calendar["name"];
 			$participantField = $calendar["participants"];
 		}
-		else
-			echo "Calendar ".$calendarID." does not exist";
+		else {
+			echo "Calendar ".$calendarID." does not exist"."\n";
+			return;
+		}
 	}
 	else {
 		// calendar = 0  == > get the default form and calendar name
@@ -89,8 +91,10 @@
 			$formID = $calendar["formNumber"];
 			$calName = $calendar["name"];
 		}
-		else
-			echo "Calendar ".$calendarID." does not exist";
+		else {
+			echo "Calendar ".$calendarID." does not exist"."\n";
+			return;
+		}
 	}
 
 	// now get the order data

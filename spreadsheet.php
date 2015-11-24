@@ -349,6 +349,36 @@ function getFirstWorksheet($spreadsheetName) {
 	syslog(LOG_ERR, "Failed to initialize backup spreadsheet ".$spreadsheetName);
 }
 
+/* Not used ---------------
+
+function updateColumnNames($worksheet, $names, $colNum) {
+
+	$batchRequest = new Google\Spreadsheet\Batch\BatchRequest();
+    $cellFeed = $worksheet->getCellFeed();
+	for ($i=1; $i <= $colNum; $i++) {
+		if ($names)
+			$colName = $names[$i-1]["name"];
+		else	
+			$colName = "col".$i;
+        $inputCell = $cellFeed->getCell(1, $i);
+        if (empty($inputCell)) {
+        	// CellEntry doesn't exist. Use edit cell.
+        	syslog(LOG_INFO, "Empty field updated manually: ".$colName);
+        	$cellFeed->editCell(1, $i, $colName);
+		}
+		else {
+			$colName = str_replace('"','', $colName);
+		    $inputCell->setContent($colName);
+		    $batchRequest->addEntry($inputCell);
+		}
+
+		//echo $i;
+	}
+	$batchRes = $cellFeed->insertBatch($batchRequest);
+	if ($batchRes->hasErrors())
+	   	syslog(LOG_ERR, "Error in batchRequest");
+
+}
 
 function writeBackup($spreadsheetName) {
  	global $mainTable, $fieldTable;
@@ -363,24 +393,7 @@ function writeBackup($spreadsheetName) {
 	$listFeed = $worksheet->getListFeed();
 	$entries = $listFeed->getEntries();
 
-	$rows = count($entries)-1;
-	syslog(LOG_INFO, "deleting ". $rows. " rows");
-
-	for ($i=$rows ; $i>=0 ; $i--) {
-		try {
-			$entries[$i]->delete();
-		}
-		catch(Exception $e) {
-			syslog (LOG_ERR, "Exception: " .$e->getMessage());
-			$worksheet = getFirstWorksheet($spreadsheetName);
-			$listFeed = $worksheet->getListFeed();
-			$entries = $listFeed->getEntries();
-			$i++;	
-		}
-		if (fmod($i, 100) == 0)
-			syslog(LOG_INFO, $i." records left to delete");
-	}
-
+	$rows = count($entries);
 
 	$sql = "SELECT * FROM $mainTable";
     $result = mysql_query($sql);
@@ -391,25 +404,33 @@ function writeBackup($spreadsheetName) {
     $res = mysql_query($sql);
     for ($i=0; $field[$i] = mysql_fetch_array($res); $i++);
 
+    $colNum = $i;
+
+	// write column titles col1, col2... 
+	updateColumnNames($worksheet, null, $colNum);
+
 	syslog(LOG_INFO, "writing backup to ". $spreadsheetName);
 	$recordNum = 0;
     while ($record = mysql_fetch_array($result)) {
-    	for ($i=0; array_key_exists($i, $field); $i++) {
-    		//$key = $field[$i]["name"];
+    	//var_dump($record);
+    	for ($i=1; $i <= $colNum; $i++) {
     		$key = "col".$i;
-    		$row[$key] = $record[$i];
+    		$row[$key] = $record[$i-1];
     	}
     	while (true) {	// retry loop
 	    	//var_dump($row);
-	    	$error = false;
 	    	try {
-	     		$listFeed->insert($row); 
+	    		if ($recordNum < $rows)	
+	    			$entries[$recordNum]->update($row);	// update existing row
+	    		else
+	    			$listFeed->insert($row); // add new row
 	     		break;
 	     	}
 	     	catch(Exception $e) {
 	     		syslog (LOG_ERR, "Exception: " .$e->getMessage());
 	     		$worksheet = getFirstWorksheet($spreadsheetName);
 	     		$listFeed = $worksheet->getListFeed();
+	     		$entries = $listFeed->getEntries();
 	     	}
      	}
      	$recordNum++;
@@ -417,13 +438,17 @@ function writeBackup($spreadsheetName) {
      		syslog(LOG_INFO, "backup wrote ".$recordNum." records");
     }
 
+    // write real column titles
     $worksheet = getFirstWorksheet($spreadsheetName);
+    updateColumnNames($worksheet, $field, $colNum);
+
     if ($worksheet)
 		$worksheet->update(date("d/m/Y H:i"));
 
 	syslog(LOG_INFO, "Completed writing backup to ".$spreadsheetName."...");
 	
 }
+---------------*/
 
 
 ?>

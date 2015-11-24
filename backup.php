@@ -25,8 +25,8 @@ require_once "spreadsheet.php";
 
 require realpath(dirname(__FILE__) . '/php-google-spreadsheet-client-master/vendor/autoload.php');
 
-use Google\Spreadsheet\DefaultServiceRequest;
-use Google\Spreadsheet\ServiceRequestFactory;
+use Google\Drive\DefaultServiceRequest;
+use Google\Drive\ServiceRequestFactory;
 
 		// get arguments from command line		
 		parse_str(implode('&', array_slice($argv, 1)), $_GET);
@@ -56,10 +56,147 @@ use Google\Spreadsheet\ServiceRequestFactory;
  			if ($now > $targetTime)
  				$targetTime = strtotime("+1 day", $targetTime);
 
- 			syslog(LOG_INFO, "Backup scheduled to: ".date("d-m-Y H:i", $targetTime));
+ 			syslog(LOG_INFO, "backup scheduled to: ".date("d-m-Y H:i", $targetTime));
 			time_sleep_until($targetTime);
 
- 			writeBackup($custName."-backup");
+			$filename = $custName."-backup";
+ 			writeBackupToFile($filename);
+
+ 			$service = getGoogleDriveService();
+
+ 			$parameters = array('q' => "title = '".$filename."' and trashed = false and mimeType = 'text/csv'");
+ 			$fileList = $service->files->listFiles($parameters);
+
+ 			if ($files = $fileList->getItems()) {
+ 				// file already exist
+ 				echo "File exists\n";
+ 				$file = $files[0];
+ 				$result = $service->files->update($file->getId(), $file, array(
+ 				  	'data' => file_get_contents($filename),
+ 				  	'mimeType' => 'text/csv',
+ 				  	'uploadType' => 'media'),
+ 					array('convert'=>true, 'newRevision' => true)
+ 				);
+ 			}
+ 			else {
+ 				// new file
+ 				echo "New file\n";
+ 				$file = new Google_Service_Drive_DriveFile();
+ 				$file->setTitle($filename);
+	 			$result = $service->files->insert($file, array(
+	 			  	'data' => file_get_contents($filename),
+	 			  	'mimeType' => 'text/csv',
+	 			  	'uploadType' => 'media'),
+	 				array('convert'=>true, 'newRevision' => true)
+	 			);
+
+	 			$newPermission= new Google_Service_Drive_Permission();
+	 			$newPermission->setType('user');
+	 			$newPermission->setRole('writer');
+	 			$newPermission->setValue('admin@googmesh.com'); //thats email to share
+	 			$result = $service->permissions->insert($result->getId(),$newPermission);
+	 		}
+	 			//var_dump($result);
+ 			sleep(10);	// wait until target time has passed
  		}
+
+
+function writeBackupToFile($filename) {
+	global $mainTable, $fieldTable;
+
+	syslog(LOG_INFO, "writing backup to ". $filename);
+	$sql = "SELECT * FROM $mainTable";
+    $result = mysql_query($sql);
+
+    $sql = "Select name FROM $fieldTable";
+    $res = mysql_query($sql);
+    $titles[0] = "id";
+
+    for ($i=0; $field = mysql_fetch_array($res); $i++)
+    	$titles[$i+1] = $field["name"];
+
+	$file = fopen($filename, 'w');
+
+	// write column titles 
+    fputcsv($file, $titles);
+
+    $row = [];
+	$recordNum = 0;
+    while ($record = mysql_fetch_array($result)) {
+    	for ($i=1; array_key_exists($i, $record); $i++)
+    		$row[$i-1] = $record[$i];
+
+    	fputcsv($file, $row);
+
+     	$recordNum++;
+     	if (fmod($recordNum, 100) == 0)
+     		syslog(LOG_INFO, "backup wrote ".$recordNum." records");
+    }
+
+
+}
+
+
+function getGoogleDriveService() {
+	global $globalDBName, $appName;
+
+	$customer = getClient($globalDBName, 1);	// always use the first client
+
+	$clientid = $customer["clientID"];
+	$clientmail = $customer["clientMail"];
+	$clientkeypath = $customer["clientKeyPath"];
+
+	try {
+		syslog (LOG_INFO, "Get Google drive service");
+
+		$client = new Google_Client();
+		$client->setApplicationName($appName);
+		$client->setClientId($clientid);	 
+		
+		/*
+		if (isset($_SESSION['service_token'])) {
+		  $client->setAccessToken($_SESSION['service_token']);
+		  syslog(LOG_INFO, "Service token is set for session");
+		}
+		*/
+		$key = file_get_contents($clientkeypath);
+		$cred = new Google_Auth_AssertionCredentials(
+		    $clientmail,
+		    array('https://www.googleapis.com/auth/drive'),
+		    $key
+		);
+		$client->setAssertionCredentials($cred);
+		
+		
+		if ($client->getAuth()->isAccessTokenExpired()) {
+		  $client->getAuth()->refreshTokenWithAssertion($cred);
+		}
+			   
+		if ($client->getAccessToken()) {
+			//$_SESSION['service_token'] = $client->getAccessToken();
+			
+			//$obj_token  = json_decode($client->getAccessToken());
+			//$accessToken = $obj_token->access_token;
+			  	
+			//var_dump($accessToken);
+			
+			//$serviceRequest = new DefaultServiceRequest($accessToken);
+			//ServiceRequestFactory::setInstance($serviceRequest);
+			
+			$driveService = new Google_Service_Drive($client);
+	
+		}
+		else {
+			syslog(LOG_ERR, "could not access drive");
+			return null;
+		} 
+	}
+	catch(Exception $e) {
+		syslog (LOG_ERR, "Exception: " .$e->getMessage());
+		return null;	
+	}	
+	syslog(LOG_INFO, "Drive service initiated<br>");
+	return $driveService;
+}
 
 ?>
