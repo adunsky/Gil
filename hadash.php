@@ -53,6 +53,17 @@ use Google\Spreadsheet\ServiceRequestFactory;
 		$spreadsheet = initGoogleAPI(); // from spreadsheet.php
 		$worksheetFeed = $spreadsheet->getWorksheets();
 		syslog(LOG_INFO, "Running hadash, command: ".$command);
+
+		echo "Are you sure ??? db=".$dbName." ?  Type 'yes' to continue: ";
+		$handle = fopen ("php://stdin","r");
+		$line = fgets($handle);
+		if(trim($line) != 'yes'){
+		    echo "ABORTING!\n";
+		    exit;
+		}
+		echo "\n";
+		echo "Thank you, continuing...\n";
+
 		if ($command == "clean") {
 			// remove the google calendars and table
 			removeCalendars($worksheetFeed, $calendarsTable, $eventsTable);
@@ -85,7 +96,7 @@ use Google\Spreadsheet\ServiceRequestFactory;
 			// Create log table		
 			createLogTable($logTable);
 		}
-		if (command == "forms")
+		if ($command == "forms")
 			// Create FormTables form and field form tables	
 			updateFormTables($worksheetFeed, true);			 
 
