@@ -28,8 +28,9 @@ require realpath(dirname(__FILE__) . '/php-google-spreadsheet-client-master/vend
 use Google\Drive\DefaultServiceRequest;
 use Google\Drive\ServiceRequestFactory;
 
-		// get arguments from command line		
-		parse_str(implode('&', array_slice($argv, 1)), $_GET);
+		if (!$_GET)
+			// get arguments from command line		
+			parse_str(implode('&', array_slice($argv, 1)), $_GET);
 
 		$dbName = $_GET['db'];
 		//echo $dbName;
@@ -51,13 +52,16 @@ use Google\Drive\ServiceRequestFactory;
  		date_default_timezone_set("Asia/Jerusalem");
 
  		$targetTime = strtotime($time);
+
  		while (true) {
  			$now = strtotime("now");
  			if ($now > $targetTime)
  				$targetTime = strtotime("+1 day", $targetTime);
 
- 			syslog(LOG_INFO, "backup for ".$custName." scheduled to: ".date("d-m-Y H:i", $targetTime));
-			time_sleep_until($targetTime);
+ 			if ($time != "once") {
+	 			syslog(LOG_INFO, "backup for ".$custName." scheduled to: ".date("d-m-Y H:i", $targetTime));
+				time_sleep_until($targetTime);
+			}
 
 			$filename = $custName."-backup";
 
@@ -97,12 +101,14 @@ use Google\Drive\ServiceRequestFactory;
 		 			$result = $service->permissions->insert($result->getId(),$newPermission);
 		 		}
 		 		syslog(LOG_INFO, "backup completed, file: ".$filename);
+		 		echo "backup completed, file: ".$filename;
 	 		}
 	 		catch(Exception $e) {
 	 			syslog (LOG_ERR, "Exception: " .$e->getMessage());
 	 			continue;	
 	 		}			 		
-	 			
+			if ($time == "once")
+				break;	 			
  			sleep(10);	// wait until target time has passed
  		}
 
@@ -126,15 +132,8 @@ function writeBackupToFile($filename) {
 	// write column titles 
     fputcsv($file, $titles);
 
-    $row = [];
-	$recordNum = 0;
-    while ($record = mysql_fetch_array($result)) {
-    	$row[0] = $record["id"];
-    	for ($i=2; array_key_exists($i, $record); $i++) {
-    		$row[$i-1] = $record[$i];
-    		//echo $row[$i-1]."\n";
-    	}
-    	fputcsv($file, $row);
+    while ($record = mysql_fetch_assoc($result)) {
+    	fputcsv($file, $record);
     }
 
 
