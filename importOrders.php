@@ -62,16 +62,18 @@
 		if (mysql_num_rows($fields) == 0)
 			die('get fields Failed! ' . mysql_error());
 
-		$values = "'null' ";
 		$dates = [];
 		$newOrder = [];
 		$count = 0;
 		while ($field = mysql_fetch_array($fields, MYSQL_ASSOC)) {
 
 			list($key, $value) = each($order);
-			if ($count++ == 0)
+			if ($count++ == 0) {
+				// insert the id value first
+				$orderID = $value;
+				$values = "'$value' ";
 				list($key, $value) = each($order);	// skip the id column			
-			
+			}
 			$field["value"] = $value;
 
 			$name = $field["index"];
@@ -102,62 +104,13 @@
 
 			array_push($newOrder, $field);
 		}
-		
-		if ($command == 'calc') {
-			// send to spreadsheet for calculation
-			$order = getCalcFields($newOrder);  // get from spreadsheet
-			if ($order == null){
-				echo "getCalcFields failed\n";
-				sleep(5);
-				initGoogleAPI($ssName);
-				$i--; // go back to prev order
-				continue;			
-			}
-				
-			$values = "'null' ";
-			$dates = [];
-			$count = 0;
-			foreach ($order as $field) {
-				if ($count++ ==0)
-					continue;	// skip the id column								
-				
-				$name = $field["index"];
-				$value = $field["value"];
-				//echo "Index: ".$name." value: ".$value."<br>\n";
-				if ($value == '_none')
-					$value = "";
-				$type = $field["type"];
-	
-				if (strpos($type, "STARTTIME") === 0 || strpos($type, "ENDTIME") === 0)
-					$type = "DATETIME";  // it behaves like DATETIME
-				if ($type == "DATE" || $type == "DATETIME") {
-					// need to add to the dates array to add to the events table
-					$value = str_replace('/', '-', $value);
-					if ($date = strtotime($value)) {
-						// format it to DB date format
-						if ($type == "DATE")
-							$date = date('Y-m-d', $date);
-						else // DATETIME
-							$date = date('Y-m-d H:i', $date);							
-						$dates[$name] = $date;
-					}
-					else	// not a valid date
-						$dates[$name] = "0000-00-00 00:00:00";
-				}
-			
-				$value = mysql_real_escape_string($value);	// handle special characters
-				$values .= ", '$value'";
-				
-			}
-
-		}
 
 		if ($command != 'events') {
 			//echo "values: ".$values."<br>\n";
 			// insert each order to the main table
 			$sql = "INSERT INTO $mainTable VALUES ($values);";
 			$res = mysql_query($sql) or die('insert into main Failed! ' . mysql_error()); 
-			$orderID = mysql_insert_id();	
+			//$orderID = mysql_insert_id();	
 		}
 		// Update the events table with the updated dates
 		$keys = array_keys($dates);
