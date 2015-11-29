@@ -1,5 +1,10 @@
+- map shows more events than shown in calendar
+
+- allow updating only some users, some calendars
 
 - enable removing of forms, calendars
+
+- enable edit form in english
 
 - change email configuration to general notifications (email, popup, )
 

@@ -37,7 +37,7 @@ require_once "gmail.php";
 	getClientInfo($dbName); 	// to set the global $lang
 
 	$clientList = getClientList($dbName);
-	$logFileName = $custName.".log";
+	$logFileName = $custName.".log";	// rename to accelerate with 2 processes
 
 	$clients = [];
 	$services = [];
@@ -92,6 +92,8 @@ require_once "gmail.php";
 
 			// Look for calendar events that needs update
 			$sql = "SELECT * FROM $eventsTable WHERE updated='0';";
+			// To accelerate with 2 processes:
+			//$sql = "SELECT * FROM $eventsTable WHERE updated='0' ORDER BY orderID DESC;";
 			if (!$result = mysql_query($sql)) {
 				error_log( $currTime.'Select event table Failed! ' . mysql_error(), 3, $logFileName); 
 				sleep(1);
@@ -418,7 +420,7 @@ function getSearchFields($order) {
 }
 
 function checkForEmails() {
-	global $emailsTable;
+	global $emailsTable, $logFileName;
 
 	$currTime = date("M d H:i:s ");
 	// Look for awaiting emails in the emails table

@@ -66,7 +66,8 @@ use Google\Drive\ServiceRequestFactory;
 			$filename = $custName."-backup";
 
 			try {
-	 			writeBackupToFile($filename);
+	 			if (!writeBackupToFile($filename))
+	 				continue;
 
 	 			$service = getGoogleDriveService();
 
@@ -128,14 +129,19 @@ function writeBackupToFile($filename) {
     	$titles[$i+1] = $field["name"];
 
 	$file = fopen($filename, 'w');
+	if (!$file) {
+		echo "Unable to open output file: ".$filename;
+		syslog(LOG_ERR, "Unable to open output file: ".$filename);
+		return false; 
 
+	}
 	// write column titles 
     fputcsv($file, $titles);
 
     while ($record = mysql_fetch_assoc($result)) {
     	fputcsv($file, $record);
     }
-
+    return true;
 
 }
 
