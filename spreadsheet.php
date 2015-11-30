@@ -263,7 +263,7 @@ function getCalcFields($order, $oldValues) {
 		$listEntry = $entries[2]; 
 		$values = $listEntry->getValues();
 	
-		release_named_lock($mainSpreadsheetName);
+		release_named_lock($mainSpreadsheetName.$mainCounter);
 		$i = 0;
 		syslog(LOG_INFO, "Reading from spreadsheet...");
 		foreach ($order as $field) { // update the output values
@@ -297,7 +297,7 @@ function getCalcFields($order, $oldValues) {
 	}	// try
 	//catch exception
 	catch(Exception $e) {
-		release_named_lock($mainSpreadsheetName);
+		release_named_lock($mainSpreadsheetName.$mainCounter);
 		syslog (LOG_ERR, "Exception: " .$e->getMessage());
 		return null;	
 	}
