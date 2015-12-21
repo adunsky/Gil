@@ -173,7 +173,10 @@ displayedDates.end = google.calendar.utils.fromDate(Date());
 function displayedDatesCallback(dates) {
 	var startDate = google.calendar.utils.toDate(dates.startTime);
 	var endDate = google.calendar.utils.toDate(dates.endTime);
-	displayedDates.start = dates.startTime;	
+
+  var timezoneOffset = startDate.getTimezoneOffset();
+  startDate.setTime(startDate.getTime() - timezoneOffset*60*1000);
+	displayedDates.start = google.calendar.utils.fromDate(startDate);;	
 	// add one day to end date to include it
 	endDate.setDate(endDate.getDate()+1);
 	displayedDates.end = google.calendar.utils.fromDate(endDate);

@@ -260,12 +260,12 @@ function getCalcFields($order, $oldValues) {
 		$listFeed = $worksheet->getListFeed();
 		
 		$entries = $listFeed->getEntries();
+		syslog(LOG_INFO, "Reading from spreadsheet...");
 		$listEntry = $entries[2]; 
 		$values = $listEntry->getValues();
 	
 		release_named_lock($mainSpreadsheetName.$mainCounter);
 		$i = 0;
-		syslog(LOG_INFO, "Reading from spreadsheet...");
 		foreach ($order as $field) { // update the output values
 			$col = $field["index"];
 			$input = $field["input"];

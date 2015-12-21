@@ -94,13 +94,13 @@ use Google\Drive\ServiceRequestFactory;
 		 			  	'uploadType' => 'media'),
 		 				array('convert'=>true, 'newRevision' => true)
 		 			);
-
-		 			$newPermission= new Google_Service_Drive_Permission();
-		 			$newPermission->setType('user');
-		 			$newPermission->setRole('writer');
-		 			$newPermission->setValue('admin@googmesh.com'); //thats email to share
-		 			$result = $service->permissions->insert($result->getId(),$newPermission);
 		 		}
+	 			$newPermission= new Google_Service_Drive_Permission();
+	 			$newPermission->setType('user');
+	 			$newPermission->setRole('writer');
+	 			$newPermission->setValue('admin@googmesh.com'); //thats email to share
+	 			$result = $service->permissions->insert($result->getId(),$newPermission);
+
 		 		syslog(LOG_INFO, "backup completed, file: ".$filename);
 		 		echo "backup completed, file: ".$filename;
 	 		}

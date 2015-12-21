@@ -1,6 +1,10 @@
 - map shows more events than shown in calendar
 
+- missing documents in forms
+
 - allow updating only some users, some calendars
+
+- save all documents on a single user account
 
 - enable removing of forms, calendars
 

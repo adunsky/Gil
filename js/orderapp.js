@@ -905,6 +905,8 @@ orderApp.controller ('orderCtrl', function orderController ($scope, $http, $time
 
 			$scope.loadUserForm = function(renewUser) {
 				gapi.client.load('oauth2', 'v2', function() {
+					if (!gapi.client.oauth2)	// retry if not initialized yet
+						setTimeout($scope.loadUserForm, 1000, renewUser);
 				  gapi.client.oauth2.userinfo.get().execute(function(resp) {
 				    // Get the user email
 				    if (resp.email == "") {	// if no user is logged in - require the user to log in
@@ -1021,8 +1023,10 @@ orderApp.controller ('orderCtrl', function orderController ($scope, $http, $time
 					      $scope.getFolderList(resp.items[0].id);
 				      }
 				      else {
-				      		// Folder is not shared with the user - alert and quit
-				      	 	//alert("Folder "+parentFolder+" is not shared with user "+$scope.user);
+				      	if (resp.error)	// retry in case of error
+				      		setTimeout($scope.getFolders, 1000);
+				      	// Folder is not shared with the user - alert and quit
+				      	//alert("Folder "+parentFolder+" is not shared with user "+$scope.user);
 
 				      }
 				    });
@@ -1037,8 +1041,10 @@ orderApp.controller ('orderCtrl', function orderController ($scope, $http, $time
 				  	'q' : $qString
 				 }).
 			   	execute(function(resp) {
-			   		if (resp.error && resp.message=="User Rate Limit Exceeded")
-			   			setTimeout($scope.getFolderList, 500, parentID);	
+			   		if (resp.error) { // && resp.message=="User Rate Limit Exceeded")
+			   			setTimeout($scope.getFolderList, 500, parentID);
+			   			return;
+			   		}
 			   		var i=0;
 			       	while(resp.items && resp.items[i])  {
 			       		var folder = resp.items[i++];
@@ -1147,8 +1153,11 @@ orderApp.controller ('orderCtrl', function orderController ($scope, $http, $time
 				    'q' : $qString
 				  }).
 				  execute(function(resp) {
-				  	if (resp.error && resp.message=="User Rate Limit Exceeded")
+				  	if (resp.error) {//  && resp.message=="User Rate Limit Exceeded")
 				  		setTimeout($scope.searchFiles, 500, parentFolder, orderFolderID);
+				  		return;
+				  	}
+
 				    if (resp.items && resp.items[0])  {
 				      	// files exists
 				      	parentFolder.fileList = [];
