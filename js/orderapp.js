@@ -666,6 +666,12 @@ orderApp.controller ('orderCtrl', function orderController ($scope, $http, $time
 		      				}		      					
 		      				$scope.form.fields[i].value = $scope.order[fieldIndex].value;
 						}
+	    				if ($scope.form.fields[i].type == 'CHARGE') {
+	    					// non empty charge field cannot be changed - make it read only 
+	    					if ($scope.form.fields[i].value != '')
+	    						$scope.form.fields[i].fieldType = 'Read Only';
+	    				}
+
 	    				if ($scope.form.fields[i].type == 'LIST') {
 							// add the current value to the list if it is not there
 							if ($scope.form.fields[i].listValues.indexOf($scope.form.fields[i].value) == -1)
