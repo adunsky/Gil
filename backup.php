@@ -117,30 +117,36 @@ use Google\Drive\ServiceRequestFactory;
 function writeBackupToFile($filename) {
 	global $mainTable, $fieldTable;
 
-	syslog(LOG_INFO, "writing backup to ". $filename);
-	$sql = "SELECT * FROM $mainTable";
-    $result = mysql_query($sql);
+	try {
+		syslog(LOG_INFO, "writing backup to ". $filename);
+		$sql = "SELECT * FROM $mainTable";
+	    $result = mysql_query($sql);
 
-    $sql = "Select name FROM $fieldTable";
-    $res = mysql_query($sql);
-    $titles[0] = "id";
+	    $sql = "Select * FROM $fieldTable";
+	    $res = mysql_query($sql);
+	    $titles[0] = "id";
 
-    for ($i=0; $field = mysql_fetch_array($res); $i++)
-    	$titles[$i+1] = $field["name"];
+	    for ($i=0; $field = mysql_fetch_array($res); $i++)
+	    	$titles[$i+1] = $field["name"];
 
-	$file = fopen($filename, 'w');
-	if (!$file) {
-		echo "Unable to open output file: ".$filename;
-		syslog(LOG_ERR, "Unable to open output file: ".$filename);
-		return false; 
+		$file = fopen($filename, 'w');
+		if (!$file) {
+			echo "Unable to open output file: ".$filename;
+			syslog(LOG_ERR, "Unable to open output file: ".$filename);
+			return false; 
 
-	}
-	// write column titles 
-    fputcsv($file, $titles);
+		}
+		// write column titles 
+	    fputcsv($file, $titles);
 
-    while ($record = mysql_fetch_assoc($result)) {
-    	fputcsv($file, $record);
+	    while ($record = mysql_fetch_assoc($result)) {
+	    	fputcsv($file, $record);
+	    }
     }
+    catch(Exception $e) {
+    	syslog (LOG_ERR, "Exception: " .$e->getMessage());
+    	retrun false;	
+    }	    
     return true;
 
 }
