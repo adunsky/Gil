@@ -379,12 +379,18 @@ function createUsersTable($worksheetFeed, $usersTable, $calendarsTable) {
 		$result = mysql_query($sql) or die('Create Users table Failed! ' . mysql_error());
 		
 		echo "Table ".$usersTable." created<br>\n"; 
+		updateUsersTable($worksheetFeed, true);
 	
+}
+
+function updateUsersTable($worksheetFeed, $new=false) {	
+	global $usersTable, $calendarsTable;
+
 		$worksheet = $worksheetFeed->getByTitle('Users');
 		$cellFeed = $worksheet->getCellFeed();
 		
 		$row = 2;
-		// loop on rows = calendars
+		// loop on rows = users
 		$cellEntry = $cellFeed->getCell($row, 1);		
 		while ($cellEntry && ($userName = $cellEntry->getContent()) != "") {
 			// go over columns to get the details per user
@@ -404,17 +410,31 @@ function createUsersTable($worksheetFeed, $usersTable, $calendarsTable) {
 				if ($calendar = mysql_fetch_array($result)) {
 					$calendarNum = $calendar["number"];
 					$count = $calendar["count"];
-					$calID = $calendar["calID"];	
-					
-					if (shareCalendar($calID, $email, $count)) {
-						// insert to users table
-						$sql = "INSERT INTO $usersTable VALUES ('$userName', '$email', '$role', '$calendarNum');";
-						$result = mysql_query($sql) or die('Insert field Failed! ' . mysql_error());
+					$calID = $calendar["calID"];
+					$shared = false;
+					if (!$new) {
+						$sql = "SELECT * FROM $usersTable WHERE email='$email' AND calendarNum='$calendarNum'";
+						$result = mysql_query($sql) or die('select user table Failed! ' . mysql_error());
+						if (mysql_num_rows($result) > 0) {
+							// calendar already shared with user
+							$shared = true;
+						}
+					}
+					if (!$shared) {
+						echo "Sahring calendar ".$calendarName." with user ".$userName."<br>\n";
+						if (shareCalendar($calID, $email, $count)) {
+							// insert to users table
+							$sql = "INSERT INTO $usersTable VALUES ('$userName', '$email', '$role', '$calendarNum');";
+							$result = mysql_query($sql) or die('Insert user Failed! ' . mysql_error());
+						}
+						else
+							echo "Calendar sharing failed<br>\n";
 					}
 				}
 				$cellEntry = $cellFeed->getCell($row, ++$col);
 			}
 			$cellEntry = $cellFeed->getCell(++$row, 1);
+			echo "User ".$userName." updated<br>\n"; 
 		}
 }
 

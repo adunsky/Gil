@@ -1,6 +1,3 @@
-- map shows more events than shown in calendar
-
-- missing documents in forms
 
 - allow updating only some users, some calendars
 
@@ -18,13 +15,11 @@
 	- cc, bcc
 	- attachments
 
-- Add progress bar window for file uploads
-
 audit trail - store all changes per record, with user
  - for each record' store google spreadsheet and get audit trail for free
 
 - backup script on server
- 	update column names
+	- how to update existing sheet
 
 - eventID is not needed anymore. only for old events
 - Add an option to send email notification to attendees
@@ -32,6 +27,9 @@ audit trail - store all changes per record, with user
 
 - Web page to view order status 
 
+// - Add progress bar window for file uploads
+//- map shows more events than shown in calendar
+//- missing documents in forms
 //- optimize spreadsheet read/write:
 //	- separate input and output lines
 //	- use listEntry to write/read:

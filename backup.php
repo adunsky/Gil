@@ -145,7 +145,7 @@ function writeBackupToFile($filename) {
     }
     catch(Exception $e) {
     	syslog (LOG_ERR, "Exception: " .$e->getMessage());
-    	retrun false;	
+    	return false;	
     }	    
     return true;
 

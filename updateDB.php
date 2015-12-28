@@ -71,12 +71,12 @@ use Google\Spreadsheet\ServiceRequestFactory;
 		if ($command == "calendars") {
 			// update calendars and users that share them
 			updateCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fieldTable);
-			createUsersTable($worksheetFeed, $usersTable, $calendarsTable);	
+			updateUsersTable($worksheetFeed);	
 
 		}
 		if ($command == "users") {
 			// Just update the Users table		
-			createUsersTable($worksheetFeed, $usersTable, $calendarsTable);	
+			updateUsersTable($worksheetFeed);	
 
 		}
 
@@ -101,7 +101,7 @@ use Google\Spreadsheet\ServiceRequestFactory;
 			updateCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fieldTable);
 			
 			// Create Users table		
-			createUsersTable($worksheetFeed, $usersTable, $calendarsTable);
+			updateUsersTable($worksheetFeed);
 
 			createEmailCfgTable($worksheetFeed);
 		}

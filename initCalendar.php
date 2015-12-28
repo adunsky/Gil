@@ -52,7 +52,7 @@ function initCalendar($clientNumber) {
 			 ************************************************/
 			
 			if (isset($_SESSION[$clientid])) {
-			  echo "Got token from session\n";	
+			  //echo "Got token from session\n";	
 			  $client->setAccessToken($_SESSION[$clientid]);
 			}
 
@@ -116,7 +116,7 @@ function shareCalendar($calID, $email, $calNumber) {
 		//$rule->setRole("owner");
 		
 		$createdRule = $service->acl->insert($calID, $rule);
-		echo "Rule: ".$createdRule->getId()."<br>\n";			
+		// echo "Rule: ".$createdRule->getId()."<br>\n";			
 		
 		return $createdRule;		
 
