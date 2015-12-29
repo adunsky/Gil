@@ -231,17 +231,9 @@ function updateCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 		$row = 2;
 		$calNumber = 0;
 		$calID = 0;
-		$prevCalName = "";
 		// loop on rows = calendars
 		$cellEntry = $cellFeed->getCell($row, 1);		
 		while ($cellEntry && ($calendarName = $cellEntry->getContent()) != "") {
-			if ($calendarName != $prevCalName) {
-				// a new calendar
-				$calID = 0;
-				$count++;
-			}
-			$prevCalName = $calendarName;
-			// a new calendar number
 			$calNumber++;
 
 			// go over columns to get the details per calendar
@@ -308,14 +300,24 @@ function updateCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 			$sql = "SELECT * FROM $calendarsTable WHERE name='$calendarName' AND fieldIndex='$fieldIndex';";
 			$result = mysql_query($sql) or die('Select calendar Failed! ' . mysql_error());
 			if (mysql_num_rows($result) == 0) {
-				// it is a new calendar with a new number
+				// it is a new calendar in the table
 				$maxCal++;
 				echo "Adding calendar: ".$maxCal." ".$calendarName."<br>\n";
-				if (!$calID) {
+				// Check if calendar with the same name exists - same google calendar
+				$sql = "SELECT * FROM $calendarsTable WHERE name='$calendarName';";
+				$result = mysql_query($sql) or die('Select calendar Failed! ' . mysql_error());
+				if ($existingCal = mysql_fetch_array($result)) {
+					// it is an existing google calendar
+					$calID = $existingCal["calID"];
+					$count = $existingCal["count"];
+				}
+				else {
 					// calendar doesn't exist - create it and add to the table
+					$count++;
 					$calID = createCalendar($worksheetFeed, $calendarName, $count);
 				}
 				if ($calID) {
+					// insert it as the last calendar number as we can't change existing cal numbers
 					$sql = "INSERT INTO $calendarsTable VALUES ('$maxCal', '$count', '$calendarName', '$fieldIndex', '$formID', '$titleFieldIndex', '$locationFieldIndex', '$participantsFieldIndex', '$calID');";
 					if (!$result = mysql_query($sql)) {
 						deleteCalendar($calID, $count);
@@ -325,6 +327,8 @@ function updateCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 			}				
 			else {
 				// calendar exist - update it
+				$existingCal = mysql_fetch_array($result);
+				$count = $existingCal["count"];
 				echo "Updating calendar: ".$calNumber." ".$calendarName."<br>\n";
 				$sql = "UPDATE $calendarsTable SET formNumber='$formID', titleField='$titleFieldIndex', locationField='$locationFieldIndex', participants='$participantsFieldIndex' WHERE name='$calendarName' AND fieldIndex='$fieldIndex';";
 				$result = mysql_query($sql) or die('Update calendar Failed! ' . mysql_error());
