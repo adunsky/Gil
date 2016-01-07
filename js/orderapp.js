@@ -298,7 +298,14 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, orderServic
 	$scope.filterList = [];
 	$scope.optimize = true;
 	$scope.calculated = false;
-  	
+
+  	$scope.download = function() {
+  		var url = 'data:application/octet-stream,' + JSON.stringify($scope.orderList) ;
+  		window.open(url);
+
+  	}
+
+
 	$scope.onDragComplete = function(order,$event) {
 		var sourceIndex = $scope.dirList.indexOf(order);
 		$scope.dirList.splice(sourceIndex, 1);	// remove the dragged item
@@ -649,6 +656,9 @@ orderApp.controller ('orderCtrl', function orderController ($scope, $http, $time
 					for(var i=0; $scope.form.fields[i]; i++) {
 		      			var fieldIndex = $scope.form.fields[i].fieldIndex-2;
 		      			$scope.form.fields[i].input = $scope.order[fieldIndex].input;
+		      			if ($scope.form.fields[i].input != 'Y')	
+		      				$scope.form.fields[i].fieldType = 'Read Only';
+
 		      			if ($scope.form.fields[i].type == 'EmbedHyperlink')
 		      				$scope.form.fields[i].value = $sce.trustAsResourceUrl($scope.order[fieldIndex].value);
 		      			else {
