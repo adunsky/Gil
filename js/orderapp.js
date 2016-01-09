@@ -656,7 +656,7 @@ orderApp.controller ('orderCtrl', function orderController ($scope, $http, $time
 					for(var i=0; $scope.form.fields[i]; i++) {
 		      			var fieldIndex = $scope.form.fields[i].fieldIndex-2;
 		      			$scope.form.fields[i].input = $scope.order[fieldIndex].input;
-		      			if ($scope.form.fields[i].input != 'Y')	
+		      			if ($scope.form.fields[i].input == 'N')	
 		      				$scope.form.fields[i].fieldType = 'Read Only';
 
 		      			if ($scope.form.fields[i].type == 'EmbedHyperlink')
