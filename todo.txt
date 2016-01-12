@@ -1,9 +1,20 @@
 
-- allow updating only some users, some calendars
+- in cfgUtil check if field name appears twice and display error
+
+- define calendar identification method (not based on ID) - for restoring from backup
+	- i.e. an event at 01/01/1970 with specific content
+
+- restoring procedure from backup:
+	- for DB
+	- for events
+	- for code
+
+- innterface to manage calendars, users, emails	
+	- enable removing of forms, calendars
+
+- interface to download data based on filter
 
 - save all documents on a single user account
-
-- enable removing of forms, calendars
 
 - enable edit form in english
 
@@ -27,6 +38,8 @@ audit trail - store all changes per record, with user
 
 - Web page to view order status 
 
+//- in forms, non-input fields should be read-only by default
+//- allow updating only some users, some calendars
 // - Add progress bar window for file uploads
 //- map shows more events than shown in calendar
 //- missing documents in forms

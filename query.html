@@ -1,0 +1,38 @@
+<title>Query</title>
+<link rel="stylesheet" href="css/style.css">
+<div class="query col-sm-12" data-ng-controller="queryCtrl" data-ng-init="getOrders()">
+
+
+		<form role="form" class="form-horizontal">
+			<p>Filter:</p>
+	    		<div class="filter form-group col-sm-12" ng-repeat="filter in filterList">
+	           		<div class="col-sm-5">
+						<input type="text" class="form-control" name="{{filter.name}}" ng-model="filter.value"></input>
+					</div>
+					<div class="col-sm-7">
+						<select class="form-control" name="{{filter.name}}" ng-model="filter.name" ng-change="addFilter(filter)">
+					        <option ng-repeat="field in fieldList">{{field.name}}</option>
+						</select>
+					</div>
+				</div>
+				<button type="submit" class="btn btn-success" ng-click="getFilter()">Filter</button>
+			<br>
+			<br>
+
+			<table border="1" style="width:100%">
+				<tr ng-repeat="order in orders" ng-click="openOrder(order)">
+					<td ng-repeat="field in order" dir="rtl" ng-show="$index < limit">
+			    		<p>{{field.value}}</p>
+			    	</td>		
+			 	</tr>
+			</table>
+
+			<br>
+
+			<button type="submit" class="btn btn-link" ng-click="download()">Download</button>
+		</form>	
+
+</div>
+
+
+

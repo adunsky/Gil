@@ -38,8 +38,10 @@ orderApp.config(function($routeProvider){
           })
         .when('/route',{
                 templateUrl: 'route.html'
+          })
+        .when('/query',{
+                templateUrl: 'query.html'
           });
-
 });
 
 
@@ -529,6 +531,149 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, orderServic
     		$scope.directionsDisplay.set('directions', null);
 		});
 
+
+	}
+
+});
+
+
+orderApp.controller('queryCtrl', function($scope, $http,  $location, orderService){
+
+	$scope.filterList = [];
+	$scope.limit = 15;
+
+  	$scope.download = function() {
+
+  		var content = "";
+  		
+  		for (var line=0; $scope.orders[line]!=null; line++) {
+  			var order = $scope.orders[line];
+			for(var col=0; order[col] != null; col++) {
+				if (col > 0)
+					content += ",";
+				content += '"'+order[col].value.replace(/ /g, '%20')+'"';
+			} 
+			content += "%0A";
+  		}
+
+
+  		var url = 'data:application/octet-stream,' + content;
+  		window.open(url);
+
+  	}
+
+	$scope.openOrder = function(order) {
+		if (order.orderID && order.calendarID)
+			window.open("http://googlemesh.com/Gilamos/#/newOrder?db="+$scope.dbName+"&orderID="+order.orderID+"&calendarNum="+order.calendarID);
+
+	}
+
+	$scope.setFields = function() {
+		
+		$scope.orders = [];
+		for (var i=0; $scope.orderList[i] != null; i++) {
+			var fieldList = [{}];
+
+			fieldList[0].value = $scope.orderList[i].id;	// the first value is the id
+			angular.forEach($scope.orderList[i], function(value, key){
+				if (key != 'id')	// skip the id, it was entered first
+		    		fieldList.push({
+		        		key: key,
+		        		value: value
+		    		});
+			});
+			$scope.orders[i] = fieldList;
+		}
+
+	}
+
+  	$scope.getOrders = function () {
+ 		
+		var argv = $location.search();      		
+
+		if (argv.db)
+			$scope.dbName = argv.db;
+		if (argv.user)
+				$scope.user = argv.user;
+			else {
+				$scope.user = "";
+			}
+
+		if (argv.start)
+			$scope.startDate = argv.start;		
+		if (argv.end)
+			$scope.endDate = argv.end;	
+		if (argv.calendars)
+			$scope.calendars = argv.calendars;
+
+ 		$http.get("getQueryOrders.php", { params: { db: $scope.dbName, user: $scope.user, startDate: $scope.startDate, endDate: $scope.endDate, calendars: $scope.calendars, filters: "" } })
+ 		.success(function(data) {
+         	console.log(data);
+  	    	try {
+	        	$scope.orderList = angular.fromJson(data);
+	        	$scope.setFields();
+      	 	}
+    		catch (e) {
+        		alert("Error: "+data);
+        		$scope.orderList = null;
+    		}
+
+    		//$scope.calcRoute();
+		});
+
+	  	$scope.getSearchFields();
+	}
+
+	$scope.getSearchFields = function () {
+ 		$http.get("getSearchFields.php", { params: { db: $scope.dbName } })
+ 		.success(function(data) {
+         	console.log(data);
+  	    	try {
+	        	$scope.fieldList = angular.fromJson(data);
+	        	// add empty string
+	        	var field = {};
+	        	field.name = "";
+	        	field.value = "";
+	        	$scope.fieldList.push(field);
+      	 	}
+    		catch (e) {
+        		alert("Error: "+data);
+        		$scope.fieldList = null;
+    		}
+    		$scope.addFilter();
+		});		
+
+	}
+
+	$scope.addFilter = function (filter) {
+
+		var filterLen = $scope.filterList.length;
+		var filterIndex = $scope.filterList.indexOf(filter);
+
+		if (filterIndex == filterLen-1)
+			$scope.filterList[filterLen] = {};		// add another filter field
+
+		if (filter && filter.name == "")	// no value selected - remove it
+			$scope.filterList.splice(filterIndex, 1);
+
+	}
+
+	$scope.getFilter = function () {
+
+		var filters = angular.toJson($scope.filterList);		
+ 		$http.get("getQueryOrders.php", { params: { db: $scope.dbName, user: $scope.user, startDate: $scope.startDate, endDate: $scope.endDate, calendars: $scope.calendars, filters: filters } })
+ 		.success(function(data) {
+         	console.log(data);
+  	    	try {
+	        	$scope.orderList = angular.fromJson(data);
+	        	$scope.setFields();
+      	 	}
+    		catch (e) {
+        		alert("Error: "+data);
+        		$scope.orderList = null;
+    		}
+    		$scope.message = "";
+		});
 
 	}
 
