@@ -213,7 +213,7 @@ function openForm(e) {
 }
 
 
-function getRoute() {
+function openWindow(name) {
   var startDate = displayedDates.start.date + "-" + displayedDates.start.month + "-" + displayedDates.start.year;
   var endDate = displayedDates.end.date + "-" + displayedDates.end.month + "-" + displayedDates.end.year;
   var calendars = "";
@@ -223,7 +223,7 @@ function getRoute() {
     calendars += "'" + displayedCalendars[i] + "'";
   }  
 
-  window.open("http://googlemesh.com/Gilamos/#/route?db=" + dbName + "&user=" + user + 
+  window.open("http://googlemesh.com/Gilamos/#/"+name+"?db=" + dbName + "&user=" + user + 
               "&start=" + startDate + "&end=" + endDate + "&calendars=" + calendars);
 
 }
@@ -328,10 +328,11 @@ var map = null;
 
 function mapInit () {
   var main = document.getElementById('main');
-  var html = '<a href="#" onclick="openDefaultForm()" class="basic">New Order</a><br><a href="#" onclick="getRoute()" class="basic">Routes</a><br>';
+  var html = '<a href="#" onclick="openDefaultForm()" class="basic">New Order</a><br><a href="#" onclick="openWindow('+"'route'"+')" class="basic">Routes</a><br>';
   
   html += '<div id="map-canvas"></div>';
-  	
+  
+  html += '<a href="#" onclick="openWindow('+"'query'"+')" class="basic">Export</a><br>';	
  	main.innerHTML = html;
   
   var mapOptions = {
