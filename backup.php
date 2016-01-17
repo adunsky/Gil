@@ -34,7 +34,10 @@ use Google\Drive\ServiceRequestFactory;
 
 		$dbName = $_GET['db'];
 		//echo $dbName;
-		$time = $_GET['time'];
+		if (array_key_exists('interval', $_GET))
+			$interval = $_GET['interval'];		
+		else
+			$interval = 0;
 				
 		if (!selectDB($dbName))
 			return;	
@@ -51,17 +54,8 @@ use Google\Drive\ServiceRequestFactory;
  		set_time_limit (0); // This may take a while
  		date_default_timezone_set("Asia/Jerusalem");
 
- 		$targetTime = strtotime($time);
 
  		while (true) {
- 			$now = strtotime("now");
- 			if ($now > $targetTime)
- 				$targetTime = strtotime("+1 day", $targetTime);
-
- 			if ($time != "once") {
-	 			syslog(LOG_INFO, "backup for ".$custName." scheduled to: ".date("d-m-Y H:i", $targetTime));
-				time_sleep_until($targetTime);
-			}
 
 			$filename = $custName."-backup";
 
@@ -107,10 +101,15 @@ use Google\Drive\ServiceRequestFactory;
 	 		catch(Exception $e) {
 	 			syslog (LOG_ERR, "Exception: " .$e->getMessage());
 	 			continue;	
-	 		}			 		
-			if ($time == "once")
-				break;	 			
- 			sleep(10);	// wait until target time has passed
+	 		}
+	 		if ($interval == 0)
+				break;	 
+
+	 		$targetTime = strtotime("+".$interval." hour");
+
+ 			syslog(LOG_INFO, "backup for ".$custName." scheduled to: ".date("d-m-Y H:i", $targetTime));
+			time_sleep_until($targetTime);
+			
  		}
 
 
