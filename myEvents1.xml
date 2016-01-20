@@ -217,14 +217,14 @@ function openForm(e) {
 
 function openConfigWindow() {
 
-  window.open("http://googlemesh.com/Gilamos/#/"+name+"?db=" + dbName + "&user=" + user );
+  window.open("http://googlemesh.com/Gilamos/#/config?db=" + dbName + "&user=" + user );
 
 }
 
 
 function openWindow(name) {
-  var startDate = displayedDates.start.date + "-" + displayedDates.start.month + "-" + displayedDates.start.year;
-  var endDate = displayedDates.end.date + "-" + displayedDates.end.month + "-" + displayedDates.end.year;
+  var startDate = displayedDates.start.year + "-" + displayedDates.start.month + "-" + displayedDates.start.date;
+  var endDate = displayedDates.end.year + "-" + displayedDates.end.month + "-" + displayedDates.end.date;
   var calendars = "";
   for (var i=0; displayedCalendars[i] ; i++) {
     if (i > 0)
