@@ -59,49 +59,8 @@ use Google\Drive\ServiceRequestFactory;
 
 			$filename = $custName."-backup";
 
-			try {
-	 			if (!writeBackupToFile($filename))
-	 				continue;
+			writeBackup($filename);
 
-	 			$service = getGoogleDriveService();
-
-	 			$parameters = array('q' => "title = '".$filename."' and trashed = false and mimeType = 'text/csv'");
-	 			$fileList = $service->files->listFiles($parameters);
-
-	 			if ($files = $fileList->getItems()) {
-	 				//echo "File exists\n";
-	 				$file = $files[0];
-	 				$result = $service->files->update($file->getId(), $file, array(
-	 				  	'data' => file_get_contents($filename),
-	 				  	'mimeType' => 'text/csv',
-	 				  	'uploadType' => 'media'),
-	 					array('convert'=>true, 'newRevision' => true)
-	 				);
-	 			}
-	 			else {
-	 				//echo "New file\n";
-	 				$file = new Google_Service_Drive_DriveFile();
-	 				$file->setTitle($filename);
-		 			$result = $service->files->insert($file, array(
-		 			  	'data' => file_get_contents($filename),
-		 			  	'mimeType' => 'text/csv',
-		 			  	'uploadType' => 'media'),
-		 				array('convert'=>true, 'newRevision' => true)
-		 			);
-		 		}
-	 			$newPermission= new Google_Service_Drive_Permission();
-	 			$newPermission->setType('user');
-	 			$newPermission->setRole('writer');
-	 			$newPermission->setValue('admin@googmesh.com'); //thats email to share
-	 			$result = $service->permissions->insert($result->getId(),$newPermission);
-
-		 		syslog(LOG_INFO, "backup completed, file: ".$filename);
-		 		echo "backup completed, file: ".$filename;
-	 		}
-	 		catch(Exception $e) {
-	 			syslog (LOG_ERR, "Exception: " .$e->getMessage());
-	 			continue;	
-	 		}
 	 		if ($interval == 0)
 				break;	 
 
@@ -111,6 +70,54 @@ use Google\Drive\ServiceRequestFactory;
 			time_sleep_until($targetTime);
 			
  		}
+
+
+function writeBackup($filename) {			
+
+try {
+		if (!writeBackupToFile($filename))
+			continue;
+
+		$service = getGoogleDriveService();
+
+		$parameters = array('q' => "title = '".$filename."' and trashed = false and mimeType = 'text/csv'");
+		$fileList = $service->files->listFiles($parameters);
+
+		if ($files = $fileList->getItems()) {
+			//echo "File exists\n";
+			$file = $files[0];
+			$result = $service->files->update($file->getId(), $file, array(
+			  	'data' => file_get_contents($filename),
+			  	'mimeType' => 'text/csv',
+			  	'uploadType' => 'media'),
+				array('convert'=>true, 'newRevision' => true)
+			);
+		}
+		else {
+			//echo "New file\n";
+			$file = new Google_Service_Drive_DriveFile();
+			$file->setTitle($filename);
+			$result = $service->files->insert($file, array(
+			  	'data' => file_get_contents($filename),
+			  	'mimeType' => 'text/csv',
+			  	'uploadType' => 'media'),
+				array('convert'=>true, 'newRevision' => true)
+			);
+		}
+		$newPermission= new Google_Service_Drive_Permission();
+		$newPermission->setType('user');
+		$newPermission->setRole('writer');
+		$newPermission->setValue('admin@googmesh.com'); //thats email to share
+		$result = $service->permissions->insert($result->getId(),$newPermission);
+
+		syslog(LOG_INFO, "backup completed, file: ".$filename);
+		echo "backup completed, file: ".$filename;
+	}
+	catch(Exception $e) {
+		syslog (LOG_ERR, "Exception: " .$e->getMessage());
+		continue;	
+	}
+}
 
 
 function writeBackupToFile($filename) {
@@ -144,8 +151,10 @@ function writeBackupToFile($filename) {
     }
     catch(Exception $e) {
     	syslog (LOG_ERR, "Exception: " .$e->getMessage());
+    	fclose($file);
     	return false;	
-    }	    
+    }
+    fclose($file);	    
     return true;
 
 }
