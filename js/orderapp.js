@@ -595,13 +595,16 @@ orderApp.controller('queryCtrl', function($scope, $http,  $location, orderServic
 	$scope.search = {};
 	$scope.search.calendar = {};
 	$scope.search.filterList = [];
+	$scope.searching = false;
 
   	$scope.onMouseLeaveDrag = function() {
-		document.body.style.cursor = 'default';
+  		if (!$scope.searching)
+			document.body.style.cursor = 'default';
   	}
 
   	$scope.onMouseoverDrag = function() {
-		document.body.style.cursor = 'pointer';
+  		if (!$scope.searching)
+			document.body.style.cursor = 'pointer';
   	}
 
 	$scope.onDragComplete = function(sourceFieldIndex, $event) {

@@ -25,7 +25,7 @@
 			return;	
 		}
 	}
-
+	set_time_limit (0); // no time limit
 	//var_dump($calendarList);
 
 	$startDate = date('Y-m-d H:i:s', strtotime($start));
@@ -34,57 +34,48 @@
 
 	$filterString = getFilterString($filterList);
 
-	syslog(LOG_INFO, "getOrders called, startDate: ".$startDate." endDate: ".$endDate." filter: ".$filterString);
+	syslog(LOG_INFO, "getQueryOrders called, startDate: ".$startDate." endDate: ".$endDate." filter: ".$filterString);
 
 	//echo ("start: ".$startDate." end: ".$endDate);
+	// get calendar numbers
 
-	$eventList = [];
+	$calendarNums = "";
+	$sql = "SELECT * FROM $calendarsTable WHERE name in ($calendars);";
+	$result = mysql_query($sql) or die('get calendars Failed! ' . mysql_error()); 
+	$i = 0;
+	while ($cal = mysql_fetch_array($result)) {
+		$calNumber = $cal["number"];
+		if ($i++ > 0)
+			$calendarNums = $calendarNums.",";
+		$calendarNums = $calendarNums.$calNumber;
+	}
+
+	$orders = [];
+	$orderList = "";
 	// Get the relevant events
-	$sql = "SELECT * FROM $eventsTable WHERE eventDate BETWEEN '$startDate' AND '$endDate' ORDER BY eventDate ASC";
+	$sql = "SELECT * FROM $eventsTable WHERE calendarID IN ($calendarNums) AND eventDate BETWEEN '$startDate' AND '$endDate' ORDER BY eventDate ASC";
 	$result = mysql_query($sql) or die('get events Failed! ' . mysql_error()); 
 	if (mysql_num_rows($result) > 0)	{
 		//  found events
+		$i=0;
 		while ($event = mysql_fetch_array($result, MYSQL_ASSOC)) {
 			$orderID = $event["orderID"];
-			if (!orderExists($orderID,$eventList)) {
-				$calendarID = $event["calendarID"];
-				$eventTime = date('H:i', strtotime($event["eventDate"]));
-				if ($eventTime == "00:00")
-					$format = 'd/m/Y';
-				else
-					$format = 'd/m/Y h:i A';					
-				$event["eventDate"] = date($format, strtotime($event["eventDate"]));
-				$cal = mysql_query("SELECT * FROM $calendarsTable WHERE name IN ($calendars) AND number='$calendarID'") or die('get calendar Failed! ' . mysql_error()); 
-				if ($calendar = mysql_fetch_array($cal, MYSQL_ASSOC)) {
-					// get the title and location from the first calendar for this event
-					$titleFieldIndex = $calendar["titleField"];
-					$locationFieldIndex = $calendar["locationField"];
-					$main = mysql_query("SELECT * FROM $mainTable WHERE id='$orderID'".$filterString) or die('get order from main Failed! ' . mysql_error()); 
-					if ($order = mysql_fetch_array($main, MYSQL_ASSOC)) {
-						$order["calendarID"] = $calendarID;
-						array_push($eventList, $order);
-					}
-				}
-				//else
-				//	syslog(LOG_INFO, "Event for order: ".$orderID." not found in calendar: ".$calendarID);
-			}
+			if ($i++ > 0)
+				$orderList = $orderList.",";
+			$orderList = $orderList.$orderID;
+		}
+
+		$main = mysql_query("SELECT * FROM $mainTable WHERE id IN ($orderList)".$filterString) or die('get order from main Failed! ' . mysql_error()); 
+		while ($order = mysql_fetch_array($main, MYSQL_ASSOC)) {
+			$order["calendarID"] = $calNumber;	// one of the calendars in the list
+			array_push($orders, $order);
 		}
 	}
 	else
 		echo("Events not found");	
 
-	echo json_encode($eventList);
+	echo json_encode($orders);
 
-
-
-function orderExists($orderID, $eventList) {
-	for ($i=0; array_key_exists($i, $eventList) ; $i++) {
-		if (in_array($orderID, $eventList[$i]))
-			return true;
-
-	}
-	return false;
-}
 
 function getFilterString($filterList) {
 	global $fieldTable;

@@ -5,7 +5,7 @@
 <div class="query" data-ng-controller="queryCtrl" data-ng-init="initSearch()" ng-disabled="searching">
 
 	<form role="form" class="form-horizontal">
-		<div class="form-group col-sm-12">
+		<div class="form-group row">
 			<div class="col-sm-4">
 				<div class="col-sm-4">
 	    			<label class="control-label">Search name:</label>
@@ -24,8 +24,8 @@
        			<span >{{search.message}}</span>
        		</div>
        	</div>
-       	<br><br><br>
-		<div class="form-group col-sm-12">
+       	<br>
+		<div class="form-group row">
 			<div class="col-sm-4">
 				<div class="col-sm-4">
 					<label class="control-label" for="{{calendar.name}}">Calendar:</label>
@@ -63,7 +63,7 @@
     			</div>
     		</div>	
     	</div>
-    	<div class="filter form-group col-sm-12" ng-repeat="filter in search.filterList">
+    	<div class="filter form-group row" ng-repeat="filter in search.filterList">
     		<div class="col-sm-4">
     			<div class="col-sm-4">
     				<label class="control-label"> Field:</label>
@@ -87,40 +87,39 @@
 			</div>
 			<div class="col-sm-4"></div>
 		</div>
-		<div class="col-sm-12">
+		<div class="row">
 			<div class="col-sm-4">
 				<div class="col-sm-4"></div>
 					<button type="submit" class="btn btn-success" ng-click="getFilter()" ng-disabled="searching">{{searching?'Searching...':'Search'}}</button>
 			</div>
+			<div class="col-sm-8"></div>
 		</div>
-		<div class="col-sm-12">
 		<br>
 		<br>
-		</div>
 	</form>	
 
-		<div class="scrollable">
-		    <div class="searchCol" ng-repeat="fieldIndex in displayFields track by $index" draggable="true" ng-drag="true" ng-drag-data="fieldIndex" ng-drag-success="onDragComplete(fieldIndex,$event)" ng-drop="true"  ng-drop-success="onDropComplete(fieldIndex,$data,$event)" ng-mouseover="onMouseoverDrag()" ng-mouseLeave="onMouseLeaveDrag()" dir="rtl">
+	<div class="scrollable">
+	    <div class="searchCol" ng-repeat="fieldIndex in displayFields track by $index" draggable="true" ng-drag="true" ng-drag-data="fieldIndex" ng-drag-success="onDragComplete(fieldIndex,$event)" ng-drop="true"  ng-drop-success="onDropComplete(fieldIndex,$data,$event)" ng-mouseover="onMouseoverDrag()" ng-mouseLeave="onMouseLeaveDrag()" dir="rtl">
 
 
-				<select class="selectCol" name="{{fieldList[fieldIndex-2].name}}"  ng-model="fieldName" ng-change="fieldUpdated($index, fieldName)" ng-click="onSelectClick($event)">
-			        <option ng-repeat="field in fieldList | orderBy: 'name'" ng-selected="field==fieldList[fieldIndex-2]" >{{field.name}}</option>
-				</select>
-				<div>
-				<span class="glyphicon glyphicon-remove" ng-click="removeField(fieldIndex)" style="color: red"> </span>
-				<span class="glyphicon glyphicon-plus" ng-click="addField(fieldIndex)" style="color: green"> </span>
-				</div>
-
-
-
-		    </div>
-
-			<div ng-repeat="order in orders">
-				<div class="cell" ng-repeat="fieldIndex in displayFields track by $index" dir="rtl" ng-mouseover="onMouseoverDrag()" ng-mouseLeave="onMouseLeaveDrag()">
-		    		<input type="text" class="selectCol" ng-readonly="true" ng-model="order[fieldIndex-1].value" ng-click="openOrder(order)" > </input>
-		    	</div>		
+			<select class="selectCol" name="{{fieldList[fieldIndex-2].name}}"  ng-model="fieldName" ng-change="fieldUpdated($index, fieldName)" ng-click="onSelectClick($event)">
+		        <option ng-repeat="field in fieldList | orderBy: 'name'" ng-selected="field==fieldList[fieldIndex-2]" >{{field.name}}</option>
+			</select>
+			<div>
+			<span class="glyphicon glyphicon-remove" ng-click="removeField(fieldIndex)" style="color: red"> </span>
+			<span class="glyphicon glyphicon-plus" ng-click="addField(fieldIndex)" style="color: green"> </span>
 			</div>
+
+
+
+	    </div>
+
+		<div ng-repeat="order in orders">
+			<div class="cell" ng-repeat="fieldIndex in displayFields track by $index" dir="rtl" ng-mouseover="onMouseoverDrag()" ng-mouseLeave="onMouseLeaveDrag()">
+	    		<input type="text" class="selectCol" ng-readonly="true" ng-model="order[fieldIndex-1].value" ng-click="openOrder(order)" > </input>
+	    	</div>		
 		</div>
+	</div>
 	<br>
 	<div>
 		<a href="" id="downloadButton" class="btn btn-link" ng-click="download()">Download</button>
