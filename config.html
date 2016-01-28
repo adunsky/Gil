@@ -1,0 +1,30 @@
+<title>GoogMesh Configuration</title>
+<link rel="stylesheet" href="css/style.css">
+<div class="query col-sm-12" data-ng-controller="configCtrl" data-ng-init="initCfg()">
+
+
+		<form role="form" class="form-horizontal">
+			<p>Configuration:</p>
+			<button type="submit" class="btn btn-link" ng-click="updateCfg('fields')">Update Fields</button>
+			<br>
+			<button type="submit" class="btn btn-link" ng-click="updateCfg('forms')">Update Forms</button>
+			<br>
+			<button type="submit" class="btn btn-link" ng-click="updateCfg('calendars')">Update Calendars</button>
+			<br>
+			<button type="submit" class="btn btn-link" ng-click="updateCfg('users')">Update Users</button>
+			<br>
+			<button type="submit" class="btn btn-link" ng-click="updateCfg('emails')">Update Notifications</button>
+			<br>
+			<button type="submit" class="btn btn-link" ng-click="updateCfg('all')">Update All</button>
+			<br>
+			<button type="submit" class="btn btn-link" ng-click="gadgetLink()">Link to calendar with gadget</button>
+			<br>
+			<button type="submit" class="btn btn-link" ng-click="downloadCSV()">Download DB to CSV file</button>
+			<br>
+
+		</form>	
+
+</div>
+
+
+
