@@ -933,6 +933,8 @@ orderApp.controller('queryCtrl', function($scope, $http,  $location, orderServic
 			return;
 		}
 
+	    document.body.style.cursor = 'wait';
+	    $scope.searching = true;
 		var filters = angular.toJson($scope.search.filterList);		
  		$http.get("getQueryOrders.php", { params: { db: $scope.dbName, user: $scope.user, startDate: $scope.search.calendar.startDate, endDate: $scope.search.calendar.endDate, calendars: "'"+$scope.search.calendar.name+"'", filters: filters } })
  		.success(function(data) {
@@ -946,6 +948,8 @@ orderApp.controller('queryCtrl', function($scope, $http,  $location, orderServic
         		$scope.orderList = null;
     		}
     		$scope.message = "";
+    		document.body.style.cursor = 'default';
+    		$scope.searching = false;
 		});
 
 	}
