@@ -11,17 +11,22 @@
 	$calendars = $_GET['calendars'];
 	$filters = $_GET['filters'];
 	$filterList = json_decode($filters);
+	$user = $_GET["user"];	
 
 	if (!selectDB($dbName))
 		return;	
+
+	$calendarList = explode(",", $calendars);
 	
-/*
-	$user = $_GET["user"];	
-	if (!authUserForm($user, 0)) {
+	for ($i = 0; array_key_exists($i, $calendarList); $i++) {
+		//var_dump($calendarList);
+		if (!authUserCalendar($user, trim($calendarList[$i], "'"))) {
 			echo "The user is not authorized to perform this action.";
 			return;	
+		}
 	}
-*/	
+
+	//var_dump($calendarList);
 
 	$startDate = date('Y-m-d H:i:s', strtotime($start));
 	$end = strtotime($end);
@@ -55,10 +60,8 @@
 					$titleFieldIndex = $calendar["titleField"];
 					$locationFieldIndex = $calendar["locationField"];
 					$main = mysql_query("SELECT * FROM $mainTable WHERE id='$orderID'".$filterString) or die('get order from main Failed! ' . mysql_error()); 
-					if ($order = mysql_fetch_array($main, MYSQL_ASSOC)) {	
-						$event["title"] = $order[$titleFieldIndex];
-						$event["location"] = $order[$locationFieldIndex];
-						syslog(LOG_INFO, "Event added to list: ".$event["title"]);
+					if ($order = mysql_fetch_array($main, MYSQL_ASSOC)) {
+						$order["calendarID"] = $calendarID;
 						array_push($eventList, $order);
 					}
 				}

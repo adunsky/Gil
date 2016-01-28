@@ -1,38 +1,129 @@
+<script ng-src="https://apis.google.com/js/client.js"></script>
+
 <title>Query</title>
 <link rel="stylesheet" href="css/style.css">
-<div class="query col-sm-12" data-ng-controller="queryCtrl" data-ng-init="getOrders()">
+<div class="query" data-ng-controller="queryCtrl" data-ng-init="initSearch()">
 
-
-		<form role="form" class="form-horizontal">
-			<p>Filter:</p>
-	    		<div class="filter form-group col-sm-12" ng-repeat="filter in filterList">
-	           		<div class="col-sm-5">
-						<input type="text" class="form-control" name="{{filter.name}}" ng-model="filter.value"></input>
-					</div>
-					<div class="col-sm-7">
-						<select class="form-control" name="{{filter.name}}" ng-model="filter.name" ng-change="addFilter(filter)">
-					        <option ng-repeat="field in fieldList">{{field.name}}</option>
-						</select>
-					</div>
+	<form role="form" class="form-horizontal">
+		<div class="form-group col-sm-12">
+			<div class="col-sm-4">
+				<div class="col-sm-4">
+	    			<label class="control-label">Search name:</label>
+	    		</div>
+	       		<div class="col-sm-8">
+	       			<input type=text list="searchList" class="form-control" ng-model="name" ng-change="updateSearch()" placeholder="">
+	       			<datalist id="searchList">
+	       			   <option ng-repeat="search in searchList" >{{search.name}}</option>
+	       			</datalist>
+	       		</div>
+       		</div>
+       		<div class="col-sm-1">
+       			<button type="submit" class="btn btn-info" ng-disabled="!name || name=='' || !changed" ng-click="save()">Save</button>
+       		</div>
+       		<div class="col-sm-1">
+       			<span >{{search.message}}</span>
+       		</div>
+       	</div>
+       	<br><br><br>
+		<div class="form-group col-sm-12">
+			<div class="col-sm-4">
+				<div class="col-sm-4">
+					<label class="control-label" for="{{calendar.name}}">Calendar:</label>
 				</div>
-				<button type="submit" class="btn btn-success" ng-click="getFilter()">Filter</button>
-			<br>
-			<br>
+				<div class="col-sm-8">
+    				<select class="form-control col-sm-2" name="{{search.calendar.name}}" ng-model="search.calendar.name" ng-change="changed=true">
+    			        <option ng-repeat="calendar in calendarList">{{calendar.name}}</option>
+    				</select>
+    			</div>
+			</div>	 
+			<div class="col-sm-4">
+				<div class="col-sm-4">
+					<label class="control-label" for="{{calendar}}"> From:</label>
+				</div>
+				<div class="col-sm-8">
+					<p class="input-group">
+	    			    <input type="text" class="form-control" name="{{search.calendar}}" ng-readonly="false" style="background-color:white; cursor: default;" datetime-picker="dd-MM-yyyy" ng-model="search.calendar.startDate" value="{{search.calendar.startDate}}" enable-time="false" close-on-date-selection="true" is-open="startDateCtrl.isOpen" datepicker-options="dateOptions" ng-blur="validate()" ng-change="changed=true" >
+	    			    <span class="input-group-btn">
+	    			        <button type="button" class="btn btn-default" ng-click="openDateTimeCalendar($event, startDateCtrl)" ><i class="fa fa-calendar"></i></button>
+	    			    </span>
+	    			</p>
+    			</div>
+    		</div>	
+			<div class="col-sm-4">
+				<div class="col-sm-2">
+					<label class="control-label" for="{{calendar}}"> To:</label>
+				</div>
+				<div class="col-sm-8">
+	    			<p class="input-group">
+	    			    <input type="text" class="form-control" ng-readonly="false" style="background-color:white; cursor: default;" datetime-picker="dd-MM-yyyy" ng-model="search.calendar.endDate" value="{{search.calendar.endDate}}" enable-time="false" close-on-date-selection="true" is-open="endDateCtrl.isOpen" datepicker-options="dateOptions" ng-blur="validate()" ng-change="changed=true" >
+	    			    <span class="input-group-btn">
+	    			        <button type="button" class="btn btn-default" ng-click="openDateTimeCalendar($event, endDateCtrl)" ><i class="fa fa-calendar"></i></button>
+	    			    </span>
+	    			</p>
+    			</div>
+    		</div>	
+    	</div>
+    	<div class="filter form-group col-sm-12" ng-repeat="filter in search.filterList">
+    		<div class="col-sm-4">
+    			<div class="col-sm-4">
+    				<label class="control-label"> Field:</label>
+    			</div>
+    			<div class="col-sm-8">
+    				<select class="form-control" name="{{filter.name}}" ng-model="filter.name" ng-change="addFilter(filter)">
+    			        <option ng-repeat="field in fieldList | orderBy: 'name'">{{field.name}}</option>
+    				</select>
+    			</div>
+    		</div>		    		
+	    	<div class="col-sm-4">
+	    		<div class="col-sm-4">
+	    			<label class="control-label"> value:</label>
+	    		</div>
+           		<div class="col-sm-8" >
+           			<input type=text list="{{filter.name}}" class="form-control" ng-model="filter.value" >
+           			<datalist id="{{filter.name}}" >
+           			   <option ng-repeat="value in filter.valueList" >{{value}}</option>
+           			</datalist>
+           		</div>
+			</div>
+			<div class="col-sm-4"></div>
+		</div>
+		<div class="col-sm-12">
+			<div class="col-sm-4">
+				<div class="col-sm-4"></div>
+					<button type="submit" class="btn btn-success" ng-click="getFilter()">Search</button>
+			</div>
+		</div>
+		<div class="col-sm-12">
+		<br>
+		<br>
+		</div>
+	</form>	
 
-			<table border="1" style="width:100%">
-				<tr ng-repeat="order in orders" ng-click="openOrder(order)">
-					<td ng-repeat="field in order" dir="rtl" ng-show="$index < limit">
-			    		<p>{{field.value}}</p>
-			    	</td>		
-			 	</tr>
-			</table>
+		<div class="scrollable">
+		    <div class="searchCol" ng-repeat="fieldIndex in displayFields track by $index" draggable="true" ng-drag="true" ng-drag-data="fieldIndex" ng-drag-success="onDragComplete(fieldIndex,$event)" ng-drop="true"  ng-drop-success="onDropComplete(fieldIndex,$data,$event)" ng-mouseover="onMouseoverDrag()" ng-mouseLeave="onMouseLeaveDrag()" dir="rtl">
 
-			<br>
 
-			<button type="submit" class="btn btn-link" ng-click="download()">Download</button>
-		</form>	
+				<select class="selectCol" name="{{fieldList[fieldIndex-2].name}}"  ng-model="fieldName" ng-change="fieldUpdated($index, fieldName)" ng-click="onSelectClick($event)">
+			        <option ng-repeat="field in fieldList | orderBy: 'name'" ng-selected="field==fieldList[fieldIndex-2]" >{{field.name}}</option>
+				</select>
+				<div>
+				<span class="glyphicon glyphicon-remove" ng-click="removeField(fieldIndex)" style="color: red"> </span>
+				<span class="glyphicon glyphicon-plus" ng-click="addField(fieldIndex)" style="color: green"> </span>
+				</div>
+
+
+
+		    </div>
+
+			<div ng-repeat="order in orders">
+				<div class="cell" ng-repeat="fieldIndex in displayFields track by $index" dir="rtl" ng-mouseover="onMouseoverDrag()" ng-mouseLeave="onMouseLeaveDrag()">
+		    		<input type="text" class="selectCol" ng-readonly="true" ng-model="order[fieldIndex-1].value" ng-click="openOrder(order)" > </input>
+		    	</div>		
+			</div>
+		</div>
+	<br>
+	<div>
+		<a href="" id="downloadButton" class="btn btn-link" ng-click="download()">Download</button>
+	</div>
 
 </div>
-
-
-

@@ -22,11 +22,7 @@
 	$clientkeypath = 'API Project-0ffd21d566b5.p12';
 */
 
-	$mysql_id = @mysql_connect($hostname, $username, $password);
-	if (!$mysql_id) {
-		echo "MySql connection failed ! <br>";
-	}
-	
+
 	$logTable = '_log';
 	$mainTable = '_main';
 	$formsTable = '_forms';
@@ -39,9 +35,28 @@
 	$emailCfgTable = '_emailCfg';	
 	$emailsTable = '_emails';
 	$clientIDTable = '_clientids';
+	$searchTable = '_search';
+	$filterTable = '_searchFilters';
+	$displayFieldsTable = '_searchdisplayfields';
+
+function closeDB() {
+	global $mysql_id;
 	
+	if ($mysql_id)
+		return(mysql_close($mysql_id));
+
+	return false;
+}
+
+
 function selectDB($dbName)	{
-	global $mysql_id, $globalDBName;
+	global $hostname, $username, $password, $globalDBName, $mysql_id;
+
+	$mysql_id = @mysql_connect($hostname, $username, $password);
+	if (!$mysql_id) {
+		echo "MySql connection failed ! <br>";
+		return false;
+	}
 	
 	$dbSelected = @mysql_select_db($dbName, $mysql_id);
 	if (!$dbSelected) {

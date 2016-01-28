@@ -11,17 +11,20 @@
 	$calendars = $_GET['calendars'];
 	$filters = $_GET['filters'];
 	$filterList = json_decode($filters);
+	$user = $_GET["user"];	
 
 	if (!selectDB($dbName))
 		return;	
+
+	$calendarList = explode(",", $calendars);
 	
-/*
-	$user = $_GET["user"];	
-	if (!authUserForm($user, 0)) {
+	for ($i = 0; array_key_exists($i, $calendarList); $i++) {
+		//var_dump($calendarList);
+		if (!authUserCalendar($user, trim($calendarList[$i], "'"))) {
 			echo "The user is not authorized to perform this action.";
 			return;	
+		}
 	}
-*/	
 
 	$startDate = date('Y-m-d H:i:s', strtotime($start));
 	$end = strtotime($end);

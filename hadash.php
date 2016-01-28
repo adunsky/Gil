@@ -92,6 +92,7 @@ use Google\Spreadsheet\ServiceRequestFactory;
 
 			createEmailCfgTable($worksheetFeed);
 			createEmailsTable($worksheetFeed);
+			createSearchTables($worksheetFeed);
 
 			// Create log table		
 			createLogTable($logTable);

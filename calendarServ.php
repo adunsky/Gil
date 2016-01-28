@@ -96,7 +96,7 @@ require_once "gmail.php";
 			//$sql = "SELECT * FROM $eventsTable WHERE updated='0' ORDER BY orderID DESC;";
 			if (!$result = mysql_query($sql)) {
 				error_log( $currTime.'Select event table Failed! ' . mysql_error(), 3, $logFileName); 
-				sleep(1);
+				handleDBError($dbName);
 				continue;
 			}
 			if ((mysql_num_rows($result) > 0) && ($event = mysql_fetch_array($result, MYSQL_ASSOC))) {
@@ -110,7 +110,8 @@ require_once "gmail.php";
 	         
 				$sql = "SELECT * FROM $calendarsTable WHERE number = '$calendarNum';";
 				if (!$result = mysql_query($sql)) {
-					error_log( $currTime.'Select calendar table Failed! ' . mysql_error(), 3, $logFileName); 
+					error_log( $currTime.'Select calendar table Failed! ' . mysql_error(), 3, $logFileName);
+					handleDBError($dbName);
 					continue;
 				}
 				if ((mysql_num_rows($result) > 0) && ($calendar = mysql_fetch_array($result, MYSQL_ASSOC))) {
@@ -131,7 +132,8 @@ require_once "gmail.php";
 				}
 				$sql = "SELECT * FROM $mainTable WHERE id='$orderID';";
 				if (!$result = mysql_query($sql)) {
-					error_log( $currTime.'Select main table Failed! ' . mysql_error(), 3, $logFileName); 
+					error_log( $currTime.'Select main table Failed! ' . mysql_error(), 3, $logFileName);
+					handleDBError($dbName);
 					continue;
 				}
 				if ((mysql_num_rows($result) > 0) && ($order = mysql_fetch_array($result, MYSQL_ASSOC))) {
@@ -151,6 +153,7 @@ require_once "gmail.php";
 				$sql = "SELECT * FROM $fieldTable WHERE `index`='$fieldIndex';";
 				if (!$result = mysql_query($sql)) {
 					error_log( $currTime.'Select field table Failed! ' . mysql_error(), 3, $logFileName); 
+					handleDBError($dbName);
 					continue;
 				}
 				if ((mysql_num_rows($result) > 0) && ($field = mysql_fetch_array($result, MYSQL_ASSOC))) {
@@ -163,6 +166,7 @@ require_once "gmail.php";
 						$sql = "SELECT * FROM $fieldTable WHERE type='$type2';";
 						if (!$result = mysql_query($sql)) {
 							error_log( $currTime.'Select field table Failed! ' . mysql_error(), 3, $logFileName); 
+							handleDBError($dbName);
 							continue;
 						}
 						if ((mysql_num_rows($result) > 0) && ($field = mysql_fetch_array($result, MYSQL_ASSOC))) {
@@ -178,6 +182,7 @@ require_once "gmail.php";
 				$sql = "SELECT * FROM $fieldTable WHERE `index`='$fieldIndex';";
 				if (!$result = mysql_query($sql)) {
 					error_log( $currTime.'Select field table Failed! ' . mysql_error(), 3, $logFileName); 
+					handleDBError($dbName);
 					continue;
 				}
 				if ((mysql_num_rows($result) > 0) && ($field = mysql_fetch_array($result, MYSQL_ASSOC))) {
@@ -190,6 +195,7 @@ require_once "gmail.php";
 						$sql = "SELECT * FROM $fieldTable WHERE type='$type2';";
 						if (!$result = mysql_query($sql)) {
 							error_log( $currTime.'Select field table Failed! ' . mysql_error(), 3, $logFileName); 
+							handleDBError($dbName);
 							continue;
 						}
 						if ((mysql_num_rows($result) > 0) && ($field = mysql_fetch_array($result, MYSQL_ASSOC))) {
@@ -251,6 +257,7 @@ require_once "gmail.php";
 				$sql = "DELETE FROM $eventsTable WHERE calendarID='$calendarNum' AND orderID='$orderID' AND eventID = '$eventID';";
 				if (!$result = mysql_query($sql)) {
 					error_log( $currTime.'Delete from events table Failed! ' . mysql_error(), 3, $logFileName); 
+					handleDBError($dbName);
 				}
 				continue; // Don't continue to process this event
 			}
@@ -379,6 +386,7 @@ require_once "gmail.php";
 			$sql = "UPDATE $eventsTable set eventID='$eventID', updated='1' WHERE calendarID='$calendarNum' AND orderID='$orderID';";
 			if (!$result = mysql_query($sql)) {
 				error_log( $currTime.'Update events table Failed! ' . mysql_error(), 3, $logFileName); 
+				handleDBError($dbName);
 				continue;
 			}
 			else
@@ -398,7 +406,16 @@ require_once "gmail.php";
 	
 	} // while (true)
 
+function handleDBError($dbName) {
+	global $logFileName;
 
+	closeDB();
+	while (!selectDB($dbName)) {
+		$currTime = date("M d H:i:s ");
+		error_log($currTime." Failed to connect to DB: ".$dbName."\n", 3, $logFileName);
+		sleep(5);
+	}
+}
 
 function getSearchFields($order) {
 	global $fieldTable;

@@ -13,3 +13,35 @@
 
 }
 
+.scrollable {
+	width: 100%;
+    white-space:nowrap;
+    overflow-x:auto;
+    overflow-y:hidden;
+
+}
+
+.searchCol {
+	border-style: groove;
+	width:200px;
+	height:45px;
+	margin:0px;
+	display:inline-block
+}
+
+.searchCol.dragging {
+	opacity: 0.8;
+	width: 200px;
+}
+
+
+.selectCol {
+	width: 100%;
+}
+
+.cell {
+	width:200px;
+	height:25px;
+	margin:0px;
+	display:inline-block
+}

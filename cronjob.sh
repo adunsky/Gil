@@ -7,4 +7,4 @@ php calendarServ.php db=karnit &
 php calendarServ.php db=demo & 
 php calendarServ.php db=instdel & 
 php calendarServ.php db=arava & 
-php backup.php db=samgal time=00:00 &
+php backup.php db=samgal interval=1 &

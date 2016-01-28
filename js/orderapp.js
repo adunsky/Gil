@@ -1,5 +1,11 @@
 var orderApp = angular.module('orderApp', ['ngRoute', 'ngDraggable', 'ui.bootstrap', 'ui.bootstrap.datetimepicker']);
 
+var CLIENT_ID = '785966582104-p03j542fcviuklf0kka21ushko2i7k0a.apps.googleusercontent.com';
+var SCOPES = ['https://www.googleapis.com/auth/userinfo.email','https://www.googleapis.com/auth/drive'];
+var FOLDER_PREFIX = '';
+var parentFolder = 'GoogMesh';
+var templateFolder = 'template';
+
 orderApp.service('orderService', function () {
 	var Order = [];
 	var Forms = [];
@@ -30,6 +36,9 @@ orderApp.config(function($routeProvider){
         .when('/',{
                 templateUrl: 'home.html'
           })
+        .when('/config',{
+                templateUrl: 'config.html'
+          })        
         .when('/newOrder',{
                 templateUrl: 'newOrder.html'
           })
@@ -301,13 +310,6 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, orderServic
 	$scope.optimize = true;
 	$scope.calculated = false;
 
-  	$scope.download = function() {
-  		var url = 'data:application/octet-stream,' + JSON.stringify($scope.orderList) ;
-  		window.open(url);
-
-  	}
-
-
 	$scope.onDragComplete = function(order,$event) {
 		var sourceIndex = $scope.dirList.indexOf(order);
 		$scope.dirList.splice(sourceIndex, 1);	// remove the dragged item
@@ -315,9 +317,10 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, orderServic
 	}
 
 	$scope.openOrder = function(order) {
-		if (order.orderID && order.calendarID)
-			window.open("http://googlemesh.com/Gilamos/#/newOrder?db="+$scope.dbName+"&orderID="+order.orderID+"&calendarNum="+order.calendarID);
-
+		if (order.orderID && order.calendarID) {
+			var host = window.location.hostname;
+			window.open("http://"+host+"/Gilamos/#/newOrder?db="+$scope.dbName+"&orderID="+order.orderID+"&calendarNum="+order.calendarID);
+		}
 	}
 
 	$scope.optimizeRoute = function() {
@@ -537,10 +540,140 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, orderServic
 });
 
 
+orderApp.controller('configCtrl', function($scope, $http, $location){
+
+  	$scope.initCfg = function () {
+ 		
+		var argv = $location.search();      		
+
+		if (argv.db)
+			$scope.dbName = argv.db;
+		if (argv.user)
+			$scope.user = argv.user;
+		else {
+			$scope.user = "";
+		}
+
+		
+ 		$http.get("getUserRole.php", { params: { db: $scope.dbName, user: $scope.user }})
+ 		.success(function(data) {
+         	console.log(data);
+  	    	try {
+	        	if (data.trim() != "admin") {
+	      			alert("Error: "+$scope.user+" is not authorized to perform this action !");
+	      			//window.close();
+
+	      		}
+      	 	}
+    		catch (e) {
+        		alert("Error: "+data);
+        	}
+
+
+
+		});
+	}
+
+	$scope.updateCfg = function (cmd) {
+
+		var host = window.location.hostname;
+		window.open("http://"+host+"/Gilamos/updateDB.php?cmd="+cmd+"&db="+$scope.dbName+"&user="+$scope.user);
+
+	}
+
+
+});
+
+
 orderApp.controller('queryCtrl', function($scope, $http,  $location, orderService){
 
-	$scope.filterList = [];
-	$scope.limit = 15;
+	$scope.displayFields = [2, 3, 4, 5, 6, 7, 8];
+	$scope.startDateCtrl = {}
+	$scope.endDateCtrl = {}
+	$scope.startDateCtrl.isOpen = false;
+	$scope.endDateCtrl.isOpen = false;
+	$scope.search = {};
+	$scope.search.calendar = {};
+	$scope.search.filterList = [];
+
+  	$scope.onMouseLeaveDrag = function() {
+		document.body.style.cursor = 'default';
+  	}
+
+  	$scope.onMouseoverDrag = function() {
+		document.body.style.cursor = 'pointer';
+  	}
+
+	$scope.onDragComplete = function(sourceFieldIndex, $event) {
+	//	var sourceCol = $scope.findFieldCol(sourceFieldIndex);
+	//	if (sourceCol != -1)
+	//		$scope.displayFields.splice(sourceCol, 1);	// remove the source field
+	}
+
+	$scope.onDropComplete = function(targetFieldIndex, sourceFieldIndex, $event) {
+
+		if (!targetFieldIndex)
+			return;
+		var sourceCol = $scope.findFieldCol(sourceFieldIndex);
+		if (sourceCol != -1)	// source not removed yet
+			$scope.displayFields.splice(sourceCol, 1);	// remove the source field
+
+		var targetCol = $scope.findFieldCol(targetFieldIndex);
+		
+		$scope.displayFields.splice(targetCol, 0, sourceFieldIndex);	// add the source field	to target col
+		$scope.changed = true;
+
+	}
+
+	$scope.findFieldCol = function(fieldIndex) {
+		for (var i=0; $scope.displayFields[i] != null; i++) {
+			if ($scope.displayFields[i] == fieldIndex)
+				return i;
+
+		}
+		return -1;
+
+	}
+
+	$scope.getFieldByName = function(name) {
+		for (var i=0; $scope.fieldList[i] != null; i++)
+			if (name == $scope.fieldList[i].name)
+				return $scope.fieldList[i];
+
+		return null;	
+
+	}
+
+	$scope.fieldUpdated = function(index, fieldName) {
+
+		var field = $scope.getFieldByName(fieldName);
+		if (field)
+			$scope.displayFields[index] = Number(field.index);
+		$scope.changed = true;
+	}
+
+	$scope.addField = function(index) {
+		var col = $scope.findFieldCol(index);
+		if (col => 0)
+			$scope.displayFields.splice(col+1, 0, -1);
+		$scope.changed = true;
+	}
+
+	$scope.removeField = function(index) {
+		var col = $scope.findFieldCol(index);
+		if (col => 0)
+			$scope.displayFields.splice(col, 1);
+		$scope.changed = true;
+	}
+
+	$scope.openOrder = function(order) {
+		if (order["id"] && order["calendarID"]) {
+			var orderID = order["id"];
+			var calendarID = order["calendarID"];
+			var host = window.location.hostname;
+			window.open("http://"+host+"/Gilamos/#/newOrder?db="+$scope.dbName+"&orderID="+orderID+"&calendarNum="+calendarID+"&user="+$scope.user);
+		}
+	}
 
   	$scope.download = function() {
 
@@ -548,25 +681,44 @@ orderApp.controller('queryCtrl', function($scope, $http,  $location, orderServic
   		
   		for (var line=0; $scope.orders[line]!=null; line++) {
   			var order = $scope.orders[line];
-			for(var col=0; order[col] != null; col++) {
-				if (col > 0)
+			for(var i=0; $scope.displayFields[i] != null; i++) {
+				if (i > 0)
 					content += ",";
-				content += '"'+order[col].value.replace(/ /g, '%20')+'"';
+				var col = $scope.displayFields[i];
+				if (col < 0)
+					content += '""';
+				else	
+					content += '"'+order[col-1].value+'"';
 			} 
-			content += "%0A";
+			content += "\n";
   		}
 
+		console.log(content);
 
+		var csvData = new Blob([content], { type: "text/plain;charset=UTF-8" }); 
+		var csvUrl = URL.createObjectURL(csvData);
+
+		var link         = document.createElement('a');
+		link.href =  csvUrl;
+		//a.href        = 'data:attachment/csv,' +  content;
+		link.target      = '_blank';
+
+		var filename = "mySearch.csv";
+		if ($scope.search.name && $scope.search.name != "")
+			filename = $scope.search.name+".csv";
+
+		link.download    = filename;
+
+		document.body.appendChild(link);
+		link.click();
+		URL.revokeObjectURL(link.href);
+		document.body.removeChild(link);
+  		delete link;
+/*
   		var url = 'data:application/octet-stream,' + content;
   		window.open(url);
-
+*/
   	}
-
-	$scope.openOrder = function(order) {
-		if (order.orderID && order.calendarID)
-			window.open("http://googlemesh.com/Gilamos/#/newOrder?db="+$scope.dbName+"&orderID="+order.orderID+"&calendarNum="+order.calendarID);
-
-	}
 
 	$scope.setFields = function() {
 		
@@ -574,7 +726,8 @@ orderApp.controller('queryCtrl', function($scope, $http,  $location, orderServic
 		for (var i=0; $scope.orderList[i] != null; i++) {
 			var fieldList = [{}];
 
-			fieldList[0].value = $scope.orderList[i].id;	// the first value is the id
+			fieldList["id"] = $scope.orderList[i].id;	// the first value is the id
+			fieldList["calendarID"] = $scope.orderList[i].calendarID;
 			angular.forEach($scope.orderList[i], function(value, key){
 				if (key != 'id')	// skip the id, it was entered first
 		    		fieldList.push({
@@ -587,7 +740,74 @@ orderApp.controller('queryCtrl', function($scope, $http,  $location, orderServic
 
 	}
 
-  	$scope.getOrders = function () {
+	$scope.getUser = function() {
+		gapi.client.load('oauth2', 'v2', function() {
+			if (!gapi.client.oauth2)	// retry if not initialized yet
+				setTimeout($scope.getUser, 1000);
+		  gapi.client.oauth2.userinfo.get().execute(function(resp) {
+		    // Get the user email
+		    if (resp.email == "") {	// if no user is logged in - require the user to log in
+		    	return;
+		    }
+
+		    if ($scope.user != resp.email) {	// user was changed - reload form
+			    $scope.user = resp.email;
+			    $scope.loadSearch();
+			}
+		  })
+		});
+	}
+
+	$scope.authUser = function() {
+
+		if (!gapi || !gapi.auth) {
+			// wait until Google API library has loaded
+			setTimeout($scope.authUser, 1000);
+			return;
+		}	
+
+		try {
+		    gapi.auth.authorize(
+		        {'client_id': CLIENT_ID, 
+		        'scope': SCOPES, 
+		        'cookie_policy': 'single_host_origin',
+		        'user_id': $scope.user,
+		        'authuser': -1,
+		        'immediate': true},
+		        function(authResult) {
+		        	if (authResult && !authResult.error) {
+			       		// authorization granted
+			       		$scope.loadSearch();
+					}
+					else {
+						// try manual authorization
+						gapi.auth.authorize(
+						    {'client_id': CLIENT_ID, 
+						     'scope': SCOPES, 
+						     'cookie_policy': 'single_host_origin',
+						     'authuser': -1,
+			   			     'immediate': false},
+			   			    function(authResult) {
+			   			       	if (authResult && !authResult.error) {
+			   			       		// authorization granted
+			   			       		$scope.getUser();
+			   					}
+			   					else {
+					    			alert("Authorization failed !")
+					    			return NULL;
+					    		}	
+     					});
+	     			}	
+        		});
+			}
+			catch (e) { 
+			    alert(e.message); 
+			}
+
+
+	}
+
+  	$scope.initSearch = function () {
  		
 		var argv = $location.search();      		
 
@@ -599,33 +819,60 @@ orderApp.controller('queryCtrl', function($scope, $http,  $location, orderServic
 				$scope.user = "";
 			}
 
-		if (argv.start)
-			$scope.startDate = argv.start;		
-		if (argv.end)
-			$scope.endDate = argv.end;	
-		if (argv.calendars)
-			$scope.calendars = argv.calendars;
+		if (argv.calendars) {
+			var calendarList = argv.calendars.split(",");
+			$scope.search.calendar.name = calendarList[0].replace(/'/g,"");
+		}
 
- 		$http.get("getQueryOrders.php", { params: { db: $scope.dbName, user: $scope.user, startDate: $scope.startDate, endDate: $scope.endDate, calendars: $scope.calendars, filters: "" } })
+		if (argv.start) {
+			$scope.search.calendar.startDate = argv.start.replace(/-/g, "/");
+		}	
+		if (argv.end) {
+			$scope.search.calendar.endDate = argv.end.replace(/-/g, "/");
+		}
+
+		$scope.authUser();
+	}
+
+	$scope.loadSearch = function() {		
+
+ 		$http.get("getCalendars.php", { params: { db: $scope.dbName, user: $scope.user, unique: true } })
  		.success(function(data) {
          	console.log(data);
   	    	try {
-	        	$scope.orderList = angular.fromJson(data);
-	        	$scope.setFields();
+	        	$scope.calendarList = angular.fromJson(data);
+
       	 	}
     		catch (e) {
         		alert("Error: "+data);
-        		$scope.orderList = null;
+        		$scope.calendarList = null;
     		}
 
     		//$scope.calcRoute();
 		});
-
-	  	$scope.getSearchFields();
+ 		$scope.getSearchList();
+	  	$scope.getFields();
+	  	$scope.addFilter();	// at least one empty filter should exist
+	  	$scope.changed = false;
 	}
 
-	$scope.getSearchFields = function () {
- 		$http.get("getSearchFields.php", { params: { db: $scope.dbName } })
+	$scope.getSearchList = function () {
+ 		$http.get("getSearchList.php", { params: { db: $scope.dbName, user: $scope.user } })
+ 		.success(function(data) {
+         	console.log(data);
+  	    	try {
+	        	$scope.searchList = angular.fromJson(data);
+      	 	}
+    		catch (e) {
+        		alert("Error: "+data);
+        		$scope.searchList = null;
+    		}
+		});		
+
+	}	
+
+	$scope.getFields = function () {
+ 		$http.get("getFields.php", { params: { db: $scope.dbName } })
  		.success(function(data) {
          	console.log(data);
   	    	try {
@@ -640,28 +887,54 @@ orderApp.controller('queryCtrl', function($scope, $http,  $location, orderServic
         		alert("Error: "+data);
         		$scope.fieldList = null;
     		}
-    		$scope.addFilter();
 		});		
 
 	}
 
 	$scope.addFilter = function (filter) {
 
-		var filterLen = $scope.filterList.length;
-		var filterIndex = $scope.filterList.indexOf(filter);
+		var filterLen = $scope.search.filterList.length;
+		var filterIndex = $scope.search.filterList.indexOf(filter);
 
-		if (filterIndex == filterLen-1)
-			$scope.filterList[filterLen] = {};		// add another filter field
+		if (filterIndex == filterLen-1) {
+			$scope.search.filterList[filterLen] = {};		// add empty filter field
+			$scope.search.filterList[filterLen].name = "";
+			$scope.search.filterList[filterLen].value = "";
+		}
 
 		if (filter && filter.name == "")	// no value selected - remove it
-			$scope.filterList.splice(filterIndex, 1);
+			$scope.search.filterList.splice(filterIndex, 1);
 
+		if (filter) {
+			$scope.getFieldValues(filter);
+			filter.value = "";	// reset the selected value
+			$scope.changed = true;
+		}
+	}
+
+	$scope.getFieldValues = function(filter) {
+
+		if (filter && filter.name != "") {	// a valid field was selected
+	 		$http.get("getFieldValues.php", { params: { db: $scope.dbName, field: filter.name } })
+	 		.success(function(data) {
+	         	console.log(data);
+  	    		if (data != "")
+	        		filter.valueList = data;
+	        	else
+	        		filter.valueList = null;
+			});			
+		}
 	}
 
 	$scope.getFilter = function () {
 
-		var filters = angular.toJson($scope.filterList);		
- 		$http.get("getQueryOrders.php", { params: { db: $scope.dbName, user: $scope.user, startDate: $scope.startDate, endDate: $scope.endDate, calendars: $scope.calendars, filters: filters } })
+		if (!$scope.search.calendar.name || !$scope.search.calendar.startDate || !$scope.search.calendar.endDate) {
+			alert("Please enter calendar, start date and end date !");
+			return;
+		}
+
+		var filters = angular.toJson($scope.search.filterList);		
+ 		$http.get("getQueryOrders.php", { params: { db: $scope.dbName, user: $scope.user, startDate: $scope.search.calendar.startDate, endDate: $scope.search.calendar.endDate, calendars: "'"+$scope.search.calendar.name+"'", filters: filters } })
  		.success(function(data) {
          	console.log(data);
   	    	try {
@@ -676,6 +949,86 @@ orderApp.controller('queryCtrl', function($scope, $http,  $location, orderServic
 		});
 
 	}
+
+	$scope.save = function() {
+
+		$scope.search.name = $scope.name;
+		$scope.search.user = $scope.user;
+		$scope.search.dbName = $scope.dbName;
+		$scope.search.displayFields = $scope.displayFields;
+
+        var content = angular.toJson($scope.search);
+        var request = $http({
+                method: "post",
+                url: "saveSearch.php",
+                data: content,
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        });
+            /* Check whether the HTTP Request is Successfull or not. */
+        request.success(function (data) {
+            console.log(data);
+			if (!isNaN(data)) {	                
+            	$scope.searchID = parseInt(data); // PHP returned a valid ID number
+            	$scope.getSearchList();
+            	$scope.search.message = "Saved";
+            }
+            else {
+            	alert("Error: "+data.trim());
+            	$scope.search.message = "Save failed !";
+            }	
+        });
+        request.error(function (data, status) {
+            alert("Error: "+data.trim());
+        });
+        $scope.changed = false;
+
+	}
+
+	$scope.updateSearch = function() {
+		$scope.search.message = "";
+		if (!$scope.name || $scope.name == "")
+			return;	// no name selected
+
+		for (var i=0; i < $scope.searchList.length ; i++) {
+			if ($scope.name == $scope.searchList[i].name) {
+				$scope.orders = null;
+				$scope.changed = false;
+				$scope.search = $scope.searchList[i];
+				if ($scope.searchList[i].displayFields && $scope.searchList[i].displayFields.length )
+					$scope.displayFields = $scope.searchList[i].displayFields;
+
+				for (var i=0; $scope.search.filterList[i]; i++ )  {
+					var filter = $scope.search.filterList[i];
+					if (!filter.valueList)
+						$scope.getFieldValues(filter);	
+				}
+				break;
+			}
+			else
+				$scope.changed = true;
+		}
+
+	}
+
+	$scope.openDateTimeCalendar = function(e, field) {
+	    e.preventDefault();
+	    e.stopPropagation();
+	
+	    if (field.isOpen)
+	    	field.isOpen = false;
+	    else
+	    	field.isOpen = true;
+	};
+	   
+	$scope.timeOptions = {
+	    //readonlyInput: true,
+	    startingTime: "08:00",
+	    showMeridian: false
+	};
+	$scope.dateOptions = {
+	    //readonlyInput: true,
+	    showWeeks: false
+	};	
 
 });
 
@@ -813,7 +1166,8 @@ orderApp.controller ('orderCtrl', function orderController ($scope, $http, $time
 		      				else {
 		      					if ($scope.form.fields[i].type == 'Hyperlink') {
 		      						if ($scope.order[fieldIndex].value.substring(0, 4) == 'http' ||
-		      							$scope.order[fieldIndex].value.substring(0, 4) == 'HTTP')
+		      							$scope.order[fieldIndex].value.substring(0, 4) == 'HTTP' ||
+		      							$scope.order[fieldIndex].value.substring(0, 4) == 'file' )
 		      							$scope.form.fields[i].prefix = "";
 		      						else
 		      							$scope.form.fields[i].prefix = "http://";		      					
@@ -922,7 +1276,7 @@ orderApp.controller ('orderCtrl', function orderController ($scope, $http, $time
 
 			$scope.openLink = function(e, field) {
 
-				window.open(field.prefix+field.value, '_blank');
+				window.open(field.prefix+field.value);
 				e.preventDefault();
 				return false;
 			}
@@ -1156,12 +1510,6 @@ orderApp.controller ('orderCtrl', function orderController ($scope, $http, $time
 
 
 			// Code for file attachments
-
-			var CLIENT_ID = '785966582104-p03j542fcviuklf0kka21ushko2i7k0a.apps.googleusercontent.com';
-			var SCOPES = ['https://www.googleapis.com/auth/userinfo.email','https://www.googleapis.com/auth/drive'];
-			var FOLDER_PREFIX = '';
-			var parentFolder = 'GoogMesh';
-			var templateFolder = 'template';
 
 			$scope.getFolders = function() {
 				// reset the folder list and content flag

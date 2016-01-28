@@ -90,6 +90,11 @@ use Google\Spreadsheet\ServiceRequestFactory;
 			// update email configuration but keep existing emails
 			createEmailCfgTable($worksheetFeed);
 		}
+
+		if ($command == "search") {
+			// update email configuration but keep existing emails
+			createSearchTables($worksheetFeed);
+		}
 				
 		if ($command == "all") {		
 			// Create FieldType table
@@ -104,6 +109,7 @@ use Google\Spreadsheet\ServiceRequestFactory;
 			updateUsersTable($worksheetFeed);
 
 			createEmailCfgTable($worksheetFeed);
+			createSearchTables($worksheetFeed);
 		}
 
 

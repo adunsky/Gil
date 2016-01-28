@@ -626,4 +626,24 @@ function createEmailsTable($worksheetFeed) {
 
 }
 
+function createSearchTables($worksheetFeed) {
+	global $searchTable, $filterTable, $displayFieldsTable;
+
+		$sql = "CREATE TABLE IF NOT EXISTS $searchTable (id INT(32) AUTO_INCREMENT PRIMARY KEY, name VARCHAR(64), calendar VARCHAR(64), startDate DATE, endDate DATE );";
+		$result = mysql_query($sql) or die('Create search table Failed! ' . mysql_error());
+		echo "Table ".$searchTable." created<br>\n"; 		
+
+		$sql = "CREATE TABLE IF NOT EXISTS $filterTable (searchID INT(32), name VARCHAR(64), value VARCHAR(64) );";
+		$result = mysql_query($sql) or die('Create search filter table Failed! ' . mysql_error());
+		echo "Table ".$filterTable." created<br>\n"; 
+		
+		$sql = "CREATE TABLE IF NOT EXISTS $displayFieldsTable (searchID INT(32), field INT(32));";
+		$result = mysql_query($sql) or die('Create search display fields table Failed! ' . mysql_error());
+		echo "Table ".$displayFieldsTable." created<br>\n"; 
+
+
+}
+
+
+
 ?>

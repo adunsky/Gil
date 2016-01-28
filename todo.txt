@@ -1,5 +1,16 @@
 
+- add authorization for search screen
+
 - in cfgUtil check if field name appears twice and display error
+
+- add warnings before delete calendar and events
+
+- add configuration screen for all update scripts
+	- add authorization
+	- add icons
+	- fix messages in scripts
+
+- add authorization check to config scripts, backup etc.
 
 - define calendar identification method (not based on ID) - for restoring from backup
 	- i.e. an event at 01/01/1970 with specific content
@@ -11,6 +22,7 @@
 
 - innterface to manage calendars, users, emails	
 	- enable removing of forms, calendars
+	- rename calendars, change date_key
 
 - interface to download data based on filter
 
