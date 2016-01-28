@@ -34,7 +34,7 @@
 		$result = mysql_query($sql) or die('Update search table Failed! ' . mysql_error()); 
 	}
 	else {	// new search
-		$sql = "INSERT into $searchTable VALUES (null, '$user', '$name', '$calName', '$startDate', '$endDate') ";
+		$sql = "INSERT into $searchTable VALUES (null, '$name', '$user', '$calName', '$startDate', '$endDate') ";
 		$result = mysql_query($sql) or die('Insert into search table Failed! ' . mysql_error()); 
 		$searchID = mysql_insert_id();
 	}
