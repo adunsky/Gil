@@ -23,8 +23,8 @@
        		<div class="col-sm-1">
        			<button type="submit" class="btn btn-warning" ng-disabled="!name || name=='' || !changed || role!='admin'" ng-click="save(1)">Share</button>
        		</div>
-       		<div class="col-sm-1">
-       			<span >{{search.message}}</span>
+       		<div class="col-sm-1" ng-if="!changed">
+       			<span>{{search.message}}</span>
        		</div>
        	</div>
        	<br>
@@ -118,8 +118,8 @@
 	    </div>
 
 		<div ng-repeat="order in orders">
-			<div class="cell" ng-repeat="fieldIndex in displayFields track by $index" dir="rtl" ng-mouseover="onMouseoverDrag()" ng-mouseLeave="onMouseLeaveDrag()">
-	    		<input type="text" class="selectCol" ng-readonly="true" ng-model="order[fieldIndex-1].value" ng-click="openOrder(order)" > </input>
+			<div class="cell" ng-repeat="fieldIndex in displayFields track by $index" dir="rtl">
+	    		<input type="text" class="selectCol" ng-readonly="true" ng-model="order[fieldIndex-1].value" ng-click="openOrder(order)" style="cursor:pointer;cursor:hand"> </input>
 	    	</div>		
 		</div>
 	</div>
