@@ -1,5 +1,9 @@
 
-- add authorization for search screen
+- query fails with big periods
+
+-  add an option for admin to share searches
+
+- delete erronous duplicate events ?
 
 - in cfgUtil check if field name appears twice and display error
 

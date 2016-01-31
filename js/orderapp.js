@@ -945,6 +945,8 @@ orderApp.controller('queryCtrl', function($scope, $http,  $location, orderServic
 	  	    	try {
 		        	$scope.orderList = angular.fromJson(data);
 		        	$scope.setFields();
+		        	if ($scope.orderList["Max"])
+		        		alert("Results exceeded maximum size - list truncated !");
 	      	 	}
 	    		catch (e) {
 	        		alert("Error: "+data);

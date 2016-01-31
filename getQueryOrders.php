@@ -25,7 +25,7 @@
 			return;	
 		}
 	}
-	set_time_limit (0); // no time limit
+	//set_time_limit (120); // no time limit
 	//var_dump($calendarList);
 
 	$startDate = date('Y-m-d H:i:s', strtotime($start));
@@ -65,11 +65,25 @@
 			$orderList = $orderList.$orderID;
 		}
 
-		$main = mysql_query("SELECT * FROM $mainTable WHERE id IN ($orderList)".$filterString) or die('get order from main Failed! ' . mysql_error()); 
-		while ($order = mysql_fetch_array($main, MYSQL_ASSOC)) {
-			$order["calendarID"] = $calNumber;	// one of the calendars in the list
-			array_push($orders, $order);
-		}
+    	$column_count = mysql_num_rows(mysql_query("describe $mainTable"));
+    	$rowSize = $column_count*64*8; // approximate row size
+        $maxRows = 400000000/$rowSize; // allow up to 400MB total returned size
+        $main = mysql_query("SELECT * FROM $mainTable WHERE id IN ($orderList)".$filterString) or die('get order from main Failed! ' . mysql_error());
+        if (mysql_num_rows($main)*$rowSize > 1000000) {	// need to allow more memory
+                ini_set('memory_limit', '512M');
+        }
+        $i=0;
+        while ($order = mysql_fetch_array($main, MYSQL_ASSOC)) {
+                $order["calendarID"] = $calNumber;      // one of the calendars in the list
+                //echo $order["id"]."\n";
+                array_push($orders, $order);
+                if ($i++ > $maxRows){
+                        $orders["Max"]=true;
+                        break;
+                }
+        }
+        $orders["Max"]=false;
+
 	}
 	else
 		echo("Events not found");	
