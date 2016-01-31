@@ -743,6 +743,15 @@ orderApp.controller('queryCtrl', function($scope, $http,  $location, orderServic
 
 	}
 
+
+	$scope.getUserRole = function(user) {
+		$http.get("getUserRole.php", { params: { db: $scope.dbName, user: user } })
+		.success(function(data) {
+        	$scope.role = data.trim();
+		});
+
+	}
+
 	$scope.getUser = function() {
 		gapi.client.load('oauth2', 'v2', function() {
 			if (!gapi.client.oauth2)	// retry if not initialized yet
@@ -753,7 +762,7 @@ orderApp.controller('queryCtrl', function($scope, $http,  $location, orderServic
 		    	return;
 		    }
 
-		    if ($scope.user != resp.email) {	// user was changed - reload form
+		    if ($scope.user != resp.email) {	// user was changed
 			    $scope.user = resp.email;
 			    $scope.loadSearch();
 			}
@@ -837,7 +846,8 @@ orderApp.controller('queryCtrl', function($scope, $http,  $location, orderServic
 		$scope.authUser();
 	}
 
-	$scope.loadSearch = function() {		
+	$scope.loadSearch = function() {	
+		$scope.getUserRole($scope.user);		
 
  		$http.get("getCalendars.php", { params: { db: $scope.dbName, user: $scope.user, unique: true } })
  		.success(function(data) {
@@ -964,10 +974,13 @@ orderApp.controller('queryCtrl', function($scope, $http,  $location, orderServic
 
 	}
 
-	$scope.save = function() {
+	$scope.save = function(share) {
 
 		$scope.search.name = $scope.name;
-		$scope.search.user = $scope.user;
+		if (!share)
+			$scope.search.user = $scope.user;
+		else
+			$scope.search.user = '';
 		$scope.search.dbName = $scope.dbName;
 		$scope.search.displayFields = $scope.displayFields;
 

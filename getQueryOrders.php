@@ -28,9 +28,9 @@
 	//set_time_limit (120); // no time limit
 	//var_dump($calendarList);
 
-	$startDate = date('Y-m-d H:i:s', strtotime($start));
-	$end = strtotime($end);
-	$endDate = date('Y-m-d H:i:s', strtotime("-1 minute", $end));	// until 23:59 of the last day
+    $startDate = date('Y-m-d 00:00:00', strtotime($start));		// start of day
+    //$end = strtotime($end);
+    $endDate = date('Y-m-d 23:59:59', strtotime($end));     // until 23:59 of the last day
 
 	$filterString = getFilterString($filterList);
 

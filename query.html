@@ -18,7 +18,10 @@
 	       		</div>
        		</div>
        		<div class="col-sm-1">
-       			<button type="submit" class="btn btn-info" ng-disabled="!name || name=='' || !changed" ng-click="save()">Save</button>
+       			<button type="submit" class="btn btn-info" ng-disabled="!name || name=='' || !changed" ng-click="save(0)">Save</button>
+       		</div>
+       		<div class="col-sm-1">
+       			<button type="submit" class="btn btn-warning" ng-disabled="!name || name=='' || !changed || role!='admin'" ng-click="save(1)">Share</button>
        		</div>
        		<div class="col-sm-1">
        			<span >{{search.message}}</span>
