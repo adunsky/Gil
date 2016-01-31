@@ -73,6 +73,7 @@
                 ini_set('memory_limit', '512M');
         }
         $i=0;
+        $orders["Max"]=false;
         while ($order = mysql_fetch_array($main, MYSQL_ASSOC)) {
                 $order["calendarID"] = $calNumber;      // one of the calendars in the list
                 //echo $order["id"]."\n";
@@ -82,8 +83,6 @@
                         break;
                 }
         }
-        $orders["Max"]=false;
-
 	}
 	else
 		echo("Events not found");	
