@@ -114,7 +114,7 @@ use Google\Spreadsheet\ServiceRequestFactory;
 
 
 function updateFieldTypeTable($worksheetFeed, $fieldTable, $listValueTable) {
-		global $mainTable;
+		global $mainTable, $dbName ;
 	
 		// get the current number of fields in case we need to add to Main
 		$sql = "SELECT * FROM $mainTable;";
@@ -185,14 +185,14 @@ function updateFieldTypeTable($worksheetFeed, $fieldTable, $listValueTable) {
 			}
 
 			// update the field type if needed
-			$result = mysql_query("SELECT DATA_TYPE, CHARACTER_MAXIMUM_LENGTH FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = '$mainTable' AND COLUMN_NAME = $row");
+			$result = mysql_query("SELECT DATA_TYPE, CHARACTER_MAXIMUM_LENGTH FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '$dbName' AND table_name = '$mainTable' AND COLUMN_NAME = '$row'");
 			if (!$result) {
 				die('Select column from main table Failed! ' . mysql_error());
 			}
 			else {
 				$resArray = mysql_fetch_array($result);
 				$currType = $resArray["DATA_TYPE"]."(".$resArray["CHARACTER_MAXIMUM_LENGTH"].")";
-				//echo "CurrType: ".$currType."<br>\n";
+h
 				if ($currType != $DBtype){
 					echo "Updating column type: ".$name." to ".$DBtype."<br>\n";
 					$result = mysql_query("ALTER TABLE $mainTable MODIFY COLUMN `$row` $DBtype");
