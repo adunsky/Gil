@@ -192,7 +192,6 @@ function updateFieldTypeTable($worksheetFeed, $fieldTable, $listValueTable) {
 			else {
 				$resArray = mysql_fetch_array($result);
 				$currType = $resArray["DATA_TYPE"]."(".$resArray["CHARACTER_MAXIMUM_LENGTH"].")";
-h
 				if ($currType != $DBtype){
 					echo "Updating column type: ".$name." to ".$DBtype."<br>\n";
 					$result = mysql_query("ALTER TABLE $mainTable MODIFY COLUMN `$row` $DBtype");
