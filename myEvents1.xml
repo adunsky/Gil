@@ -195,12 +195,12 @@ function deleteMarkers() {
 
 
 function openDefaultForm() {
-    window.open("http://googlemesh.com/Gilamos/#/newOrder?id=0" + "&db=" + dbName + "&user=" + user);
+    window.open("http://googmesh.com/Gilamos/#/newOrder?id=0" + "&db=" + dbName + "&user=" + user);
 }
 
 function openForm(e) {
   // parse the form url from the event description
-  var startIndex = e.details.indexOf("http://googlemesh.com");
+  var startIndex = e.details.indexOf("http://googmesh.com");
   var endIndex = -1;
   if (startIndex>=0) {
     var url = e.details.substring(startIndex);
@@ -217,7 +217,7 @@ function openForm(e) {
 
 function openConfigWindow() {
 
-  window.open("http://googlemesh.com/Gilamos/#/config?db=" + dbName + "&user=" + user );
+  window.open("http://googmesh.com/Gilamos/#/config?db=" + dbName + "&user=" + user );
 
 }
 
@@ -232,7 +232,7 @@ function openWindow(name) {
     calendars += "'" + displayedCalendars[i] + "'";
   }  
 
-  window.open("http://googlemesh.com/Gilamos/#/"+name+"?db=" + dbName + "&user=" + user + 
+  window.open("http://googmesh.com/Gilamos/#/"+name+"?db=" + dbName + "&user=" + user + 
               "&start=" + startDate + "&end=" + endDate + "&calendars=" + calendars);
 
 }
