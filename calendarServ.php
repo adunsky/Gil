@@ -236,7 +236,8 @@ require_once "gmail.php";
 		    			break;
 					}
 					else {	// event ID does not exist in our DB - remove it
-						// $services[$googleClient]->events->delete($calendarID, $eventx->getId());
+						//error_log( $currTime." deleting duplicate event in calendar: ". $calendarID." for orderID: ".$orderID."\n", 3, $logFileName);
+						//$services[$googleClient]->events->delete($calendarID, $eventx->getId());
 					}	
 				
 				}
@@ -327,7 +328,7 @@ require_once "gmail.php";
 			$gadget = new Google_Service_Calendar_EventGadget();
 			$gadget->setDisplay("icon");
 			$gadget->setIconLink("https://www.thefreedictionary.com/favicon.ico");
-			$gadget->setLink("https://googlemesh.com/Gilamos/hello.xml");
+			$gadget->setLink("https://googmesh.com/Gilamos/hello.xml");
 			$gadget->setType("application/x-google-gadgets+xml");
 		  	$gadget->setHeight(236);
 		   	$gadget->setWidth(600);
@@ -358,7 +359,7 @@ require_once "gmail.php";
 				}
 			// set text direction for the description according to the language of the first word...
 			$linkTitle = $lang == 'eng' ? 'Update' : 'עדכון';
-			$description = "<a href=http://googlemesh.com/Gilamos/#/newOrder?db=".$dbName."&orderID=".$orderID."&calendarNum=".$calendarNum.">".$linkTitle."</a>
+			$description = "<a href=http://googmesh.com/Gilamos/#/newOrder?db=".$dbName."&orderID=".$orderID."&calendarNum=".$calendarNum.">".$linkTitle."</a>
 							<p>Order ID :".$orderID."<br>".getSearchFields($order)."</p>";
 			if($new) {
 				// error_log( $currTime."Calendar: ".$calendarNum." Client: ".$googleClient."\n", 3, $logFileName);
