@@ -6,7 +6,7 @@
 <link ng-if="form.dir == 'ltr'" rel="stylesheet" href="css/styleEng.css?v=1">
 
 <h1>
-	<img ng-if="form.logo" ng-src="https://googledrive.com/host/0BxKK2ik5inqBfndtazV1ZElzT1ptamJjWGJyZ3R6MUxaTlBTVVI4eUtNdVBoZEo3OGZsUHc/{{form.logo}}" class="logo" style="width:210px;height:70px;margin-right:0px;" />
+	<img ng-if="form.logo" ng-src="{{logoURL}}" class="logo" style="width:210px;height:70px;margin-right:0px;" />
 	<button ng-if="role=='admin'" class="btn btn-link" ng-click="editForm()">Edit Form</button> 
 	<span ng-if="role!='admin'">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</span> 
 	{{form.title}}

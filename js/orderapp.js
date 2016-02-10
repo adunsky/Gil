@@ -1557,6 +1557,7 @@ orderApp.controller ('orderCtrl', function orderController ($scope, $http, $time
 					      // GoogMesh folder exists - insert into it
 					      $scope.parentFolderID = resp.items[0].id;
 					      $scope.getFolderList(resp.items[0].id);
+					      $scope.getLogo(resp.items[0].id);
 				      }
 				      else {
 				      	if (resp.error)	// retry in case of error
@@ -1569,6 +1570,24 @@ orderApp.controller ('orderCtrl', function orderController ($scope, $http, $time
 				});
 			}
 
+			$scope.getLogo = function(parentID) {
+				// Search for all folders under parent folder
+				$qString = "'"+parentID+"' in parents and trashed = false and title = '"+$scope.form.logo+"'";
+				gapi.client.drive.files.list({
+				  	'q' : $qString
+				 }).
+			   	execute(function(resp) {
+			   		if (resp.error) { // && resp.message=="User Rate Limit Exceeded")
+			   			setTimeout($scope.getFolderList, 500, parentID);
+			   			return;
+			   		}
+			       	if (resp.items && resp.items[0])  {
+						$scope.logoURL = resp.items[0].thumbnailLink;
+			       	};
+
+			    });
+
+			}
 
 			$scope.getFolderList = function(parentID) {
 				// Search for all folders under parent folder
