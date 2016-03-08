@@ -200,7 +200,9 @@ function openDefaultForm() {
 
 function openForm(e) {
   // parse the form url from the event description
-  var startIndex = e.details.indexOf("http://googmesh.com");
+  var startIndex = e.details.indexOf("http://googlemesh.com");
+  if (startIndex < 0)
+    var startIndex = e.details.indexOf("http://googmesh.com");
   var endIndex = -1;
   if (startIndex>=0) {
     var url = e.details.substring(startIndex);
