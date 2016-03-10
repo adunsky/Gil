@@ -948,7 +948,7 @@ orderApp.controller('queryCtrl', function($scope, $http,  $location, orderServic
 
 	    document.body.style.cursor = 'wait';
 	    $scope.searching = true;
-		var filters = angular.toJson($scope.search.filterList);		
+		var filters = angular.toJson($scope.getCleanFilterList($scope.search.filterList));		
  		$http.get("getQueryOrders.php", { params: { db: $scope.dbName, user: $scope.user, startDate: $scope.search.calendar.startDate, endDate: $scope.search.calendar.endDate, calendars: "'"+$scope.search.calendar.name+"'", filters: filters } })
 	 		.success(function(data) {
 	         	console.log(data);
@@ -971,6 +971,17 @@ orderApp.controller('queryCtrl', function($scope, $http,  $location, orderServic
 				$scope.searching = false;
 	            alert("Error: "+data.trim());
 			});
+
+	}
+
+	$scope.getCleanFilterList = function(filterList) {
+		var cleanFilterList = [];
+		for (var i=0; i<filterList.length; i++) {
+			cleanFilterList[i] = {};
+			cleanFilterList[i].name = filterList[i].name;
+			cleanFilterList[i].value = filterList[i].value;
+		}
+		return cleanFilterList;
 
 	}
 

@@ -84,7 +84,7 @@
            		<div class="col-sm-8" >
            			<input type=text list="{{filter.name}}" class="form-control" ng-model="filter.value" >
            			<datalist id="{{filter.name}}" >
-           			   <option ng-repeat="value in filter.valueList" >{{value}}</option>
+           			   <option ng-repeat="value in filter.valueList track by $index" >{{value}}</option>
            			</datalist>
            		</div>
 			</div>
