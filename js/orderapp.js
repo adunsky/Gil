@@ -263,6 +263,7 @@ orderApp.controller('formCtrl', function($scope, $http,  $location, orderService
  		input.dbName = $scope.dbName;
  		input.user = $scope.user;
 		input.form = $scope.form;
+		$scope.saving = true;
 
 	    document.body.style.cursor = 'wait';
 		var content = angular.toJson(input);
@@ -277,6 +278,7 @@ orderApp.controller('formCtrl', function($scope, $http,  $location, orderService
             var message = data;
             console.log(message);
             document.body.style.cursor = 'default';
+            $scope.saving = false;
             alert("Form "+$scope.form.title+" updated successfuly");
             $scope.changed = false;
 			         	
@@ -284,11 +286,13 @@ orderApp.controller('formCtrl', function($scope, $http,  $location, orderService
         request.error(function (data, status) {
             var message = data;
             document.body.style.cursor = 'default';
+            $scope.saving = false;
             alert("Error: "+message);
         });
 
 
  	}
+
 
  	$scope.closeForm = function () {
  		var ok = true;
