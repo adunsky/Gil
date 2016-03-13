@@ -51,26 +51,33 @@ use Google\Spreadsheet\ServiceRequestFactory;
 		}		
 					
  		set_time_limit (0); // This may take a while
+ 		$sql = "SELECT * FROM $calendarsTable WHERE calID='$calID';";
+ 		$result = mysql_query($sql) or die("SELECT calendar from DB Failed! " . mysql_error());
+		$cal = mysql_fetch_assoc($result);
+		$calName = $cal["name"];
+		$calNum = $cal["number"];
+
+ 		echo "Are you sure ??? db=".$dbName." calendar: ".$calName." ?  Type 'yes' to continue: ";
+ 		$handle = fopen ("php://stdin","r");
+ 		$line = fgets($handle);
+ 		if(trim($line) != 'yes'){
+ 		    echo "ABORTING!\n";
+ 		    exit;
+ 		}
+ 		echo "\n";
+ 		echo "Thank you, continuing...\n";
 
  		if (deleteCalendar($calID, $count)) {
- 			$sql = "SELECT * FROM $calendarsTable WHERE calID='$calID';";
- 			if (!$result = mysql_query($sql)) 	
- 				echo "SELECT calendar from DB Failed! " . mysql_error();
-			else {
-				// found calendar in table
-				$cal = mysql_fetch_array($result);
-				$calNum = $cal["number"];
+ 			echo "calendar deleted: ".$calID."<br>\n";
+  			// Remove the events for this calendar from the events table
+ 			$sql = "DELETE FROM $eventsTable WHERE calendarID='$calNum';";
+ 			if (!$result = mysql_query($sql))
+ 				echo "DELETE events from DB Failed! " . mysql_error();
 
-	  			// Remove the events for this calendar from the events table
-	 			$sql = "DELETE FROM $eventsTable WHERE calendarID='$calNum';";
-	 			if (!$result = mysql_query($sql))
-	 				echo "DELETE events from DB Failed! " . mysql_error();
-
-	 			// Remove it from the calendars table
-	 			$sql = "DELETE FROM $calendarsTable WHERE calID='$calID';";
-	 			if (!$result = mysql_query($sql))
-	 				echo "DELETE calendar from DB Failed! " . mysql_error();
-			}
+ 			// Remove it from the calendars table
+ 			$sql = "DELETE FROM $calendarsTable WHERE calID='$calID';";
+ 			if (!$result = mysql_query($sql))
+ 				echo "DELETE calendar from DB Failed! " . mysql_error();
  		}
  		else {
  			echo "Deletion of Google calendar ID: ".$calID. " Failed!<br>\n";

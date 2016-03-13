@@ -1,7 +1,18 @@
+Config:
 
-- query fails with big periods
+- update calendars after save
+- handle updateDB when calendars were updated through UI
+- handle empty calendar list
+- form config - add user authorization and fix logo
 
--  add an option for admin to share searches
+Mobile:
+ - iPad support
+ - phone display size
+ - Google calendar app - link
+
+- write order id to spreadsheet
+
+- Async file upload
 
 - delete erronous duplicate events ?
 
@@ -54,6 +65,8 @@ audit trail - store all changes per record, with user
 
 - Web page to view order status 
 
+//- query fails with big periods
+//-  add an option for admin to share searches
 //- in forms, non-input fields should be read-only by default
 //- allow updating only some users, some calendars
 // - Add progress bar window for file uploads

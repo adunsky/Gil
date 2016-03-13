@@ -359,7 +359,7 @@ require_once "gmail.php";
 				}
 			// set text direction for the description according to the language of the first word...
 			$linkTitle = $lang == 'eng' ? 'Update' : 'עדכון';
-			$description = "<a href=http://googmesh.com/Gilamos/#/newOrder?db=".$dbName."&orderID=".$orderID."&calendarNum=".$calendarNum.">".$linkTitle."</a>
+			$description = "<a href=http://".$publicDNSName."/stelvio/#/newOrder?db=".$dbName."&orderID=".$orderID."&calendarNum=".$calendarNum.">".$linkTitle."</a>
 							<p>Order ID :".$orderID."<br>".getSearchFields($order)."</p>";
 			if($new) {
 				// error_log( $currTime."Calendar: ".$calendarNum." Client: ".$googleClient."\n", 3, $logFileName);

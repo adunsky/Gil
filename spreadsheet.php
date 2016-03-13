@@ -143,7 +143,7 @@ function release_named_lock($lockname) {
 }
 
 
-function getCalcFields($order, $oldValues) {
+function getCalcFields($order, $oldValues, $orderID = 0) {
 	global $spreadsheet, $mainSpreadsheetName, $useOldValues;	
 	set_time_limit (60); // This may take a while
 
@@ -236,6 +236,8 @@ function getCalcFields($order, $oldValues) {
 			//echo $name.": ".$value."\n";
 
 		}
+		//var_dump($values);
+		$values["id"] = $orderID;
 		$listEntry->update($values);
 
 		if ($useOldValues) {

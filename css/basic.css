@@ -1,5 +1,5 @@
 .error {
-	color: red;
+	 color: red;
 }
 
 .datetime-picker div > table .btn-default {
@@ -105,4 +105,8 @@ text-align: center;
     -webkit-border-radius:6px 0 6px 6px;
     -moz-border-radius:6px 0 6px 6px;
     border-radius:6px 0 6px 6px;
+}
+
+.redText {
+  color: red;
 }

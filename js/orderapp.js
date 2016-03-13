@@ -1,9 +1,9 @@
 var orderApp = angular.module('orderApp', ['ngRoute', 'ngDraggable', 'ui.bootstrap', 'ui.bootstrap.datetimepicker']);
 
-var CLIENT_ID = '785966582104-p03j542fcviuklf0kka21ushko2i7k0a.apps.googleusercontent.com';
+var CLIENT_ID = '192588551946-votddhlbc9r0vl970gpfc49pc7e55ues.apps.googleusercontent.com';
 var SCOPES = ['https://www.googleapis.com/auth/userinfo.email','https://www.googleapis.com/auth/drive'];
 var FOLDER_PREFIX = '';
-var parentFolder = 'GoogMesh';
+var parentFolder = 'Stelvio';
 var templateFolder = 'template';
 
 orderApp.service('orderService', function () {
@@ -38,7 +38,10 @@ orderApp.config(function($routeProvider){
           })
         .when('/config',{
                 templateUrl: 'config.html'
-          })        
+          })   
+        .when('/calendars',{
+                  templateUrl: 'calendars.html'
+            })        
         .when('/newOrder',{
                 templateUrl: 'newOrder.html'
           })
@@ -54,7 +57,7 @@ orderApp.config(function($routeProvider){
 });
 
 
-orderApp.controller('formCtrl', function($scope, $http,  $location, orderService){
+orderApp.controller('formCtrl', function($scope, $http,  $location, orderService, $rootScope){
 
   	$scope.fieldTypes = ['Edit', 'Mandatory', 'Read Only'];
   	$scope.columns = ["2", "1"];
@@ -116,6 +119,7 @@ orderApp.controller('formCtrl', function($scope, $http,  $location, orderService
 
   	$scope.getForm = function () {
  		
+ 		$scope.logoURL = $rootScope.logoURL;
 		var argv = $location.search();      		
 
 		if (argv.db)
@@ -263,6 +267,7 @@ orderApp.controller('formCtrl', function($scope, $http,  $location, orderService
  		input.dbName = $scope.dbName;
  		input.user = $scope.user;
 		input.form = $scope.form;
+		$scope.saving = true;
 
 	    document.body.style.cursor = 'wait';
 		var content = angular.toJson(input);
@@ -277,6 +282,7 @@ orderApp.controller('formCtrl', function($scope, $http,  $location, orderService
             var message = data;
             console.log(message);
             document.body.style.cursor = 'default';
+            $scope.saving = false;
             alert("Form "+$scope.form.title+" updated successfuly");
             $scope.changed = false;
 			         	
@@ -284,6 +290,7 @@ orderApp.controller('formCtrl', function($scope, $http,  $location, orderService
         request.error(function (data, status) {
             var message = data;
             document.body.style.cursor = 'default';
+            $scope.saving = false;
             alert("Error: "+message);
         });
 
@@ -319,7 +326,7 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, orderServic
 	$scope.openOrder = function(order) {
 		if (order.orderID && order.calendarID) {
 			var host = window.location.hostname;
-			window.open("http://"+host+"/Gilamos/#/newOrder?db="+$scope.dbName+"&orderID="+order.orderID+"&calendarNum="+order.calendarID);
+			window.open("http://"+host+"/stelvio/#/newOrder?db="+$scope.dbName+"&orderID="+order.orderID+"&calendarNum="+order.calendarID);
 		}
 	}
 
@@ -533,55 +540,7 @@ orderApp.controller('routeCtrl', function($scope, $http,  $location, orderServic
     		$scope.message = "";
     		$scope.directionsDisplay.set('directions', null);
 		});
-
-
 	}
-
-});
-
-
-orderApp.controller('configCtrl', function($scope, $http, $location){
-
-  	$scope.initCfg = function () {
- 		
-		var argv = $location.search();      		
-
-		if (argv.db)
-			$scope.dbName = argv.db;
-		if (argv.user)
-			$scope.user = argv.user;
-		else {
-			$scope.user = "";
-		}
-
-		
- 		$http.get("getUserRole.php", { params: { db: $scope.dbName, user: $scope.user }})
- 		.success(function(data) {
-         	console.log(data);
-  	    	try {
-	        	if (data.trim() != "admin") {
-	      			alert("Error: "+$scope.user+" is not authorized to perform this action !");
-	      			//window.close();
-
-	      		}
-      	 	}
-    		catch (e) {
-        		alert("Error: "+data);
-        	}
-
-
-
-		});
-	}
-
-	$scope.updateCfg = function (cmd) {
-
-		var host = window.location.hostname;
-		window.open("http://"+host+"/Gilamos/updateDB.php?cmd="+cmd+"&db="+$scope.dbName+"&user="+$scope.user);
-
-	}
-
-
 });
 
 
@@ -674,7 +633,7 @@ orderApp.controller('queryCtrl', function($scope, $http,  $location, orderServic
 			var orderID = order["id"];
 			var calendarID = order["calendarID"];
 			var host = window.location.hostname;
-			window.open("http://"+host+"/Gilamos/#/newOrder?db="+$scope.dbName+"&orderID="+orderID+"&calendarNum="+calendarID+"&user="+$scope.user);
+			window.open("http://"+host+"/stelvio/#/newOrder?db="+$scope.dbName+"&orderID="+orderID+"&calendarNum="+calendarID+"&user="+$scope.user);
 		}
 	}
 
@@ -717,10 +676,7 @@ orderApp.controller('queryCtrl', function($scope, $http,  $location, orderServic
 		URL.revokeObjectURL(link.href);
 		document.body.removeChild(link);
   		delete link;
-/*
-  		var url = 'data:application/octet-stream,' + content;
-  		window.open(url);
-*/
+
   	}
 
 	$scope.setFields = function() {
@@ -754,8 +710,10 @@ orderApp.controller('queryCtrl', function($scope, $http,  $location, orderServic
 
 	$scope.getUser = function() {
 		gapi.client.load('oauth2', 'v2', function() {
-			if (!gapi.client.oauth2)	// retry if not initialized yet
+			if (!gapi.client.oauth2) {	// retry if not initialized yet
 				setTimeout($scope.getUser, 1000);
+				return;
+			}
 		  gapi.client.oauth2.userinfo.get().execute(function(resp) {
 		    // Get the user email
 		    if (resp.email == "") {	// if no user is logged in - require the user to log in
@@ -849,7 +807,7 @@ orderApp.controller('queryCtrl', function($scope, $http,  $location, orderServic
 	$scope.loadSearch = function() {	
 		$scope.getUserRole($scope.user);		
 
- 		$http.get("getCalendars.php", { params: { db: $scope.dbName, user: $scope.user, unique: true } })
+ 		$http.get("getCalendars.php", { params: { db: $scope.dbName, user: $scope.user, all: 0 } })
  		.success(function(data) {
          	console.log(data);
   	    	try {
@@ -948,7 +906,7 @@ orderApp.controller('queryCtrl', function($scope, $http,  $location, orderServic
 
 	    document.body.style.cursor = 'wait';
 	    $scope.searching = true;
-		var filters = angular.toJson($scope.search.filterList);		
+		var filters = angular.toJson($scope.getCleanFilterList($scope.search.filterList));		
  		$http.get("getQueryOrders.php", { params: { db: $scope.dbName, user: $scope.user, startDate: $scope.search.calendar.startDate, endDate: $scope.search.calendar.endDate, calendars: "'"+$scope.search.calendar.name+"'", filters: filters } })
 	 		.success(function(data) {
 	         	console.log(data);
@@ -971,6 +929,17 @@ orderApp.controller('queryCtrl', function($scope, $http,  $location, orderServic
 				$scope.searching = false;
 	            alert("Error: "+data.trim());
 			});
+
+	}
+
+	$scope.getCleanFilterList = function(filterList) {
+		var cleanFilterList = [];
+		for (var i=0; i<filterList.length; i++) {
+			cleanFilterList[i] = {};
+			cleanFilterList[i].name = filterList[i].name;
+			cleanFilterList[i].value = filterList[i].value;
+		}
+		return cleanFilterList;
 
 	}
 
@@ -1061,19 +1030,19 @@ orderApp.controller('queryCtrl', function($scope, $http,  $location, orderServic
 
 
 // Forms controller
-orderApp.controller ('orderCtrl', function orderController ($scope, $http, $timeout, $sce, $location, orderService){
+orderApp.controller ('orderCtrl', function orderController ($scope, $http, $timeout, $sce, $location, orderService, $rootScope){
 
-		$scope.attachFiles = {'rtl': "צרף מסמכים", 'ltr': "Attach Files"};
-		$scope.showFiles = {'rtl': "הצג מסמכים", 'ltr': "Show Files"};
-		$scope.newFile = {'rtl': "מסמך חדש", 'ltr': "New File"};
-		$scope.calcButton = {'rtl': "חשב", 'ltr': "Calc"};
-		$scope.calcSaveButton = {'rtl': "חשב ושמור", 'ltr': "Calc & Save"};
+	$scope.attachFiles = {'rtl': "צרף מסמכים", 'ltr': "Attach Files"};
+	$scope.showFiles = {'rtl': "הצג מסמכים", 'ltr': "Show Files"};
+	$scope.newFile = {'rtl': "מסמך חדש", 'ltr': "New File"};
+	$scope.calcButton = {'rtl': "חשב", 'ltr': "Calc"};
+	$scope.calcSaveButton = {'rtl': "חשב ושמור", 'ltr': "Calc & Save"};
 
-		$scope.columns = ['2','1'];		// For the UI
+	$scope.columns = ['2','1'];		// For the UI
 
-		$scope.inProgress = false;
+	$scope.inProgress = false;
 
-      	$scope.getOrder = function (eventID, calendarNum) {
+  	$scope.getOrder = function (eventID, calendarNum) {
     	var eventID, calendarNum;
  	
 	 	var argv = $location.search();      		
@@ -1113,1059 +1082,1061 @@ orderApp.controller ('orderCtrl', function orderController ($scope, $http, $time
 			}
 		}); 
 
-		};
+	};
 		
 			
-      	$scope.getFormFields = function (form, user) {
-				if (!$scope.form) {
-		     		$http.get("getForms.php", { params: { db: $scope.dbName, form: form, user: user } })
-		     		.success(function(data) {
-			            var message = data;
-			            console.log(message);
-			      	    try {
-			   	        		$scope.form = angular.fromJson(data);
-				      	}
-			        	catch (e) {
-			            	alert("Error: "+message.trim());
-			        	} 
-	   	        		if ($scope.form) {
-	             			$scope.setFormValues();
-						}
-					}); 
+  	$scope.getFormFields = function (form, user) {
+		if (!$scope.form) {
+     		$http.get("getForms.php", { params: { db: $scope.dbName, form: form, user: user } })
+     		.success(function(data) {
+	            var message = data;
+	            console.log(message);
+	      	    try {
+	   	        		$scope.form = angular.fromJson(data);
+		      	}
+	        	catch (e) {
+	            	alert("Error: "+message.trim());
+	        	} 
+	        		if ($scope.form) {
+         			$scope.setFormValues();
 				}
-				else { // form exist - set it to current form and set it's values
-					$scope.setFormValues();
-				}
+			}); 
+		}
+		else { // form exist - set it to current form and set it's values
+			$scope.setFormValues();
+		}
 
-			};
+	};
+
+	setProgress = function() {
+		$scope.progress += 5;
+		if ($scope.inProgress)
+			$timeout(setProgress, 200);
 	
-			setProgress = function() {
-				$scope.progress += 5;
-				if ($scope.inProgress)
-					$timeout(setProgress, 200);
-			
-			}
+	}
 
-            Date.prototype.stdTimezoneOffset = function() {
-                var jan = new Date(this.getFullYear(), 0, 1);
-                var jul = new Date(this.getFullYear(), 6, 1);
-                return Math.max(jan.getTimezoneOffset(), jul.getTimezoneOffset());
+    Date.prototype.stdTimezoneOffset = function() {
+        var jan = new Date(this.getFullYear(), 0, 1);
+        var jul = new Date(this.getFullYear(), 6, 1);
+        return Math.max(jan.getTimezoneOffset(), jul.getTimezoneOffset());
+    }
+
+	Date.prototype.dstOffset = function() {
+	    // calculate DST offset
+	    return (this.stdTimezoneOffset() -  this.getTimezoneOffset())/60;
+	}
+
+
+    getTimezoneOffset = function () {
+        var today = new Date();
+        var offset = today.getTimezoneOffset()/60+today.dstOffset();
+	    var hours = Math.abs(parseInt(offset));
+	    var minutes = (Math.abs(offset) - hours)*60;
+
+	    if (offset > 0) // positive
+	    	var sign="-";
+	    else
+	    	var sign="+";
+
+	    if (hours   < 10) {hours   = "0"+hours;}
+	    if (minutes < 10) {minutes = "0"+minutes;}
+
+	    var time    = sign+hours+':'+minutes;
+	    return time;
+	}	
+
+	$scope.setFormValues = function()	{
+		if ($scope.order && $scope.form && $scope.form.fields) 
+			for(var i=0; $scope.form.fields[i]; i++) {
+      			var fieldIndex = $scope.form.fields[i].fieldIndex-2;
+      			$scope.form.fields[i].input = $scope.order[fieldIndex].input;
+      			if ($scope.form.fields[i].input == 'N')	
+      				$scope.form.fields[i].fieldType = 'Read Only';
+
+      			if ($scope.form.fields[i].type == 'EmbedHyperlink')
+      				$scope.form.fields[i].value = $sce.trustAsResourceUrl($scope.order[fieldIndex].value);
+      			else {
+      				if ($scope.form.fields[i].type == 'Email') {
+						$scope.form.fields[i].prefix = "https://mail.google.com/mail?view=cm&to=";		      					
+      				}
+      				else {
+      					if ($scope.form.fields[i].type == 'Hyperlink') {
+      						if ($scope.order[fieldIndex].value.substring(0, 4) == 'http' ||
+      							$scope.order[fieldIndex].value.substring(0, 4) == 'HTTP' ||
+      							$scope.order[fieldIndex].value.substring(0, 4) == 'file' )
+      							$scope.form.fields[i].prefix = "";
+      						else
+      							$scope.form.fields[i].prefix = "http://";		      					
+      					}
+      				}		      					
+      				$scope.form.fields[i].value = $scope.order[fieldIndex].value;
+				}
+				if ($scope.form.fields[i].type == 'CHARGE') {
+					// non empty charge field cannot be changed - make it read only 
+					if ($scope.form.fields[i].value != '')
+						$scope.form.fields[i].fieldType = 'Read Only';
+				}
+
+				if ($scope.form.fields[i].type == 'LIST') {
+					// add the current value to the list if it is not there
+					if ($scope.form.fields[i].listValues.indexOf($scope.form.fields[i].value) == -1)
+						$scope.form.fields[i].listValues.push($scope.form.fields[i].value);	    				
+					// add an empty string to the list if not already there
+					if ($scope.form.fields[i].value != "")		    					
+						$scope.form.fields[i].listValues.push("");
+				}
+				if ($scope.form.fields[i].type == 'DATETIME' && $scope.form.fields[i].fieldType == "Edit") {
+					// the control expects format yyyy-mm-ddThh:mm+timezoneOffset
+					var date = new Date($scope.form.fields[i].value);
+					if ($scope.form.fields[i].value && $scope.form.fields[i].value != "")
+						$scope.form.fields[i].value = $scope.form.fields[i].value.replace(" ", "T") + getTimezoneOffset();
+				}	    				  				
+      				
+      		}    		
+	}
+	
+	
+	$scope.openDateTimeCalendar = function(e, field) {
+	    e.preventDefault();
+	    e.stopPropagation();
+	
+	    field.dateTimeCalendarisOpen = true;
+	};
+
+	$scope.timeOptions = {
+	    //readonlyInput: true,
+	    startingTime: "08:00",
+	    showMeridian: false
+	};
+	$scope.dateOptions = {
+	    //readonlyInput: true,
+	    showWeeks: false
+	};
+
+  $scope.updateOrder = function () {
+  		document.body.style.cursor = 'wait';
+  		$scope.progress = 0;
+		$scope.inProgress = true;
+  		setProgress(); 
+  		$scope.updateValues(); 
+  		// get the order ID and send to PHP
+		$updatedOrder = {};
+		$updatedOrder.dbName = $scope.dbName;						
+		$updatedOrder.order = $scope.order;	      		
+		$updatedOrder.orderID = $scope.orderID;	      		
+		$updatedOrder.user = $scope.user;	      		
+  		$updatedOrder.oldValues = orderService.getOrder();
+
+        var content = angular.toJson($updatedOrder);
+        var request = $http({
+                method: "post",
+                url: "updateOrder.php",
+                data: content,
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        });
+            /* Check whether the HTTP Request is Successfull or not. */
+        request.success(function (data) {
+            var message = data;
+            console.log(message);
+			if (!isNaN(data)) {	                
+            	$scope.orderID = parseInt(data); // PHP returned a valid ID number
+            	if ($scope.newDriveFolder && $scope.selectedParentFolder) {
+            		// rename the temporary drive folder
+            		for (var i=0; $scope.folderList[i]; i++)
+            			if ($scope.folderList[i].orderFolder)
+            				$scope.renameFolder($scope.folderList[i].orderFolder, FOLDER_PREFIX + $scope.orderID);
+            	}
+            	else {
+            		$scope.close();
+					}               	
             }
+            else {
+            	//$scope.orderID = data; // PHP returned invalid ID number
+            	$scope.inProgress = false;
+            	alert("Error: "+message.trim());
+            }	
+        });
+        request.error(function (data, status) {
+            var message = data;
+            $scope.inProgress = false;
+            alert("Error: "+message.trim());
+        });
+  }   
+ 
+  	$scope.updateValues = function () {
+  		for(var i=0; $scope.form.fields[i] != null; i++) {
+  			var fieldIndex = $scope.form.fields[i].fieldIndex-2;
+  			$scope.order[fieldIndex].value = $scope.form.fields[i].value;
+  		}         
+	}
 
-			Date.prototype.dstOffset = function() {
-			    // calculate DST offset
-			    return (this.stdTimezoneOffset() -  this.getTimezoneOffset())/60;
+	$scope.openLink = function(e, field) {
+
+		window.open(field.prefix+field.value);
+		e.preventDefault();
+		return false;
+	}
+
+	$scope.checkUnique = function(field) {
+
+		$scope.validate(field);
+		if (field.input == 'U' && field.value != "")	{	// check if unique value already exist in DB
+     		$http.get("checkUnique.php", { params: { orderID: $scope.orderID, db: $scope.dbName, index: field.fieldIndex, value: field.value } })
+     		.success(function(data) {
+             var message = data;
+             console.log(message);
+             if (data.trim() == "false") {
+             	// not unique
+             	field.error = true;
+             	if ($scope.form.dir == 'rtl')
+             		field.message = field.name+" "+field.value+" כבר קיים במערכת ";
+             	else
+             		field.message = field.name+" "+field.value+" already exists";						
+             }
+             else
+             	field.error = false;	
+			}); 
+		}
+	}
+
+	$scope.validate = function(field) {
+		var i = 0
+		// First check if mandatory field is empty
+		if (field.fieldType == "Mandatory" && (field.value == null || field.value == "")) {
+			// Mark field error
+			field.error = true;
+			if ($scope.form.dir == 'rtl')
+				field.message = "חובה למלא שדה זה";
+			else
+				field.message = "This field is required";
+			return field.value;
+		}
+		else
+			field.error = false;
+
+		if (!field.value || field.value == "")
+			return "";
+
+		// do not allow '=' or '+' at the begining of an input text due to the spreadsheet limitation
+		while (field.value[i] && field.value[i] != "" && (field.value[i] == '=' || field.value[i] == '+'))
+			i++; // proceed until no '=' or '+' at the beginning 
+
+		return field.value.substring(i, field.value.length);	
+
+	}
+
+		$scope.errorInForm = function() {
+			// First check if a user is logged in
+			if (!$scope.user || $scope.user == "") {
+				$scope.form.error = true;
+			if ($scope.form.dir == 'rtl')
+				$scope.form.message = "לא מוגדר משתמש";
+			else
+					$scope.form.message = "User is not defined";
+				return true;
+
 			}
+			// return true if manadtory field is empty
+			if ($scope.form && $scope.form.fields)
+				for(var i=0; $scope.form.fields[i]; i++) {
+					if ($scope.form.fields[i].fieldType == 'Mandatory' && 
+						($scope.form.fields[i].value == null || $scope.form.fields[i].value == "")) {
+						$scope.form.error = true;
 
-
-            getTimezoneOffset = function () {
-                var today = new Date();
-                var offset = today.getTimezoneOffset()/60+today.dstOffset();
-			    var hours = Math.abs(parseInt(offset));
-			    var minutes = (Math.abs(offset) - hours)*60;
-
-			    if (offset > 0) // positive
-			    	var sign="-";
-			    else
-			    	var sign="+";
-
-			    if (hours   < 10) {hours   = "0"+hours;}
-			    if (minutes < 10) {minutes = "0"+minutes;}
-
-			    var time    = sign+hours+':'+minutes;
-			    return time;
-			}	
-
-			$scope.setFormValues = function()	{
-				if ($scope.order && $scope.form && $scope.form.fields) 
-					for(var i=0; $scope.form.fields[i]; i++) {
-		      			var fieldIndex = $scope.form.fields[i].fieldIndex-2;
-		      			$scope.form.fields[i].input = $scope.order[fieldIndex].input;
-		      			if ($scope.form.fields[i].input == 'N')	
-		      				$scope.form.fields[i].fieldType = 'Read Only';
-
-		      			if ($scope.form.fields[i].type == 'EmbedHyperlink')
-		      				$scope.form.fields[i].value = $sce.trustAsResourceUrl($scope.order[fieldIndex].value);
-		      			else {
-		      				if ($scope.form.fields[i].type == 'Email') {
-								$scope.form.fields[i].prefix = "https://mail.google.com/mail?view=cm&to=";		      					
-		      				}
-		      				else {
-		      					if ($scope.form.fields[i].type == 'Hyperlink') {
-		      						if ($scope.order[fieldIndex].value.substring(0, 4) == 'http' ||
-		      							$scope.order[fieldIndex].value.substring(0, 4) == 'HTTP' ||
-		      							$scope.order[fieldIndex].value.substring(0, 4) == 'file' )
-		      							$scope.form.fields[i].prefix = "";
-		      						else
-		      							$scope.form.fields[i].prefix = "http://";		      					
-		      					}
-		      				}		      					
-		      				$scope.form.fields[i].value = $scope.order[fieldIndex].value;
-						}
-	    				if ($scope.form.fields[i].type == 'CHARGE') {
-	    					// non empty charge field cannot be changed - make it read only 
-	    					if ($scope.form.fields[i].value != '')
-	    						$scope.form.fields[i].fieldType = 'Read Only';
-	    				}
-
-	    				if ($scope.form.fields[i].type == 'LIST') {
-							// add the current value to the list if it is not there
-							if ($scope.form.fields[i].listValues.indexOf($scope.form.fields[i].value) == -1)
-								$scope.form.fields[i].listValues.push($scope.form.fields[i].value);	    				
-	    					// add an empty string to the list if not already there
-							if ($scope.form.fields[i].value != "")		    					
-	    						$scope.form.fields[i].listValues.push("");
-	    				}
-	    				if ($scope.form.fields[i].type == 'DATETIME' && $scope.form.fields[i].fieldType == "Edit") {
-	    					// the control expects format yyyy-mm-ddThh:mm+timezoneOffset
-	    					var date = new Date($scope.form.fields[i].value);
-	    					if ($scope.form.fields[i].value && $scope.form.fields[i].value != "")
-	    						$scope.form.fields[i].value = $scope.form.fields[i].value.replace(" ", "T") + getTimezoneOffset();
-	    				}	    				  				
-		      				
-		      		}    		
-			}
-			
-			
-			$scope.openDateTimeCalendar = function(e, field) {
-			    e.preventDefault();
-			    e.stopPropagation();
-			
-			    field.dateTimeCalendarisOpen = true;
-			};
-      
-			$scope.timeOptions = {
-			    //readonlyInput: true,
-			    startingTime: "08:00",
-			    showMeridian: false
-			};
-			$scope.dateOptions = {
-			    //readonlyInput: true,
-			    showWeeks: false
-			};
-
-	      $scope.updateOrder = function () {
-	      		document.body.style.cursor = 'wait';
-	      		$scope.progress = 0;
-				$scope.inProgress = true;
-	      		setProgress(); 
-	      		$scope.updateValues(); 
-	      		// get the order ID and send to PHP
-				$updatedOrder = {};
-				$updatedOrder.dbName = $scope.dbName;						
-				$updatedOrder.order = $scope.order;	      		
-				$updatedOrder.orderID = $scope.orderID;	      		
-				$updatedOrder.user = $scope.user;	      		
-	      		$updatedOrder.oldValues = orderService.getOrder();
-
-	            var content = angular.toJson($updatedOrder);
-	            var request = $http({
-	                    method: "post",
-	                    url: "updateOrder.php",
-	                    data: content,
-	                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-	            });
-	                /* Check whether the HTTP Request is Successfull or not. */
-	            request.success(function (data) {
-	                var message = data;
-	                console.log(message);
-					if (!isNaN(data)) {	                
-	                	$scope.orderID = parseInt(data); // PHP returned a valid ID number
-	                	if ($scope.newDriveFolder && $scope.selectedParentFolder) {
-	                		// rename the temporary drive folder
-	                		for (var i=0; $scope.folderList[i]; i++)
-	                			if ($scope.folderList[i].orderFolder)
-	                				$scope.renameFolder($scope.folderList[i].orderFolder, FOLDER_PREFIX + $scope.orderID);
-	                	}
-	                	else {
-	                		$scope.close();
-  						}               	
-	                }
-	                else {
-	                	//$scope.orderID = data; // PHP returned invalid ID number
-	                	$scope.inProgress = false;
-	                	alert("Error: "+message.trim());
-	                }	
-	            });
-	            request.error(function (data, status) {
-	                var message = data;
-	                $scope.inProgress = false;
-	                alert("Error: "+message.trim());
-	            });
-	      }   
-         
-	      	$scope.updateValues = function () {
-	      		for(var i=0; $scope.form.fields[i] != null; i++) {
-	      			var fieldIndex = $scope.form.fields[i].fieldIndex-2;
-	      			$scope.order[fieldIndex].value = $scope.form.fields[i].value;
-	      		}         
-			}
-
-			$scope.openLink = function(e, field) {
-
-				window.open(field.prefix+field.value);
-				e.preventDefault();
-				return false;
-			}
-
-			$scope.checkUnique = function(field) {
-
-				$scope.validate(field);
-				if (field.input == 'U' && field.value != "")	{	// check if unique value already exist in DB
-		     		$http.get("checkUnique.php", { params: { orderID: $scope.orderID, db: $scope.dbName, index: field.fieldIndex, value: field.value } })
-		     		.success(function(data) {
-		             var message = data;
-		             console.log(message);
-		             if (data.trim() == "false") {
-		             	// not unique
-		             	field.error = true;
-		             	if ($scope.form.dir == 'rtl')
-		             		field.message = field.name+" "+field.value+" כבר קיים במערכת ";
-		             	else
-		             		field.message = field.name+" "+field.value+" already exists";						
-		             }
-		             else
-		             	field.error = false;	
-					}); 
-				}
-			}
-
-			$scope.validate = function(field) {
-				var i = 0
-				// First check if mandatory field is empty
-				if (field.fieldType == "Mandatory" && (field.value == null || field.value == "")) {
-					// Mark field error
-					field.error = true;
 					if ($scope.form.dir == 'rtl')
-						field.message = "חובה למלא שדה זה";
+						$scope.form.message = "שדות חובה חסרים";
 					else
-						field.message = "This field is required";
-					return field.value;
-				}
-				else
-					field.error = false;
-
-				if (!field.value || field.value == "")
-					return "";
-
-				// do not allow '=' or '+' at the begining of an input text due to the spreadsheet limitation
-				while (field.value[i] && field.value[i] != "" && (field.value[i] == '=' || field.value[i] == '+'))
-					i++; // proceed until no '=' or '+' at the beginning 
-
-				return field.value.substring(i, field.value.length);	
-
-			}
-  
-  			$scope.errorInForm = function() {
-  				// First check if a user is logged in
-  				if (!$scope.user || $scope.user == "") {
-  					$scope.form.error = true;
-					if ($scope.form.dir == 'rtl')
-						$scope.form.message = "לא מוגדר משתמש";
-					else
-  						$scope.form.message = "User is not defined";
-  					return true;
-
-  				}
-  				// return true if manadtory field is empty
-  				if ($scope.form && $scope.form.fields)
-	  				for(var i=0; $scope.form.fields[i]; i++) {
-	  					if ($scope.form.fields[i].fieldType == 'Mandatory' && 
-	  						($scope.form.fields[i].value == null || $scope.form.fields[i].value == "")) {
-	  						$scope.form.error = true;
-
-							if ($scope.form.dir == 'rtl')
-								$scope.form.message = "שדות חובה חסרים";
-							else
-	  							$scope.form.message = "Missing required fields";
-	  						return true;
-	  					}
-	  				}
-  				$scope.form.error = false;
-  				return false;
-  			}
-
-  			$scope.filterEditMandatory = function(field) {
-  				return (field.fieldType == 'Edit' || field.fieldType == 'Mandatory');
-  			}
-
-  			$scope.isRequired = function(field) {
-  				if (field.fieldType=='Mandatory')
-  					return 'required';
-  			}
-
-	    	$scope.calcOrder = function () {
-	      		document.body.style.cursor = 'wait';
-	      		$scope.progress = 0;
-					$scope.inProgress = true;
-
-	      		setProgress(); 	      		
-	      		$scope.updateValues(); 
-				$updatedOrder = {};
-				$updatedOrder.dbName = $scope.dbName;						
-				$updatedOrder.order = $scope.order;	 
-				$updatedOrder.oldValues = orderService.getOrder();     		
-	      		
-	            var content = angular.toJson($updatedOrder);
-	            var request = $http({
-	                    method: "post",
-	                    url: "calcOrder.php",
-	                    data: content,
-	                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-	            });
-	                /* Check whether the HTTP Request is Successfull or not. */
-	            request.success(function (data) {
-	               var message = data;
-	               console.log(message);
-	               try {
-							$scope.order = angular.fromJson(data);
-							$scope.setFormValues();
-		            		//orderService.setOrder($scope.order);
-		            }						
-						catch (e) {
-							alert("Error: "+message.trim());
-						}						
-						document.body.style.cursor = 'default';
-		            $scope.inProgress = false;	
-	            });
-	            request.error(function (data, status) {
-	                var message = data;
-	                $scope.inProgress = false;
-					document.body.style.cursor = 'default';	                
-	                alert(message.trim());
-	            });
-
-			};
-
-			$scope.getUserRole = function(user) {
-				$http.get("getUserRole.php", { params: { db: $scope.dbName, user: user } })
-				.success(function(data) {
-		        	$scope.role = data.trim();
-				});
-
-			}
-
-			$scope.loadUserForm = function(renewUser) {
-				gapi.client.load('oauth2', 'v2', function() {
-					if (!gapi.client.oauth2)	// retry if not initialized yet
-						setTimeout($scope.loadUserForm, 1000, renewUser);
-				  gapi.client.oauth2.userinfo.get().execute(function(resp) {
-				    // Get the user email
-				    if (resp.email == "") {	// if no user is logged in - require the user to log in
-				    	getUser(true);
-				    	return;
-				    }
-
-				    if ($scope.user != resp.email) {	// user was changed - reload form
-					    $scope.user = resp.email;
-				    	$scope.getOrder();
-					    $scope.getUserRole($scope.user);
-					    $scope.initFolders(renewUser);
+							$scope.form.message = "Missing required fields";
+						return true;
 					}
-				  })
-				});
-			}
-
-			$scope.getUser = function(renewUser) {	// called on init form
-
-				var authuser = 0;
-				var userID = "";
-
-				var argv = $location.search();  
-
-				if (argv.user)
-	 				userID = argv.user;
-
-				if (!gapi || !gapi.auth) {
-					// wait until Google API library has loaded
-					setTimeout($scope.getUser, 1000, renewUser);
-					return;
-				}	
-
-				if (renewUser)
-					userID = "";	 // reset the user 
-
-				if (renewUser || userID != "")
-					authuser = -1;	// don't use the default logged in user
-
-				try {
-				    gapi.auth.authorize(
-				        {'client_id': CLIENT_ID, 
-				        'scope': SCOPES, 
-				        'cookie_policy': 'single_host_origin',
-				        'user_id': userID,
-				        'authuser': authuser,
-				        'immediate': !renewUser},
-				        function(authResult) {
-				        	if (authResult && !authResult.error) {
-					       		// authorization granted
-					       		$scope.loadUserForm(renewUser);
-							}
-							else {
-								// try manual authorization
-								gapi.auth.authorize(
-								    {'client_id': CLIENT_ID, 
-								     'scope': SCOPES, 
-								     'cookie_policy': 'single_host_origin',
-								     'authuser': -1,
-					   			     'immediate': false},
-					   			    function(authResult) {
-					   			       	if (authResult && !authResult.error) {
-					   			       		// authorization granted
-					   			       		$scope.loadUserForm(renewUser);
-					   					}
-					   					else {
-							    			alert("Authorization failed !")
-							    			return NULL;
-							    		}	
-		     					});
-			     			}	
-		        		});
-					}
-					catch (e) { 
-					    alert(e.message); 
-					}
-
-			}
-
-			$scope.editForm = function () {
-				var formID = $scope.form.number-1;
-				var host = window.location.hostname;
-				window.open("http://"+host+"/Gilamos/#/forms?db="+$scope.dbName+"&user="+$scope.user+"&form="+formID);
-
-			}
-
-
-			// Code for file attachments
-
-			$scope.getFolders = function() {
-				// reset the folder list and content flag
-				$scope.folderList = [];
-				$scope.fileExist = false;
-				$scope.templateExist = false;
-				$scope.templateList = [];	
-
-				gapi.client.load('drive', 'v2', function() {
-
-					// Search if GoogMesh folder exists
-					$qString = "title = '"+parentFolder+"' and trashed=false and mimeType='application/vnd.google-apps.folder' and sharedWithMe";
-					gapi.client.drive.files.list({
-					  'q' : $qString
-					  }).
-					  execute(function(resp) {
-					  if (resp.items && resp.items[0])  {
-					      // GoogMesh folder exists - insert into it
-					      $scope.parentFolderID = resp.items[0].id;
-					      $scope.getFolderList(resp.items[0].id);
-					      $scope.getLogo(resp.items[0].id);
-				      }
-				      else {
-				      	if (resp.error)	// retry in case of error
-				      		setTimeout($scope.getFolders, 1000);
-				      	// Folder is not shared with the user - alert and quit
-				      	//alert("Folder "+parentFolder+" is not shared with user "+$scope.user);
-
-				      }
-				    });
-				});
-			}
-
-			$scope.getLogo = function(parentID) {
-				// Search for all folders under parent folder
-				$qString = "'"+parentID+"' in parents and trashed = false and title = '"+$scope.form.logo+"'";
-				gapi.client.drive.files.list({
-				  	'q' : $qString
-				 }).
-			   	execute(function(resp) {
-			   		if (resp.error) { // && resp.message=="User Rate Limit Exceeded")
-			   			setTimeout($scope.getFolderList, 500, parentID);
-			   			return;
-			   		}
-			       	if (resp.items && resp.items[0])  {
-						$scope.logoURL = resp.items[0].thumbnailLink;
-			       	};
-
-			    });
-
-			}
-
-			$scope.getFolderList = function(parentID) {
-				// Search for all folders under parent folder
-				$qString = "'"+parentID+"' in parents and trashed = false and mimeType = 'application/vnd.google-apps.folder'";
-				gapi.client.drive.files.list({
-				  	'q' : $qString
-				 }).
-			   	execute(function(resp) {
-			   		if (resp.error) { // && resp.message=="User Rate Limit Exceeded")
-			   			setTimeout($scope.getFolderList, 500, parentID);
-			   			return;
-			   		}
-			   		var i=0;
-			       	while(resp.items && resp.items[i])  {
-			       		var folder = resp.items[i++];
-			       		$scope.addFolder(folder);
-			       	};
-
-			    });
-
-			}
-
-			$scope.addFolder = function(folder) {
-				$scope.folderList.push(folder);
-				$scope.searchFilesFolder(folder, $scope.orderID);
-				// wait a second before initializing the templates to avoid hitting google query limit
-				setTimeout($scope.searchTemplates, 500, folder);
-			}
-
-			$scope.searchTemplates = function(parentFolder) {
-			  // Search if templates exists
-			  $qString = "title = '"+templateFolder+"'"+" and trashed = false and mimeType = 'application/vnd.google-apps.folder'";
-			  gapi.client.drive.children.list({
-			    'folderId' : parentFolder.id, 
-			    'q' : $qString
-			    }).
-			    execute(function(resp) {
-			    	if (resp.error && resp.message=="User Rate Limit Exceeded")
-			    		setTimeout($scope.searchTemplates, 500, parentFolder);	
-		    		else
-		    			if (resp.error)
-		    				alert(resp.message);		    	
-			      	if (resp.items && resp.items[0])  {
-			        	// folder exist - look for files
-		          		$scope.searchTemplateFiles(parentFolder, resp.items[0].id);
-			      	}
-			  });
-			}
-
-			$scope.addTemplate = function(folder, file) {
-				file.folder = folder;
-				$scope.templateList.push(file);
-				$scope.templateExist = true;
-				$scope.$apply();
-
-			}
-
-			$scope.searchTemplateFiles = function(parentFolder, templateFolderID) {
-				// Search for files 
-				$qString = "'"+templateFolderID+"' in parents and trashed = false";
-				gapi.client.drive.files.list({
-				    'q' : $qString
-				  }).
-				  execute(function(resp) {
-				  	if (resp.error && resp.message=="User Rate Limit Exceeded")
-				  		setTimeout($scope.searchTemplateFiles, 500, parentFolder, templateFolderID);
-				  	else
-				  		if (resp.error)
-				  			alert(resp.message);
-				    if (resp.items)
-				    	for(var i=0; resp.items[i]; i++) {
-					      	// templates exists
-					      	$scope.addTemplate(parentFolder, resp.items[i]);
-					      	console.log("parent: "+parentFolder.title+" file: "+resp.items[i].title);
-					    }
-				});
-
-			}
-
-			$scope.searchFilesFolder = function(parentFolder, orderID) {
-				if (orderID <= 0)
-					return;	// not relevant for new orders
-
-			  var folderName = FOLDER_PREFIX+orderID;
-			  // Search if folder exists
-			  $qString = "title = '"+folderName+"'"+" and trashed = false and mimeType = 'application/vnd.google-apps.folder'";
-			  gapi.client.drive.children.list({
-			    'folderId' : parentFolder.id, 
-			    'q' : $qString
-			    }).
-			    execute(function(resp) {
-			    	if (resp.error && resp.message=="User Rate Limit Exceeded")
-			    		setTimeout($scope.searchFilesFolder, 500, parentFolder, orderID);
-			    	else
-			    		if (resp.error)
-			    			alert(resp.message);			    	
-			      	if (resp.items && resp.items[0])  {
-			        	// folder exist - look for files
-		          		$scope.searchFiles(parentFolder, resp.items[0].id);
-			      	}
-			  });
-			}
-
-			$scope.addFileToList = function(parentFolder, file) {
-
-				if (file.title && file.alternateLink) {	// already got file details
-					file.link = file.alternateLink;
-					if (!parentFolder.fileList)	// initialize file list if doesn't exist
-						parentFolder.fileList = [];
-					parentFolder.fileList.push(file);				
 				}
-			}
+			$scope.form.error = false;
+			return false;
+		}
 
-			$scope.searchFiles = function(parentFolder, orderFolderID) {
-				// Search for files 
-				$qString = "'"+orderFolderID+"' in parents and trashed = false";
-				gapi.client.drive.files.list({
-				    'q' : $qString
-				  }).
-				  execute(function(resp) {
-				  	if (resp.error) {//  && resp.message=="User Rate Limit Exceeded")
-				  		setTimeout($scope.searchFiles, 500, parentFolder, orderFolderID);
-				  		return;
-				  	}
+		$scope.filterEditMandatory = function(field) {
+			return (field.fieldType == 'Edit' || field.fieldType == 'Mandatory');
+		}
 
-				    if (resp.items && resp.items[0])  {
-				      	// files exists
-				      	parentFolder.fileList = [];
-				      	for (var i=0; resp.items[i]; i++) {
-				      		$scope.addFileToList(parentFolder, resp.items[i]);
-				      	}
-			        	$scope.fileExist = true;
-			        	parentFolder.fileExist = true;
-			        	$scope.$apply();
-				    }
-				});
+		$scope.isRequired = function(field) {
+			if (field.fieldType=='Mandatory')
+				return 'required';
+		}
 
-			}
+	$scope.calcOrder = function () {
+  		document.body.style.cursor = 'wait';
+  		$scope.progress = 0;
+			$scope.inProgress = true;
 
-			$scope.setFolders = function() {
-				if (!$scope.folderList || $scope.folderList.length == 0)	// no sub folders under parentFolder
-					alert("No folders found under "+parentFolder+" for user: "+$scope.user);
-					
-			}
-
-   			$scope.initFolders = function(renewUser){
-
-				if (!renewUser && $scope.folderList) {
-					// Already initialized
-					return;
-				}
-
-				if (!renewUser && $scope.parentFolderID ) {
-					$scope.getFolderList($scope.parentFolderID);
-					return;
-				}
-
-				$scope.getFolders();
-   			};
-			
-
-   			$scope.initUpload = function(event){
-				var files = [];
-				if (event) {
-					// copy the files so we can reset the event
-					for (var i=0; i < event.target.files.length; i++)
-						files[i] = event.target.files[i];
-
-				}	
-
-				document.getElementById('file').value = null;	// reset the file input for next time
-
-				if ($scope.selectedParentFolder && $scope.selectedParentFolder.orderFolder) {
-					// Already initialized
-					$scope.uploadFiles(files, $scope.orderID);
-					return;
-				}
-
-				/**
-				 * Check if the current user has authorized to upload to the drive
-				 */
-				try {
-   			    	gapi.auth.authorize(
-   			        {'client_id': CLIENT_ID, 
-   			        'scope': SCOPES, 
-   			        'cookie_policy': 'single_host_origin',
-   			        'user_id': $scope.user,
-   			        'authuser': -1,
-   			        'immediate': true},
-   			        function(authResult) {
-   			        	if (authResult && !authResult.error) {
-   				       		// authorization granted
-   				       		$scope.uploadFiles(files, $scope.orderID);
-   						}
-   						else {
-   							// try manual authorization
-   							gapi.auth.authorize(
-   							    {'client_id': CLIENT_ID, 
-   							     'scope': SCOPES, 
-   							     'authuser': -1,
-   							     'cookie_policy': 'single_host_origin',
-   				   			     'immediate': false},
-   				   			    function(authResult) {
-   				   			       	if (authResult && !authResult.error) {
-   				   			       		// authorization granted
-   				   			       		$scope.uploadFiles(files, $scope.orderID);
-   				   					}
-   				   					else {
-   						    			alert("Authorization failed !")
-   						    		}	
-		     					});
-   		     			}	
-		        	});
-   				}
-   				catch (e) { 
-   				    alert(e.message); 
-   				}
-
-   			};
-
-			$scope.setOrderFolder = function(folder) {
-				if (folder.alternateLink) {
-					$scope.selectedParentFolder.orderFolder = folder;
-					$scope.selectedParentFolder.orderFolder.link = folder.alternateLink;
-				}
-				else {
-					// get the folder link
-					gapi.client.drive.files.get({
-					  'fileId': folder.id
-					}).
-					execute(function(resp) {
-						$scope.selectedParentFolder.orderFolder = folder;
-						$scope.selectedParentFolder.orderFolder.link = resp.alternateLink;
-					});
-				}
-				if ($scope.orderID <= 0)
-					// new folder
-					$scope.newDriveFolder = true;
-			}
-
-			$scope.openFolder = function(folder)
-			{
-				$scope.selectedParentFolder = folder;
-        		if (!$scope.selectedParentFolder.orderFolder) {
-        			// simulate file upload just to get the folder ID from Google drive
-        			$scope.initUpload(null);
-        		}
-        		$scope.openFolderWindow()
-			}
-
-
-			$scope.openFolderWindow = function()
-			{
-				document.body.style.cursor = 'progress';
-				if (!$scope.selectedParentFolder.orderFolder)	// wait for the order folder to get created
-					setTimeout($scope.openFolderWindow, 1000);
-				else {
-					window.open($scope.selectedParentFolder.orderFolder.link);
-					document.body.style.cursor = 'default';
-				}
-			}   
-
-			$scope.addFile = function(file)
-			{
-				document.body.style.cursor = 'progress';
-				$scope.selectedParentFolder = file.folder;
-				if (!$scope.selectedParentFolder.orderFolder) {
-					// simulate file upload just to get the folder ID from Google drive
-					$scope.initUpload(null);
-				}
-				$scope.copyTemplateFile(file);
-			}
-
-			$scope.copyTemplateFile = function(file)
-			{
-				if (!$scope.selectedParentFolder.orderFolder)	// wait for the order folder to get created
-					setTimeout($scope.copyTemplateFile, 1000, file);
-				else {
-					var fileName = file.title; // +$scope.orderID;
-					$scope.copyFile(file.id, file.folder.orderFolder, fileName, $scope.copyFileCallback);
-					
-				}
-			}
-
-
-			$scope.openFile = function(file) {
-				window.open(file.link);
-			}
-
-			$scope.copyFileCallback = function(file) {
-				// copy was successful
-				$scope.fileExist = true;
-				$scope.selectedParentFolder.fileExist = true;
-				$scope.addFileToList($scope.selectedParentFolder, file);
-				console.log('Copy ID: ' + file.id);
-				window.open(file.alternateLink);
+  		setProgress(); 	      		
+  		$scope.updateValues(); 
+		$updatedOrder = {};
+		$updatedOrder.dbName = $scope.dbName;						
+		$updatedOrder.order = $scope.order;	 
+		$updatedOrder.oldValues = orderService.getOrder();     		
+  		
+        var content = angular.toJson($updatedOrder);
+        var request = $http({
+                method: "post",
+                url: "calcOrder.php",
+                data: content,
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        });
+            /* Check whether the HTTP Request is Successfull or not. */
+        request.success(function (data) {
+           var message = data;
+           console.log(message);
+           try {
+					$scope.order = angular.fromJson(data);
+					$scope.setFormValues();
+            		//orderService.setOrder($scope.order);
+            }						
+				catch (e) {
+					alert("Error: "+message.trim());
+				}						
 				document.body.style.cursor = 'default';
+            $scope.inProgress = false;	
+        });
+        request.error(function (data, status) {
+            var message = data;
+            $scope.inProgress = false;
+			document.body.style.cursor = 'default';	                
+            alert(message.trim());
+        });
+
+	};
+
+	$scope.getUserRole = function(user) {
+		$http.get("getUserRole.php", { params: { db: $scope.dbName, user: user } })
+		.success(function(data) {
+        	$scope.role = data.trim();
+		});
+
+	}
+
+	$scope.loadUserForm = function(renewUser) {
+		gapi.client.load('oauth2', 'v2', function() {
+			if (!gapi.client.oauth2)	// retry if not initialized yet
+				setTimeout($scope.loadUserForm, 1000, renewUser);
+		  gapi.client.oauth2.userinfo.get().execute(function(resp) {
+		    // Get the user email
+		    if (resp.email == "") {	// if no user is logged in - require the user to log in
+		    	getUser(true);
+		    	return;
+		    }
+
+		    if ($scope.user != resp.email) {	// user was changed - reload form
+			    $scope.user = resp.email;
+		    	$scope.getOrder();
+			    $scope.getUserRole($scope.user);
+			    $scope.initFolders(renewUser);
+			}
+		  })
+		});
+	}
+
+	$scope.getUser = function(renewUser) {	// called on init form
+
+		var authuser = 0;
+		var userID = "";
+
+		var argv = $location.search();  
+
+		if (argv.user)
+				userID = argv.user;
+
+		if (!gapi || !gapi.auth) {
+			// wait until Google API library has loaded
+			setTimeout($scope.getUser, 1000, renewUser);
+			return;
+		}	
+
+		if (renewUser)
+			userID = "";	 // reset the user 
+
+		if (renewUser || userID != "")
+			authuser = -1;	// don't use the default logged in user
+
+		try {
+		    gapi.auth.authorize(
+		        {'client_id': CLIENT_ID, 
+		        'scope': SCOPES, 
+		        'cookie_policy': 'single_host_origin',
+		        'user_id': userID,
+		        'authuser': authuser,
+		        'immediate': !renewUser},
+		        function(authResult) {
+		        	if (authResult && !authResult.error) {
+			       		// authorization granted
+			       		$scope.loadUserForm(renewUser);
+					}
+					else {
+						// try manual authorization
+						gapi.auth.authorize(
+						    {'client_id': CLIENT_ID, 
+						     'scope': SCOPES, 
+						     'cookie_policy': 'single_host_origin',
+						     'authuser': -1,
+			   			     'immediate': false},
+			   			    function(authResult) {
+			   			       	if (authResult && !authResult.error) {
+			   			       		// authorization granted
+			   			       		$scope.loadUserForm(renewUser);
+			   					}
+			   					else {
+					    			alert("Authorization failed !")
+					    			return NULL;
+					    		}	
+     					});
+	     			}	
+        		});
+			}
+			catch (e) { 
+			    alert(e.message); 
+			}
+
+	}
+
+	$scope.editForm = function () {
+		var formID = $scope.form.number-1;
+		var host = window.location.hostname;
+		window.open("http://"+host+"/stelvio/#/forms?db="+$scope.dbName+"&user="+$scope.user+"&form="+formID);
+
+	}
+
+
+	// Code for file attachments
+
+	$scope.getFolders = function() {
+		// reset the folder list and content flag
+		$scope.folderList = [];
+		$scope.fileExist = false;
+		$scope.templateExist = false;
+		$scope.templateList = [];	
+
+		gapi.client.load('drive', 'v2', function() {
+
+			// Search if Stelvio folder exists
+			$qString = "title = '"+parentFolder+"' and trashed=false and mimeType='application/vnd.google-apps.folder' and sharedWithMe";
+			gapi.client.drive.files.list({
+			  'q' : $qString
+			  }).
+			  execute(function(resp) {
+			  if (resp.items && resp.items[0])  {
+			      // Stelvio folder exists - insert into it
+			      $scope.parentFolderID = resp.items[0].id;
+			      $scope.getFolderList(resp.items[0].id);
+			      $scope.getLogo(resp.items[0].id);
+		      }
+		      else {
+		      	if (resp.error)	// retry in case of error
+		      		setTimeout($scope.getFolders, 1000);
+		      	// Folder is not shared with the user - alert and quit
+		      	//alert("Folder "+parentFolder+" is not shared with user "+$scope.user);
+
+		      }
+		    });
+		});
+	}
+
+	$scope.getLogo = function(parentID) {
+		// Search for all folders under parent folder
+		$qString = "'"+parentID+"' in parents and trashed = false and title = '"+$scope.form.logo+"'";
+		gapi.client.drive.files.list({
+		  	'q' : $qString
+		 }).
+	   	execute(function(resp) {
+	   		if (resp.error) { // && resp.message=="User Rate Limit Exceeded")
+	   			setTimeout($scope.getFolderList, 500, parentID);
+	   			return;
+	   		}
+	       	if (resp.items && resp.items[0])  {
+				$scope.logoURL = resp.items[0].thumbnailLink;
+				$rootScope.logoURL = $scope.logoURL;
 				$scope.$apply();
+	       	};
+
+	    });
+
+	}
+
+	$scope.getFolderList = function(parentID) {
+		// Search for all folders under parent folder
+		$qString = "'"+parentID+"' in parents and trashed = false and mimeType = 'application/vnd.google-apps.folder'";
+		gapi.client.drive.files.list({
+		  	'q' : $qString
+		 }).
+	   	execute(function(resp) {
+	   		if (resp.error) { // && resp.message=="User Rate Limit Exceeded")
+	   			setTimeout($scope.getFolderList, 500, parentID);
+	   			return;
+	   		}
+	   		var i=0;
+	       	while(resp.items && resp.items[i])  {
+	       		var folder = resp.items[i++];
+	       		$scope.addFolder(folder);
+	       	};
+
+	    });
+
+	}
+
+	$scope.addFolder = function(folder) {
+		$scope.folderList.push(folder);
+		$scope.searchFilesFolder(folder, $scope.orderID);
+		// wait a second before initializing the templates to avoid hitting google query limit
+		setTimeout($scope.searchTemplates, 500, folder);
+	}
+
+	$scope.searchTemplates = function(parentFolder) {
+	  // Search if templates exists
+	  $qString = "title = '"+templateFolder+"'"+" and trashed = false and mimeType = 'application/vnd.google-apps.folder'";
+	  gapi.client.drive.children.list({
+	    'folderId' : parentFolder.id, 
+	    'q' : $qString
+	    }).
+	    execute(function(resp) {
+	    	if (resp.error && resp.message=="User Rate Limit Exceeded")
+	    		setTimeout($scope.searchTemplates, 500, parentFolder);	
+    		else
+    			if (resp.error)
+    				alert(resp.message);		    	
+	      	if (resp.items && resp.items[0])  {
+	        	// folder exist - look for files
+          		$scope.searchTemplateFiles(parentFolder, resp.items[0].id);
+	      	}
+	  });
+	}
+
+	$scope.addTemplate = function(folder, file) {
+		file.folder = folder;
+		$scope.templateList.push(file);
+		$scope.templateExist = true;
+		$scope.$apply();
+
+	}
+
+	$scope.searchTemplateFiles = function(parentFolder, templateFolderID) {
+		// Search for files 
+		$qString = "'"+templateFolderID+"' in parents and trashed = false";
+		gapi.client.drive.files.list({
+		    'q' : $qString
+		  }).
+		  execute(function(resp) {
+		  	if (resp.error && resp.message=="User Rate Limit Exceeded")
+		  		setTimeout($scope.searchTemplateFiles, 500, parentFolder, templateFolderID);
+		  	else
+		  		if (resp.error)
+		  			alert(resp.message);
+		    if (resp.items)
+		    	for(var i=0; resp.items[i]; i++) {
+			      	// templates exists
+			      	$scope.addTemplate(parentFolder, resp.items[i]);
+			      	console.log("parent: "+parentFolder.title+" file: "+resp.items[i].title);
+			    }
+		});
+
+	}
+
+	$scope.searchFilesFolder = function(parentFolder, orderID) {
+		if (orderID <= 0)
+			return;	// not relevant for new orders
+
+	  var folderName = FOLDER_PREFIX+orderID;
+	  // Search if folder exists
+	  $qString = "title = '"+folderName+"'"+" and trashed = false and mimeType = 'application/vnd.google-apps.folder'";
+	  gapi.client.drive.children.list({
+	    'folderId' : parentFolder.id, 
+	    'q' : $qString
+	    }).
+	    execute(function(resp) {
+	    	if (resp.error && resp.message=="User Rate Limit Exceeded")
+	    		setTimeout($scope.searchFilesFolder, 500, parentFolder, orderID);
+	    	else
+	    		if (resp.error)
+	    			alert(resp.message);			    	
+	      	if (resp.items && resp.items[0])  {
+	        	// folder exist - look for files
+          		$scope.searchFiles(parentFolder, resp.items[0].id);
+	      	}
+	  });
+	}
+
+	$scope.addFileToList = function(parentFolder, file) {
+
+		if (file.title && file.alternateLink) {	// already got file details
+			file.link = file.alternateLink;
+			if (!parentFolder.fileList)	// initialize file list if doesn't exist
+				parentFolder.fileList = [];
+			parentFolder.fileList.push(file);				
+		}
+	}
+
+	$scope.searchFiles = function(parentFolder, orderFolderID) {
+		// Search for files 
+		$qString = "'"+orderFolderID+"' in parents and trashed = false";
+		gapi.client.drive.files.list({
+		    'q' : $qString
+		  }).
+		  execute(function(resp) {
+		  	if (resp.error) {//  && resp.message=="User Rate Limit Exceeded")
+		  		setTimeout($scope.searchFiles, 500, parentFolder, orderFolderID);
+		  		return;
+		  	}
+
+		    if (resp.items && resp.items[0])  {
+		      	// files exists
+		      	parentFolder.fileList = [];
+		      	for (var i=0; resp.items[i]; i++) {
+		      		$scope.addFileToList(parentFolder, resp.items[i]);
+		      	}
+	        	$scope.fileExist = true;
+	        	parentFolder.fileExist = true;
+	        	$scope.$apply();
+		    }
+		});
+
+	}
+
+	$scope.setFolders = function() {
+		if (!$scope.folderList || $scope.folderList.length == 0)	// no sub folders under parentFolder
+			alert("No folders found under "+parentFolder+" for user: "+$scope.user);
+			
+	}
+
+		$scope.initFolders = function(renewUser){
+
+		if (!renewUser && $scope.folderList) {
+			// Already initialized
+			return;
+		}
+
+		if (!renewUser && $scope.parentFolderID ) {
+			$scope.getFolderList($scope.parentFolderID);
+			return;
+		}
+
+		$scope.getFolders();
+		};
+	
+
+		$scope.initUpload = function(event){
+		var files = [];
+		if (event) {
+			// copy the files so we can reset the event
+			for (var i=0; i < event.target.files.length; i++)
+				files[i] = event.target.files[i];
+
+		}	
+
+		document.getElementById('file').value = null;	// reset the file input for next time
+
+		if ($scope.selectedParentFolder && $scope.selectedParentFolder.orderFolder) {
+			// Already initialized
+			$scope.uploadFiles(files, $scope.orderID);
+			return;
+		}
+
+		/**
+		 * Check if the current user has authorized to upload to the drive
+		 */
+		try {
+		    	gapi.auth.authorize(
+		        {'client_id': CLIENT_ID, 
+		        'scope': SCOPES, 
+		        'cookie_policy': 'single_host_origin',
+		        'user_id': $scope.user,
+		        'authuser': -1,
+		        'immediate': true},
+		        function(authResult) {
+		        	if (authResult && !authResult.error) {
+			       		// authorization granted
+			       		$scope.uploadFiles(files, $scope.orderID);
+					}
+					else {
+						// try manual authorization
+						gapi.auth.authorize(
+						    {'client_id': CLIENT_ID, 
+						     'scope': SCOPES, 
+						     'authuser': -1,
+						     'cookie_policy': 'single_host_origin',
+			   			     'immediate': false},
+			   			    function(authResult) {
+			   			       	if (authResult && !authResult.error) {
+			   			       		// authorization granted
+			   			       		$scope.uploadFiles(files, $scope.orderID);
+			   					}
+			   					else {
+					    			alert("Authorization failed !")
+					    		}	
+     					});
+	     			}	
+        	});
+			}
+			catch (e) { 
+			    alert(e.message); 
 			}
 
-			$scope.copyFile = function(fileID, parent, fileName, callback)
-			{
-				// get the parent resource
-				gapi.client.drive.files.get({
-				  'fileId': parent.id
-				}).
-				execute(function(resp) {
-					var body = {'title': fileName,
-								'parents': [resp] };
+		};
 
-					// copy the file			
-					var request = gapi.client.drive.files.copy({
-					  'fileId': fileID,
-					  'resource': body
-					});
-					request.execute(callback);
-				});
-			}
+	$scope.setOrderFolder = function(folder) {
+		if (folder.alternateLink) {
+			$scope.selectedParentFolder.orderFolder = folder;
+			$scope.selectedParentFolder.orderFolder.link = folder.alternateLink;
+		}
+		else {
+			// get the folder link
+			gapi.client.drive.files.get({
+			  'fileId': folder.id
+			}).
+			execute(function(resp) {
+				$scope.selectedParentFolder.orderFolder = folder;
+				$scope.selectedParentFolder.orderFolder.link = resp.alternateLink;
+			});
+		}
+		if ($scope.orderID <= 0)
+			// new folder
+			$scope.newDriveFolder = true;
+	}
 
-			$scope.selectFile = function(folder)
-			{
-				$scope.selectedParentFolder = folder;
-				$("#file").click();
-
-			}
-
-			/**
-			 * Start the file upload.
-			 *
-			 * @param {Object} evt Arguments from the file selector.
-			 */
-			$scope.uploadFiles = function(files, orderID) {
-	        	$scope.insertToParentFolder(parentFolder, orderID, files);
-			}
+	$scope.openFolder = function(folder)
+	{
+		$scope.selectedParentFolder = folder;
+		if (!$scope.selectedParentFolder.orderFolder) {
+			// simulate file upload just to get the folder ID from Google drive
+			$scope.initUpload(null);
+		}
+		$scope.openFolderWindow()
+	}
 
 
-			$scope.insertToParentFolder = function(parentFolder, orderID, files) {
-				if ($scope.selectedParentFolder) {
-					$scope.insertToFolder($scope.selectedParentFolder.id, orderID, files);
+	$scope.openFolderWindow = function()
+	{
+		document.body.style.cursor = 'progress';
+		if (!$scope.selectedParentFolder.orderFolder)	// wait for the order folder to get created
+			setTimeout($scope.openFolderWindow, 1000);
+		else {
+			window.open($scope.selectedParentFolder.orderFolder.link);
+			document.body.style.cursor = 'default';
+		}
+	}   
+
+	$scope.addFile = function(file)
+	{
+		document.body.style.cursor = 'progress';
+		$scope.selectedParentFolder = file.folder;
+		if (!$scope.selectedParentFolder.orderFolder) {
+			// simulate file upload just to get the folder ID from Google drive
+			$scope.initUpload(null);
+		}
+		$scope.copyTemplateFile(file);
+	}
+
+	$scope.copyTemplateFile = function(file)
+	{
+		if (!$scope.selectedParentFolder.orderFolder)	// wait for the order folder to get created
+			setTimeout($scope.copyTemplateFile, 1000, file);
+		else {
+			var fileName = file.title; // +$scope.orderID;
+			$scope.copyFile(file.id, file.folder.orderFolder, fileName, $scope.copyFileCallback);
+			
+		}
+	}
+
+
+	$scope.openFile = function(file) {
+		window.open(file.link);
+	}
+
+	$scope.copyFileCallback = function(file) {
+		// copy was successful
+		$scope.fileExist = true;
+		$scope.selectedParentFolder.fileExist = true;
+		$scope.addFileToList($scope.selectedParentFolder, file);
+		console.log('Copy ID: ' + file.id);
+		window.open(file.alternateLink);
+		document.body.style.cursor = 'default';
+		$scope.$apply();
+	}
+
+	$scope.copyFile = function(fileID, parent, fileName, callback)
+	{
+		// get the parent resource
+		gapi.client.drive.files.get({
+		  'fileId': parent.id
+		}).
+		execute(function(resp) {
+			var body = {'title': fileName,
+						'parents': [resp] };
+
+			// copy the file			
+			var request = gapi.client.drive.files.copy({
+			  'fileId': fileID,
+			  'resource': body
+			});
+			request.execute(callback);
+		});
+	}
+
+	$scope.selectFile = function(folder)
+	{
+		$scope.selectedParentFolder = folder;
+		$("#file").click();
+
+	}
+
+	/**
+	 * Start the file upload.
+	 *
+	 * @param {Object} evt Arguments from the file selector.
+	 */
+	$scope.uploadFiles = function(files, orderID) {
+    	$scope.insertToParentFolder(parentFolder, orderID, files);
+	}
+
+
+	$scope.insertToParentFolder = function(parentFolder, orderID, files) {
+		if ($scope.selectedParentFolder) {
+			$scope.insertToFolder($scope.selectedParentFolder.id, orderID, files);
+			return;
+		}
+	    else {
+	    	// Folder is not shared with the user - alert and quit
+	     	alert("Folder "+parentFolder+" is not shared with user "+$scope.user);
+		}
+	}
+
+	$scope.insertToFolder = function(parentID, orderID, files, callback) {
+	  var folderName = FOLDER_PREFIX+orderID;
+		if ($scope.selectedParentFolder.orderFolder) {
+			// order folder exists - insert into it
+			if (files)
+				$scope.insertFiles(files, $scope.selectedParentFolder, $scope.selectedParentFolder.orderFolder);
+			return;
+		}
+
+	  	// Search if folder exists
+	  	$qString = "title = '"+folderName+"'"+" and trashed = false and mimeType = 'application/vnd.google-apps.folder'";
+	  	gapi.client.drive.children.list({
+	    	'folderId' : parentID, 
+	    	'q' : $qString
+	    }).
+	    execute(function(resp) {
+	      	if (resp.items && resp.items[0])  {
+	      		if (orderID <= 0) {
+					// Temporary folder is in use - try a different one with --orderID
+					$scope.insertToFolder(parentID, --$scope.orderID, files);
 					return;
+		      	}
+
+		      	$scope.setOrderFolder(resp.items[0]);
+	        	// folder exist - insert into it
+	        	if (files)
+	          		$scope.insertFiles(files, $scope.selectedParentFolder, resp.items[0]);
+	          
+	          	
+	      	}
+	      	else {
+
+	        	// folder doesn't exist - create it
+	        	var request = gapi.client.request({
+		            'path': '/drive/v2/files/',
+		            'method': 'POST',
+		            'headers': {
+		                'Content-Type': 'application/json',
+		                //'Authorization': 'Bearer ' + access_token,             
+	            	},
+	            	'body':{
+	                	"title" : folderName,
+	            	    'parents': [{"id": parentID}],
+	                	"mimeType" : "application/vnd.google-apps.folder",
+	            	}
+	        	});
+	        	if (!callback) {
+		            callback = function(file) {
+		            	$scope.setOrderFolder(file);
+		              	// folder created - insert into it
+	              		if (files) 
+	              			$scope.insertFiles(files, $scope.selectedParentFolder, file);
+			            
+			            console.log("Folder: ");
+		    	        console.log(file);              
+		            };
+		        }
+	        	request.execute(callback);
+	      }
+	    });
+	      
+	  
+	}
+
+	$scope.updateProgress = function() {
+		$scope.uploadProgress += $scope.increment;
+		$scope.progressCounter++;
+		$scope.$apply();
+		if ($scope.uploading)
+			setTimeout($scope.updateProgress, 100);
+	}
+
+	$scope.closeUpload = function() {
+		$("#upload_popup").hide();
+		$scope.uploading = false;
+	}
+
+	$scope.showUploadProgress = function() {
+		$scope.uploading = true;
+		
+		$("#upload_popup").show();
+		$("#upload_popup").draggable({
+		    handle : ".modal-header"
+		});
+		$("#upload_popup").width(400);
+		$("#upload_popup").css('position', 'fixed');
+		$("#upload_popup").css('z-index', 9999);
+		$("#upload_popup").css('top', '0');
+		$("#upload_popup").css('left', '0');
+		$scope.updateProgress();
+	}
+
+	$scope.insertFiles = function(files, selectedParentFolder, orderFolder) {
+		$scope.progressCounter = 1;				
+		if (!$scope.uploading) { // reset if it is not currently uploading
+			$scope.uploadedSize = 0;
+			$scope.totalUploadSize = 0;
+			$scope.fileCount = 0;
+			$scope.sizePerCount = 3000;		// based on upload speed
+			$scope.uploadProgress = 0;
+			$scope.uploadStatus = "Uploading...";
+			$scope.uploadList = "";
+		}
+
+		for (var i=0; i < files.length ; i++) {
+			$scope.totalUploadSize += files[i].size;
+		}
+
+		if (!$scope.uploading)	// calculate initial increment size
+			$scope.increment = ($scope.sizePerCount/$scope.totalUploadSize)*100;
+
+		if (files.length > 0) {
+			$scope.fileCount += files.length;
+			$scope.showUploadProgress();
+		}
+
+		//document.body.style.cursor = 'progress';
+		for (var i=0 ; i < files.length ; i++) {
+			$scope.insertFile(files[i], orderFolder.id, function(file) {
+				// update the progress bar
+				$scope.uploadedSize += parseInt(file.fileSize);
+				$scope.uploadProgress = ($scope.uploadedSize/$scope.totalUploadSize) * 100
+
+				if (file.error) {
+					alert ("Error: "+file.error.message+"\nPlease reload the form and try again");
 				}
-			    else {
-			    	// Folder is not shared with the user - alert and quit
-			     	alert("Folder "+parentFolder+" is not shared with user "+$scope.user);
-				}
-			}
-
-			$scope.insertToFolder = function(parentID, orderID, files, callback) {
-			  var folderName = FOLDER_PREFIX+orderID;
-				if ($scope.selectedParentFolder.orderFolder) {
-					// order folder exists - insert into it
-					if (files)
-						$scope.insertFiles(files, $scope.selectedParentFolder, $scope.selectedParentFolder.orderFolder);
-					return;
-				}
-
-			  	// Search if folder exists
-			  	$qString = "title = '"+folderName+"'"+" and trashed = false and mimeType = 'application/vnd.google-apps.folder'";
-			  	gapi.client.drive.children.list({
-			    	'folderId' : parentID, 
-			    	'q' : $qString
-			    }).
-			    execute(function(resp) {
-			      	if (resp.items && resp.items[0])  {
-			      		if (orderID <= 0) {
-							// Temporary folder is in use - try a different one with --orderID
-							$scope.insertToFolder(parentID, --$scope.orderID, files);
-							return;
-				      	}
-
-				      	$scope.setOrderFolder(resp.items[0]);
-			        	// folder exist - insert into it
-			        	if (files)
-			          		$scope.insertFiles(files, $scope.selectedParentFolder, resp.items[0]);
-			          
-			          	
-			      	}
-			      	else {
-
-			        	// folder doesn't exist - create it
-			        	var request = gapi.client.request({
-				            'path': '/drive/v2/files/',
-				            'method': 'POST',
-				            'headers': {
-				                'Content-Type': 'application/json',
-				                //'Authorization': 'Bearer ' + access_token,             
-			            	},
-			            	'body':{
-			                	"title" : folderName,
-			            	    'parents': [{"id": parentID}],
-			                	"mimeType" : "application/vnd.google-apps.folder",
-			            	}
-			        	});
-			        	if (!callback) {
-				            callback = function(file) {
-				            	$scope.setOrderFolder(file);
-				              	// folder created - insert into it
-			              		if (files) 
-			              			$scope.insertFiles(files, $scope.selectedParentFolder, file);
-					            
-					            console.log("Folder: ");
-				    	        console.log(file);              
-				            };
-				        }
-			        	request.execute(callback);
-			      }
-			    });
-			      
-			  
-			}
-
-			$scope.updateProgress = function() {
-				$scope.uploadProgress += $scope.increment;
-				$scope.progressCounter++;
+				else {
+					// successfuly uploaded file
+					if ($scope.uploadList == "")
+						$scope.uploadList = "Completed:\n";
+					$scope.uploadList += file.originalFilename+"\n";
+					$scope.fileExist = true;
+					selectedParentFolder.fileExist = true;
+					$scope.addFileToList(selectedParentFolder, file);
+					console.log("File uploaded: "+file);
+					$scope.sizePerCount = ((parseInt(file.fileSize)/$scope.progressCounter) + $scope.sizePerCount)/2;
+					if ($scope.totalUploadSize > $scope.uploadedSize) {
+						// files left to upload
+						var portionSize = $scope.sizePerCount/($scope.totalUploadSize-$scope.uploadedSize);
+						$scope.increment = portionSize*100;
+					}
+					console.log("size per count: "+$scope.sizePerCount);
+					console.log("increment: "+$scope.increment);
+					console.log("total: "+$scope.uploadProgress);
+				}	
+				$scope.progressCounter = 1;
 				$scope.$apply();
-				if ($scope.uploading)
-					setTimeout($scope.updateProgress, 100);
-			}
-
-			$scope.closeUpload = function() {
-				$("#upload_popup").hide();
-				$scope.uploading = false;
-			}
-
-			$scope.showUploadProgress = function() {
-				$scope.uploading = true;
-				
-				$("#upload_popup").show();
-				$("#upload_popup").draggable({
-				    handle : ".modal-header"
-				});
-				$("#upload_popup").width(400);
-				$("#upload_popup").css('position', 'fixed');
-				$("#upload_popup").css('z-index', 9999);
-				$("#upload_popup").css('top', '0');
-				$("#upload_popup").css('left', '0');
-				$scope.updateProgress();
-			}
-
-			$scope.insertFiles = function(files, selectedParentFolder, orderFolder) {
-				$scope.progressCounter = 1;				
-				if (!$scope.uploading) { // reset if it is not currently uploading
-					$scope.uploadedSize = 0;
-					$scope.totalUploadSize = 0;
-					$scope.fileCount = 0;
-					$scope.sizePerCount = 3000;		// based on upload speed
-					$scope.uploadProgress = 0;
-					$scope.uploadStatus = "Uploading...";
-					$scope.uploadList = "";
+				if (--$scope.fileCount <= 0) { // all concurrent uploads completed
+					// This is the last file uploaded
+					document.body.style.cursor = 'default';
+					$scope.uploading = false;
+					$scope.uploadProgress = 120;
+					$scope.uploadStatus = "Done !";
+					//$("#upload_popup").hide();
 				}
 
-				for (var i=0; i < files.length ; i++) {
-					$scope.totalUploadSize += files[i].size;
-				}
+			});
 
-				if (!$scope.uploading)	// calculate initial increment size
-					$scope.increment = ($scope.sizePerCount/$scope.totalUploadSize)*100;
+		}
 
-				if (files.length > 0) {
-					$scope.fileCount += files.length;
-					$scope.showUploadProgress();
-				}
-
-				//document.body.style.cursor = 'progress';
-				for (var i=0 ; i < files.length ; i++) {
-					$scope.insertFile(files[i], orderFolder.id, function(file) {
-						// update the progress bar
-						$scope.uploadedSize += parseInt(file.fileSize);
-						$scope.uploadProgress = ($scope.uploadedSize/$scope.totalUploadSize) * 100
-
-						if (file.error) {
-							alert ("Error: "+file.error.message+"\nPlease reload the form and try again");
-						}
-						else {
-							// successfuly uploaded file
-							if ($scope.uploadList == "")
-								$scope.uploadList = "Completed:\n";
-							$scope.uploadList += file.originalFilename+"\n";
-							$scope.fileExist = true;
-							selectedParentFolder.fileExist = true;
-							$scope.addFileToList(selectedParentFolder, file);
-							console.log("File uploaded: "+file);
-							$scope.sizePerCount = ((parseInt(file.fileSize)/$scope.progressCounter) + $scope.sizePerCount)/2;
-							if ($scope.totalUploadSize > $scope.uploadedSize) {
-								// files left to upload
-								var portionSize = $scope.sizePerCount/($scope.totalUploadSize-$scope.uploadedSize);
-								$scope.increment = portionSize*100;
-							}
-							console.log("size per count: "+$scope.sizePerCount);
-							console.log("increment: "+$scope.increment);
-							console.log("total: "+$scope.uploadProgress);
-						}	
-						$scope.progressCounter = 1;
-						$scope.$apply();
-						if (--$scope.fileCount <= 0) { // all concurrent uploads completed
-							// This is the last file uploaded
-							document.body.style.cursor = 'default';
-							$scope.uploading = false;
-							$scope.uploadProgress = 120;
-							$scope.uploadStatus = "Done !";
-							//$("#upload_popup").hide();
-						}
-
-					});
-
-				}
-
-			}
+	}
 
 
-			/**
-			 * Insert new file.
-			 *
-			 * @param {File} fileData File object to read data from.
-			 * @param {Function} callback Function to call when the request is complete.
-			 */
-			$scope.insertFile = function(fileData, parentID, callback) {
-				const boundary = '-------314159265358979323846';
-				const delimiter = "\r\n--" + boundary + "\r\n";
-				const close_delim = "\r\n--" + boundary + "--";
+	/**
+	 * Insert new file.
+	 *
+	 * @param {File} fileData File object to read data from.
+	 * @param {Function} callback Function to call when the request is complete.
+	 */
+	$scope.insertFile = function(fileData, parentID, callback) {
+		const boundary = '-------314159265358979323846';
+		const delimiter = "\r\n--" + boundary + "\r\n";
+		const close_delim = "\r\n--" + boundary + "--";
 
-				var reader = new FileReader();
-				reader.readAsBinaryString(fileData);
-				reader.onload = function(e) {
-					var contentType = fileData.type || 'application/octet-stream';
-				  	var metadata = {
-				    	'title': fileData.name,
-				    	'parents': [{"id": parentID}],
-				    	'mimeType': contentType
-				    };
+		var reader = new FileReader();
+		reader.readAsBinaryString(fileData);
+		reader.onload = function(e) {
+			var contentType = fileData.type || 'application/octet-stream';
+		  	var metadata = {
+		    	'title': fileData.name,
+		    	'parents': [{"id": parentID}],
+		    	'mimeType': contentType
+		    };
 
-				    var base64Data = btoa(reader.result);
-				    var multipartRequestBody =
-				        delimiter +
-				        'Content-Type: application/json\r\n\r\n' +
-				        JSON.stringify(metadata) +
-				        delimiter +
-				        'Content-Type: ' + contentType + '\r\n' +
-				        'Content-Transfer-Encoding: base64\r\n' +
-				        '\r\n' +
-				        base64Data +
-				        close_delim;
+		    var base64Data = btoa(reader.result);
+		    var multipartRequestBody =
+		        delimiter +
+		        'Content-Type: application/json\r\n\r\n' +
+		        JSON.stringify(metadata) +
+		        delimiter +
+		        'Content-Type: ' + contentType + '\r\n' +
+		        'Content-Transfer-Encoding: base64\r\n' +
+		        '\r\n' +
+		        base64Data +
+		        close_delim;
 
-				    var request = gapi.client.request({
-				        'path': '/upload/drive/v2/files',
-				        'method': 'POST',
-				        'params': {'uploadType': 'multipart'},
-				        'headers': {
-				          'Content-Type': 'multipart/mixed; boundary="' + boundary + '"'
-				        },
-				        'body': multipartRequestBody});
-				    request.execute(callback);
-				}
-			}
+		    var request = gapi.client.request({
+		        'path': '/upload/drive/v2/files',
+		        'method': 'POST',
+		        'params': {'uploadType': 'multipart'},
+		        'headers': {
+		          'Content-Type': 'multipart/mixed; boundary="' + boundary + '"'
+		        },
+		        'body': multipartRequestBody});
+		    request.execute(callback);
+		}
+	}
 
-			/**
-			 * Rename a file.
-			 *
-			 * @param {String} fileId <span style="font-size: 13px; ">ID of the file to rename.</span><br> * @param {String} newTitle New title for the file.
-			 */
-			$scope.renameFolder = function(file, newTitle) {
-			  	var body = {'title': newTitle};
-			  	var request = gapi.client.drive.files.patch({
-			    	'fileId': file.id,
-			    	'resource': body
-			  	});
-			  	request.execute(function(resp) {
-			    	console.log('New Title: ' + resp.title);
-			    	$scope.close();
+	/**
+	 * Rename a file.
+	 *
+	 * @param {String} fileId <span style="font-size: 13px; ">ID of the file to rename.</span><br> * @param {String} newTitle New title for the file.
+	 */
+	$scope.renameFolder = function(file, newTitle) {
+	  	var body = {'title': newTitle};
+	  	var request = gapi.client.drive.files.patch({
+	    	'fileId': file.id,
+	    	'resource': body
+	  	});
+	  	request.execute(function(resp) {
+	    	console.log('New Title: ' + resp.title);
+	    	$scope.close();
 
-			  	});
-			}			
-	        
-	        $scope.close = function() {
-	            $scope.inProgress = false;
-                alert("Order ID: "+$scope.orderID+" updated successfully");
-				window.close();		        	
-	        }
+	  	});
+	}			
+    
+    $scope.close = function() {
+        $scope.inProgress = false;
+        alert("Order ID: "+$scope.orderID+" updated successfully");
+		window.close();		        	
+    }
 })
 .directive('progressBar', function() {		// This code is needed to support ie
   return {

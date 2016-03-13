@@ -2,7 +2,7 @@
 <link rel="stylesheet" href="css/style.css">
 <div class="formContainer col-sm-12" data-ng-controller="formCtrl" data-ng-init="getForm()">
 	<h1>
-		<img ng-if="form.logo" ng-src="https://googledrive.com/host/0BxKK2ik5inqBfndtazV1ZElzT1ptamJjWGJyZ3R6MUxaTlBTVVI4eUtNdVBoZEo3OGZsUHc/{{form.logo}}" class="logo" style="width:210px;height:70px;margin-right:100px;" />
+		<img ng-if="form.logo" ng-src="{{logoURL}}" class="logo" style="width:210px;height:70px;margin-right:100px;" />
 		{{form.title}}
 	</h1>
 	<div class="col-sm-6 col-sm-offset-5">
@@ -35,7 +35,7 @@
 					<span class="glyphicon glyphicon-plus" ng-click="addField(col)" ng-mouseover="onMouseoverDrag()" ng-mouseLeave="onMouseLeaveDrag()" style="color: green"></span>
 				</div>
 			<div class="col-sm-1"></div>
-			<button type="submit" class="btn btn-success col-sm-2" ng-if="col=='2'" ng-click="setFormFields()">Save</button>
+			<button type="submit" class="btn btn-success col-sm-2" ng-if="col=='2'" ng-click="setFormFields()" ng-disabled="saving || !changed">Save</button>
 			<div class="col-sm-1"></div>
 			<button class="btn btn-warning col-sm-2" ng-if="col=='2'" ng-click="closeForm()">Close</button>
 

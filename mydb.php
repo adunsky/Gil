@@ -4,24 +4,10 @@
    */ 
    
    	$hostname = 'localhost';
-	$username = 'amosg';
-	$password = "96e346nv932&";
-	$appname = "Gilamos";
-
-/*
-	//  new ones:	 
-	$clientid = '785966582104-ab859l88mtgu200tsssapjerfkeqgbri.apps.googleusercontent.com';
-	$clientmail = '785966582104-ab859l88mtgu200tsssapjerfkeqgbri@developer.gserviceaccount.com';
-	$clientkeypath = 'gilamos-f3d01bb7176e.p12';
-
-
-	// old ones - use it to clean the calendars
-
-	$clientid = '457875993449-48gmkqssiulu00va3vtrlvg297pv1j8u.apps.googleusercontent.com';
-	$clientmail = '457875993449-48gmkqssiulu00va3vtrlvg297pv1j8u@developer.gserviceaccount.com';
-	$clientkeypath = 'API Project-0ffd21d566b5.p12';
-*/
-
+	$username = 'root';
+	$password = "cyclist1";
+	$appname = "Stelvio";
+	$publicDNSName = "ec2-52-17-9-115.eu-west-1.compute.amazonaws.com";
 
 	$logTable = '_log';
 	$mainTable = '_main';

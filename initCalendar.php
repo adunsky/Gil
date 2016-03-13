@@ -85,9 +85,9 @@ function initCalendar($clientNumber) {
 }
 
 
-function createCalendar($worksheetFeed, $name, $calNumber) {
+function createCalendar($name, $count) {
 
- 		$clientNumber = getClientForCalendar($calNumber);
+ 		$clientNumber = getClientForCalendar($count);
 		$service = initCalendar($clientNumber);
 		$calendar = new Google_Service_Calendar_Calendar();
 		$calendar->setSummary($name);
@@ -102,9 +102,9 @@ function createCalendar($worksheetFeed, $name, $calNumber) {
 
 } // createCalendar
 
-function shareCalendar($calID, $email, $calNumber) {
+function shareCalendar($calID, $email, $count) {
 
- 		$clientNumber = getClientForCalendar($calNumber);
+ 		$clientNumber = getClientForCalendar($count);
 		$service = initCalendar($clientNumber);
 		$rule = new Google_Service_Calendar_AclRule();
 		$scope = new Google_Service_Calendar_AclRuleScope();
@@ -128,19 +128,46 @@ function deleteCalendar($calendar, $number) {
 	$service = initCalendar(getClientForCalendar($number));
 	$success = true;	
 
-	try {
-		$service->calendars->delete($calendar);
-		echo "calendar deleted: ".$calendar."<br>\n";
+	for ($i=0; $i<2; $i++) {
+		// retry twice if not successfull
+		try {
+			$service->calendars->delete($calendar);
+			break;
+		}
+		catch(Exception $e) {
+		  echo 'Exception: ' .$e->getMessage(). "<br>\n";
+		  $success = false;
+		}
 	}
-	catch(Exception $e) {
-	  echo 'Exception: ' .$e->getMessage(). "<br>\n";
-	  $success = false;
-	}
-
 	return $success;
 	
 } // delete
 
+
+
+function renameCalendar($calID, $number, $calName) {
+	 
+	$service = initCalendar(getClientForCalendar($number));
+	$success = true;	
+
+	try {
+
+		// First retrieve the calendar from the API.
+		$calendar = $service->calendars->get($calID);
+
+		$calendar->setSummary($calName);
+
+		$updatedCalendar = $service->calendars->update($calID, $calendar);
+		echo $updatedCalendar->getEtag();
+	}
+	catch(Exception $e) {
+	  	echo 'Exception: ' .$e->getMessage(). "<br>\n";
+	  	$success = false;
+	}
+
+	return $success;
+	
+} // rename
 
 ?>
 

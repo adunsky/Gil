@@ -31,6 +31,7 @@
 
 	$newCharge = false;
 	$chargeFieldValue = "";
+	$chargeFieldIndex = 0;
 	foreach ($origOrder as $field) {
 		$input = $field["input"];
 		$type = $field["type"];
@@ -74,7 +75,7 @@
 
 	$i=0;
 	// call spreadsheet to calculate fields
-	while (!($order = getCalcFields($origOrder, $oldValues)) && $i++ < 5) {
+	while (!($order = getCalcFields($origOrder, $oldValues, $orderID)) && $i++ < 5) {
 		// retry call to spreadsheet 
 		syslog(LOG_ERR, "getCalcFields Failed. retrying...");
 	}

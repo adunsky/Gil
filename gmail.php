@@ -72,7 +72,7 @@ function initGmail($sender) {
 
 
 function sendMail($to, $fromName, $fromEmail, $subject, $message) {
-	$sender = 'admin@googmesh.com';
+	$sender = 'stelviosys@gmail.com';
 	$service = initGmail($sender);
 	if (!$service)
 		syslog(LOG_ERR, "no Gmail service");
@@ -101,7 +101,7 @@ function sendMail($to, $fromName, $fromEmail, $subject, $message) {
 				syslog(LOG_ERR, "Ignoring invalid email address: ".$email);
 		}
 		$mail->Subject = $subject;
-		$message = $message."\nSent by GoogMesh";
+		$message = $message."\nSent by Stelvio Systems";
 		$mail->Body = $message;
 		$mail->preSend();
 		$mime = $mail->getSentMIMEMessage();

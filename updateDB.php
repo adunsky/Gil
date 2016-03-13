@@ -70,8 +70,9 @@ use Google\Spreadsheet\ServiceRequestFactory;
 		}		
 		if ($command == "calendars") {
 			// update calendars and users that share them
-			updateCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fieldTable);
-			updateUsersTable($worksheetFeed);	
+			echo "Cannot update calendars from spreadsheet";
+			//updateCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fieldTable);
+			//updateUsersTable($worksheetFeed);	
 
 		}
 		if ($command == "users") {
@@ -103,7 +104,8 @@ use Google\Spreadsheet\ServiceRequestFactory;
 			// Create form and field form tables	
 			updateFormTables($worksheetFeed, false);	
 			
-			updateCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fieldTable);
+			// cannot update calendars from the spreadsheet once changed in the UI
+			//updateCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fieldTable);
 			
 			// Create Users table		
 			updateUsersTable($worksheetFeed);
@@ -319,7 +321,7 @@ function updateCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 				else {
 					// calendar doesn't exist - create it and add to the table
 					$count++;
-					$calID = createCalendar($worksheetFeed, $calendarName, $count);
+					$calID = createCalendar($calendarName, $count);
 				}
 				if ($calID) {
 					// insert it as the last calendar number as we can't change existing cal numbers

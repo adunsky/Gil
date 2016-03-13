@@ -354,7 +354,7 @@ function createCalndarsTable($worksheetFeed, $calendarsTable, $formsTable, $fiel
 
 			if (!$calID) {
 				// new calendar - create it and add to the table
-				$calID = createCalendar($worksheetFeed, $calendarName, $count);	
+				$calID = createCalendar($calendarName, $count);	
 			}
 			if ($calID) {
 				// add it to the table
